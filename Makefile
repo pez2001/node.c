@@ -11,8 +11,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 3
-DEBUG_BUILD = 3
+BUILD = 8
+DEBUG_BUILD = 8
 
 CFLAGS= -W -w -O2 -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
@@ -55,7 +55,7 @@ test_debug: debug
 debug: build_inc node_print_debug unit_tests_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
-all: clean clean_debug clean_binaries build_inc node_print unit_tests debug
+all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests debug
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 
 unit_tests: node_static $(UT_OBJ) 

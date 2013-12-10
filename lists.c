@@ -45,6 +45,13 @@ void list_Close(item_list *list)
 	free(list);
 }
 
+item_list *list_Copy(item_list *list)
+{
+       item_list *r = list_Create(list->num,list->flags);
+       memcpy(r->items,list->items,sizeof(void*)*list->num);
+       return(r);
+}
+
 void list_Push(item_list *list, void *obj)
 {
 	if(!list->num)
@@ -77,21 +84,12 @@ BOOL list_Insert(item_list *list, long index, void *obj)
 	{
 		list_Push(list, obj);
 	}
-        /*else if(index==0 && list->num==1) //totally hideous just because of an overflow not detected in a for loop ->must investigate this
-        {
-		list->num++;
-		list->items = realloc(list->items, (list->num) * sizeof(void*));
-		list_MoveDown(list, 0);
-		list->items[0] = obj;
-		return(1);
-        }*/
 	else if(index <= list->num - 1)
 	{
 		list->num++;
 		list->items = realloc(list->items, (list->num) * sizeof(void*));
 		for(long i = list->num - 2; i >= index; i--)
 		{
-			printf("moving:index:%d,i:%d,list->num:%d\n",index,i,list->num);
 			list_MoveDown(list, i);
 		}
 		list->items[index] = obj;

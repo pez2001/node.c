@@ -35,6 +35,10 @@ extern "C"  {
 #endif
 
 #define BOOL int
+#define TRUE 1
+#define FALSE 0
+#define True 1
+#define False 0
 
 
 typedef struct
@@ -48,6 +52,8 @@ typedef struct
 #define LIST_STATIC 1		// TODO add support for static lists , so indices wont change
 
 item_list *list_Create(long num, unsigned char flags); /* returns item_list*/
+
+item_list *list_Copy(item_list *list);
 
 void list_Close(item_list *list);
 

@@ -102,7 +102,19 @@ void ptr_tests(void)
 	printf("ptr tests thru\n");
 }
 
+
+void node_tests(void)
+{
+  printf("node tests\n");
+  node *n = node_Create();
+  node_Free(n,True);
+
+  printf("node tests thru\n");
+}
+
+
 int main(int argc, char *argv[])
 {
 	ptr_tests();
+        node_tests();
 }

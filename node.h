@@ -44,16 +44,36 @@ extern "C"  {
 #define NODE_TYPE_BOOL 12
 #define NODE_TYPE_STRING 13
 #define NODE_TYPE_ARRAY 14
+#define NODE_TYPE_NODE 15
+#define NODE_TYPE_STUB 16
 
 
 
 typedef struct
 {
-char *key;
-void *value;
-int type;
-item_list *items;
+  char *key;
+  void *value;
+  int type;
+  item_list *items;
 } node;
+
+
+char *node_CopyString(char *string);
+
+node *node_Create(void);
+node *node_CreateFilled(char *key,void *value,int type,item_list *items);
+void *node_CreateValue(int type,void *value);
+void node_Free(node *n,BOOL free_value);
+void node_FreeValue(int type,void *value);
+void node_SetKey(node *n,char *key);
+void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
+void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_old_value);
+void node_SetType(node *n,int type);
+void node_SetItems(node *n, item_list *items);
+node *node_Copy(node *n,BOOL copy_value);
+
+void *node_GetValue(node *n);
+int node_GetType(node *n);
 
 
 
