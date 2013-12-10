@@ -11,8 +11,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 0
-DEBUG_BUILD = 0
+BUILD = 3
+DEBUG_BUILD = 3
 
 CFLAGS= -W -w -O2 -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
@@ -32,6 +32,14 @@ UT_BINS = unit_tests$(PLATFORM_EXT)
 UT_DEBUG_OBJ = unit_tests.do
 UT_INCLUDE_FILES = unit_tests.h
 
+NODE_PRINT_FILES = node_print.c 
+NODE_PRINT_BINS = node_print$(PLATFORM_EXT)
+NODE_PRINT_INCLUDE_FILES = node_print.h 
+NODE_PRINT_OBJ = node_print.o 
+NODE_PRINT_DEBUG_OBJ = node_print.do 
+
+
+
 TOOLS_BUILD_INC_FILES = tools/build_inc/build_inc.c
 TOOLS_BUILD_INC_BINS = build_inc$(PLATFORM_EXT)
 TOOLS_BUILD_INC_INCLUDE_FILES = tools/build_inc/build_inc.h
@@ -44,20 +52,20 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc svimpy_debug unit_tests_debug
+debug: build_inc node_print_debug unit_tests_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
-all: clean clean_debug clean_binaries build_inc svimpy unit_tests compress_pyc pack_pos debug
+all: clean clean_debug clean_binaries build_inc node_print unit_tests debug
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 
-unit_tests: vm_static $(UT_OBJ) 
-	$(CC) $(UT_OBJ) vm.a -lm -o unit_tests 
+unit_tests: node_static $(UT_OBJ) 
+	$(CC) $(UT_OBJ) node.a -lm -o unit_tests 
 
-unit_tests_debug: vm_static_debug $(UT_DEBUG_OBJ) 
-	$(CC) $(UT_DEBUG_OBJ) vm.da -lm -o unit_tests_debug 
+unit_tests_debug: node_static_debug $(UT_DEBUG_OBJ) 
+	$(CC) $(UT_DEBUG_OBJ) node.da -lm -o unit_tests_debug 
 
-unit_tests_o: $(VM_OBJ) $(UT_OBJ)
-	$(CC) $(VM_OBJ) $(UT_OBJ)  -lm -o unit_tests 
+unit_tests_o: $(NODE_OBJ) $(UT_OBJ)
+	$(CC) $(NODE_OBJ) $(UT_OBJ)  -lm -o unit_tests 
 
 build_inc: $(TOOLS_BUILD_INC_OBJ) 
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc
@@ -65,13 +73,13 @@ build_inc: $(TOOLS_BUILD_INC_OBJ)
 build_inc_o: $(TOOLS_BUILD_INC_OBJ)
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
 
-node_print: node_static $(NODE_OBJ) 
-	$(CC) $(NODE_OBJ) node.a -lm -o node_print 
+node_print: node_static  $(NODE_PRINT_OBJ)
+	$(CC) $(NODE_PRINT_OBJ) node.a -lm -o node_print 
 
-node_print_debug: node_static_debug $(NODE_DEBUG_OBJ) 
-	$(CC) $(NODE_DEBUG_OBJ) node.da -lm -o node_debug 
+node_print_debug: node_static_debug $(NODE_PRINT_DEBUG_OBJ)
+	$(CC) $(NODE_PRINT_DEBUG_OBJ) node.da -lm -o node_print_debug 
 
-nod_print_o: $(NODE_OBJ) $(NODE_PRINT_OBJ)
+node_print_o: $(NODE_OBJ) $(NODE_PRINT_OBJ)
 	$(CC) $(NODE_OBJ) $(NODE_PRINT_OBJ)  -lm -o node_print 
 	
 node_static: $(NODE_OBJ)

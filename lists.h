@@ -40,14 +40,14 @@ extern "C"  {
 typedef struct
 {
 	void **items; 
-	unsigned long num;
+	long num;
 	unsigned char flags;
 } item_list;
 
 
 #define LIST_STATIC 1		// TODO add support for static lists , so indices wont change
 
-item_list *list_Create(unsigned long num, unsigned char flags); /* returns item_list*/
+item_list *list_Create(long num, unsigned char flags); /* returns item_list*/
 
 void list_Close(item_list *list);
 
@@ -55,9 +55,9 @@ void list_Push(item_list *list, void *obj);
 
 void *list_Pop(item_list *list);
 
-BOOL list_Insert(item_list *list, unsigned long index, void *obj);
+BOOL list_Insert(item_list *list, long index, void *obj);
 
-void *list_Remove(item_list *list, unsigned long index);
+void *list_Remove(item_list *list, long index);
 
 void list_RemoveItem(item_list *list, void *obj);
 
@@ -67,9 +67,9 @@ void list_Clear(item_list *list);
 
 unsigned long list_GetLen(item_list *list);
 
-void *list_Get(item_list *list, unsigned long index);
+void *list_Get(item_list *list, long index);
 
-void list_Set(item_list *list, unsigned long index, void *obj);
+void list_Set(item_list *list, long index, void *obj);
 
 void list_Queue(item_list *list, void *obj);
 
@@ -79,9 +79,9 @@ BOOL list_IsEmpty(item_list *list);
 
 BOOL list_Contains(item_list *list,void *obj);
 
-void list_MoveUp(item_list *list, unsigned long index);
+void list_MoveUp(item_list *list, long index);
 
-void list_MoveDown(item_list *list, unsigned long index);
+void list_MoveDown(item_list *list, long index);
 
 
 #ifdef __cplusplus

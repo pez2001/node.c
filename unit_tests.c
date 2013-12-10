@@ -25,15 +25,16 @@
 
 #ifdef USE_DEBUGGING
 int debug_level = 0;
+#endif
 
 void ptr_tests(void)
 {
 	printf("testing ptr list functions\n");
-	items_list *p = list_Create(0, 0);
+	item_list *p = list_Create(0, 0);
 	
 	list_Insert(p,0,(void*)2);
 	list_Insert(p,0,(void*)1);
-	for(NUM i = 0; i < list_GetLen(p); i++)
+	for(unsigned int i = 0; i < list_GetLen(p); i++)
 		printf("%d ", (int)list_Get(p,i));
 	list_Pop(p);
 	list_Pop(p);

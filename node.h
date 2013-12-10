@@ -52,7 +52,7 @@ typedef struct
 char *key;
 void *value;
 int type;
-items_list *items;
+item_list *items;
 } node;
 
 

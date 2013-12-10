@@ -23,7 +23,7 @@
 #include "lists.h"
 
 
-item_list *list_Create(unsigned long num, unsigned char flags)
+item_list *list_Create(long num, unsigned char flags)
 {
 	item_list *l = (item_list*)malloc(sizeof(item_list));
 	if(num)
@@ -71,18 +71,27 @@ void *list_Pop(item_list *list)
 	return(0);
 }
 
-BOOL list_Insert(item_list *list, unsigned long index, void *obj)
+BOOL list_Insert(item_list *list, long index, void *obj)
 {
 	if(index == 0 && !list->num)
 	{
 		list_Push(list, obj);
 	}
+        /*else if(index==0 && list->num==1) //totally hideous just because of an overflow not detected in a for loop ->must investigate this
+        {
+		list->num++;
+		list->items = realloc(list->items, (list->num) * sizeof(void*));
+		list_MoveDown(list, 0);
+		list->items[0] = obj;
+		return(1);
+        }*/
 	else if(index <= list->num - 1)
 	{
 		list->num++;
 		list->items = realloc(list->items, (list->num) * sizeof(void*));
-		for(unsigned long i = list->num - 2; i >= index; i--)
+		for(long i = list->num - 2; i >= index; i--)
 		{
+			printf("moving:index:%d,i:%d,list->num:%d\n",index,i,list->num);
 			list_MoveDown(list, i);
 		}
 		list->items[index] = obj;
@@ -93,7 +102,7 @@ BOOL list_Insert(item_list *list, unsigned long index, void *obj)
 	return(0);
 }
 
-void list_MoveUp(item_list *list, unsigned long index)
+void list_MoveUp(item_list *list, long index)
 {
 	if(!list->num)
 	{
@@ -105,7 +114,7 @@ void list_MoveUp(item_list *list, unsigned long index)
 	}
 }
 
-void list_MoveDown(item_list *list, unsigned long index)
+void list_MoveDown(item_list *list, long index)
 {
 	if(!list->num)
 	{
@@ -117,7 +126,7 @@ void list_MoveDown(item_list *list, unsigned long index)
 	}
 }
 
-void *list_Remove(item_list *list, unsigned long index)
+void *list_Remove(item_list *list, long index)
 {
 	if(!list->num)
 	{
@@ -126,7 +135,7 @@ void *list_Remove(item_list *list, unsigned long index)
 	if(index < list->num)
 	{
 		void *tmp = list->items[index];
-		for(unsigned long i = list->num - 1; i > index; i--)
+		for(long i = list->num - 1; i > index; i--)
 		{
 			list_MoveUp(list, i);
 		}
@@ -162,7 +171,7 @@ unsigned long list_GetLen(item_list *list)
 	return(r);
 }
 
-void *list_Get(item_list *list, unsigned long index)
+void *list_Get(item_list *list,long index)
 {
 	void *r = NULL;
 	if(index < list->num)
@@ -172,7 +181,7 @@ void *list_Get(item_list *list, unsigned long index)
 	return(r);
 }
 
-void list_Set(item_list *list, unsigned long index, void *obj)
+void list_Set(item_list *list,long index, void *obj)
 {
 	if(index < list->num)
 	{
