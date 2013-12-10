@@ -45,6 +45,7 @@ typedef struct
 {
 	void **items; 
 	long num;
+        long iteration_index;
 	unsigned char flags;
 } item_list;
 
@@ -88,6 +89,12 @@ BOOL list_Contains(item_list *list,void *obj);
 void list_MoveUp(item_list *list, long index);
 
 void list_MoveDown(item_list *list, long index);
+
+void *list_Iterate(item_list *list);
+
+void list_IterationReset(item_list *list);
+
+int list_IterationUnfinished(item_list *list);
 
 
 #ifdef __cplusplus

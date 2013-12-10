@@ -58,22 +58,74 @@ typedef struct
 } node;
 
 
+/*utilities*/
 char *node_CopyString(char *string);
 
+
+/*basic node management*/
 node *node_Create(void);
 node *node_CreateFilled(char *key,void *value,int type,item_list *items);
 void *node_CreateValue(int type,void *value);
 void node_Free(node *n,BOOL free_value);
 void node_FreeValue(int type,void *value);
+node *node_Copy(node *n,BOOL copy_value);
+
+/*basic node access*/
 void node_SetKey(node *n,char *key);
 void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
 void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_old_value);
 void node_SetType(node *n,int type);
 void node_SetItems(node *n, item_list *items);
-node *node_Copy(node *n,BOOL copy_value);
-
+char *node_GetKey(node *n);
 void *node_GetValue(node *n);
 int node_GetType(node *n);
+item_list *node_GetItems(node *n);
+
+
+/*tree access*/
+long node_AddItem(node *n,node *s);
+int node_RemoveItem(node *n,node *s);
+int node_RemoveItemByIndex(node *n,long index);
+int node_RemoveItemByKey(node *n,char *key);
+long node_GetItemIndex(node *n,node *s);
+void *node_GetItem(node *n,long index);
+long node_GetItemsNum(node *n);
+void *node_GetItemByKey(node *n,char *key);
+void node_ClearItems(node *n);
+void *node_ItemIterate(node *n);
+int node_ItemIterationUnfinished(node *n);
+void node_ItemIterationReset(node *n);
+
+
+/*standard value types quick access*/
+int node_GetInt(node *n);
+float node_GetFloat(node *n);
+double node_GetDouble(node *n);
+unsigned char node_GetUint8(node *n);
+unsigned short node_GetUint16(node *n);
+unsigned long node_GetUint32(node *n);
+unsigned long long node_GetUint64(node *n);
+char node_GetSint8(node *n);
+short node_GetSint16(node *n);
+long node_GetSint32(node *n);
+long long node_GetSint64(node *n);
+char *node_GetString(node *n);
+int node_GetBool(node *n);
+
+void node_SetBool(node *n, int b);
+void node_SetInt(node *n, int i);
+void node_SetFloat(node *n,float f);
+void node_SetDouble(node *n,double d);
+void node_SetString(node *n,char *s);
+void node_SetUint8(node *n,unsigned char c);
+void node_SetUint16(node *n,unsigned short s);
+void node_SetUint32(node *n,unsigned long l);
+void node_SetUint64(node *n,unsigned long long ll);
+void node_SetSint8(node *n,char c);
+void node_SetSint16(node *n,short s);
+void node_SetSint32(node *n,long l);
+void node_SetSint64(node *n,long long ll);
+
 
 
 

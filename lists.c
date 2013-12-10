@@ -34,6 +34,7 @@ item_list *list_Create(long num, unsigned char flags)
 	else
 		l->items = NULL;
 	l->num = num;
+        l->iteration_index = 0;
 	l->flags = flags;
 	return(l);
 }
@@ -233,4 +234,24 @@ BOOL list_IsEmpty(item_list *list)
 	BOOL r = !list->num;
 	return(r);
 }
+
+//TODO iteration and removal/insertion handling
+
+void *list_Iterate(item_list *list)
+{
+  void *r = list->items[list->iteration_index];
+  list->iteration_index++;
+  return(r);
+}
+
+int list_IterationUnfinished(item_list *list)
+{
+  return(list->iteration_index < list->num);
+}
+
+void list_IterationReset(item_list *list)
+{
+  list->iteration_index = 0;
+}
+
 

@@ -196,3 +196,13 @@ int node_GetType(node *n)
   return(n->type);
 }
 
+char *node_GetKey(node *n)
+{
+  return(n->key);
+}
+
+item_list *node_GetItems(node *n)
+{
+  return(n->items);
+}
+

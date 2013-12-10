@@ -108,6 +108,13 @@ void node_tests(void)
   printf("node tests\n");
   node *n = node_Create();
   node_Free(n,True);
+  
+  n = node_Create();
+  node_SetKey(n,"root");
+  
+  printf("node key:%s\n",node_GetKey(n));
+  node_Free(n,True);
+
 
   printf("node tests thru\n");
 }
