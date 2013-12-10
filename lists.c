@@ -1,6 +1,6 @@
 /* 
- * sVimPy - small Virtual interpreting machine for Python
- * (c) 2012 by Tim Theede aka Pez2001 <pez2001@voyagerproject.de> / vp
+ * node.c - c based data tree with various imports & exports
+ * (c) 2013 by Tim Theede aka Pez2001 <pez2001@voyagerproject.de> / vp
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
