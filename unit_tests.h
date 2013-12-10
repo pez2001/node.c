@@ -23,20 +23,11 @@
 #ifndef UNIT_TESTS_H
 #define UNIT_TESTS_H
 
-#include "vm.h"
-#include "object.h"
-#include "memory.h"
-#include "internal_functions.h"
-#include "debug.h"
+#include "lists.h"
+#include "node.h"
 
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "arduino/test_pyc.h"
-//#include "arduino/blink.h"
-#include "arduino/io.h"
-#include "libraries/fmod_wrapper.h"
-
-#include "arduino/fade_min.h"
 
 #endif
