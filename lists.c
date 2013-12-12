@@ -53,19 +53,21 @@ item_list *list_Copy(item_list *list)
        return(r);
 }
 
-void list_Push(item_list *list, void *obj)
+long list_Push(item_list *list, void *obj)
 {
 	if(!list->num)
 	{
 		list->num = 1;
 		list->items = malloc(list->num * sizeof(void*));
 		list->items[0] = obj;
+		return(0);
 	}
 	else
 	{
 		list->items = realloc(list->items,(list->num + 1) * sizeof(void*));
 		list->items[list->num] = obj;
 		list->num++;
+		return(list->num-1);
 	}
 }
 
@@ -146,7 +148,7 @@ void *list_Remove(item_list *list, long index)
 		}
 		else
 		{
-			list->items =	realloc(list->items, (list->num - 1) * sizeof(void*));
+			list->items = realloc(list->items, (list->num - 1) * sizeof(void*));
 			list->num--;
 		}
 		return(tmp);
@@ -222,11 +224,12 @@ unsigned long list_GetIndex(item_list *list, void *obj)
 	return(-1);
 }
 
-void list_RemoveItem(item_list *list, void *obj)
+long list_RemoveItem(item_list *list, void *obj)
 {
 	unsigned long index = list_GetIndex(list,obj);
 	if(index != -1)
 		list_Remove(list,index);
+	return(index);
 }
 
 BOOL list_IsEmpty(item_list *list)
@@ -254,4 +257,13 @@ void list_IterationReset(item_list *list)
   list->iteration_index = 0;
 }
 
+long list_GetIterationIndex(item_list *list)
+{
+  return(list->iteration_index);
+}
+
+void list_SetIterationIndex(item_list *list,long iteration_index)
+{
+  list->iteration_index = iteration_index;
+}
 

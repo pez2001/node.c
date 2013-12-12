@@ -58,7 +58,7 @@ item_list *list_Copy(item_list *list);
 
 void list_Close(item_list *list);
 
-void list_Push(item_list *list, void *obj);
+long list_Push(item_list *list, void *obj);
 
 void *list_Pop(item_list *list);
 
@@ -66,7 +66,7 @@ BOOL list_Insert(item_list *list, long index, void *obj);
 
 void *list_Remove(item_list *list, long index);
 
-void list_RemoveItem(item_list *list, void *obj);
+long list_RemoveItem(item_list *list, void *obj);
 
 unsigned long list_GetIndex(item_list *list, void *obj);
 
@@ -95,6 +95,9 @@ void *list_Iterate(item_list *list);
 void list_IterationReset(item_list *list);
 
 int list_IterationUnfinished(item_list *list);
+
+long list_GetIterationIndex(item_list *list);
+void list_SetIterationIndex(item_list *list,long iteration_index);
 
 
 #ifdef __cplusplus

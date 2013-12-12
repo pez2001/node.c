@@ -36,17 +36,19 @@ node *node_Create(void)
   node *n = (node*)malloc(sizeof(node));
   n->type = 0;
   n->value = NULL;
+  n->parent = NULL;
   n->items = list_Create(0,0);
   return(n);
 }
 
-node *node_CreateFilled(char *key,void *value,int type,item_list *items)
+node *node_CreateFilled(node *parent,char *key,void *value,int type,item_list *items)
 {
   node *n = (node*)malloc(sizeof(node));
   n->key = node_CopyString(key);
   n->value = value;
   n->type = type;
   n->items = items;
+  n->parent = parent;
   return(n);
 }
 
@@ -59,6 +61,7 @@ void *node_CreateValue(int type,void *value)
          break;
     case NODE_TYPE_INT:
          r = malloc(sizeof(int));
+         memcpy(r, value, sizeof(int));
          break;
     case NODE_TYPE_FLOAT:
          r = malloc(sizeof(float));
@@ -129,7 +132,8 @@ void node_FreeValue(int type,void *value)
     case NODE_TYPE_SINT64:
     case NODE_TYPE_UINT64:
     case NODE_TYPE_STRING:
-         free(value);
+         if(value!=NULL)
+           free(value);
          break;
     case NODE_TYPE_ARRAY:
          break;
@@ -155,7 +159,7 @@ void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value)
     node_FreeValue(n->type,n->value);
   if(copy_value)
   {
-    
+    n->value = node_CreateValue(n->type,value);
   }
   else
     n->value = value;
@@ -178,12 +182,27 @@ void node_SetItems(node *n, item_list *items)
   n->items = items;
 }
 
+void node_SetParent(node *n,node *p)
+{
+  n->parent = p;
+}
+
 node *node_Copy(node *n,BOOL copy_value)
 {
   void *v = node_CreateValue(n->type,n->value); 
   item_list *l = list_Copy(n->items);
-  node *r = node_CreateFilled(n->key,v,n->type,l);
+  node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
   return(r);
+}
+
+int node_IsType(node *n, int type)
+{
+  return(n->type == type);
+}
+
+node *node_GetParent(node *n)
+{
+  return(n->parent);
 }
 
 void *node_GetValue(node *n)
@@ -205,4 +224,320 @@ item_list *node_GetItems(node *n)
 {
   return(n->items);
 }
+
+
+int node_GetInt(node *n)
+{
+  return(*(int*)n->value);
+}
+
+float node_GetFloat(node *n)
+{
+    return(*(float*)n->value);
+}
+
+double node_GetDouble(node *n)
+{
+    return(*(double*)n->value);
+}
+
+unsigned char node_GetUint8(node *n)
+{
+    return(*(unsigned char*)n->value);
+}
+
+unsigned short node_GetUint16(node *n)
+{
+    return(*(unsigned short*)n->value);
+}
+
+unsigned long node_GetUint32(node *n)
+{
+    return(*(unsigned long*)n->value);
+}
+
+unsigned long long node_GetUint64(node *n)
+{
+    return(*(unsigned long long*)n->value);
+}
+
+char node_GetSint8(node *n)
+{
+    return(*(char*)n->value);
+}
+
+short node_GetSint16(node *n)
+{
+    return(*(short*)n->value);
+}
+
+long node_GetSint32(node *n)
+{
+    return(*(long*)n->value);
+}
+
+long long node_GetSint64(node *n)
+{
+    return(*(long long*)n->value);
+}
+
+char *node_GetString(node *n)
+{
+    return((char*)n->value);
+}
+
+int node_GetBool(node *n)
+{
+    return(*(unsigned char*)n->value);
+}
+
+void node_SetBool(node *n, int b)
+{
+  if(node_IsType(n,NODE_TYPE_BOOL))
+     *(int*)n->value = b;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_BOOL,&b);
+     node_SetType(n,NODE_TYPE_BOOL);
+  }
+}
+
+void node_SetInt(node *n, int i)
+{
+  if(node_IsType(n,NODE_TYPE_INT))
+     *(int*)n->value = i;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_INT,&i);
+     node_SetType(n,NODE_TYPE_INT);
+  }
+}
+
+void node_SetFloat(node *n,float f)
+{
+  if(node_IsType(n,NODE_TYPE_FLOAT))
+     *(float*)n->value = f;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_FLOAT,&f);
+     node_SetType(n,NODE_TYPE_FLOAT);
+  }
+}
+
+void node_SetDouble(node *n,double d)
+{
+  if(node_IsType(n,NODE_TYPE_DOUBLE))
+     *(double*)n->value = d;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_DOUBLE,&d);
+     node_SetType(n,NODE_TYPE_DOUBLE);
+  }
+}
+
+void node_SetString(node *n,char *s)
+{
+  if(node_IsType(n,NODE_TYPE_STRING))
+     n->value = s;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_STRING,s);
+     node_SetType(n,NODE_TYPE_STRING);
+  }
+}
+
+void node_SetUint8(node *n,unsigned char c)
+{
+  if(node_IsType(n,NODE_TYPE_UINT8))
+     *(unsigned char*)n->value = c;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_UINT8,&c);
+     node_SetType(n,NODE_TYPE_UINT8);
+  }
+}
+
+void node_SetUint16(node *n,unsigned short s)
+{
+  if(node_IsType(n,NODE_TYPE_UINT16))
+     *(unsigned short*)n->value = s;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_UINT16,&s);
+     node_SetType(n,NODE_TYPE_UINT16);
+  }
+}
+
+void node_SetUint32(node *n,unsigned long l)
+{
+  if(node_IsType(n,NODE_TYPE_UINT32))
+     *(unsigned long*)n->value = l;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_UINT32,&l);
+     node_SetType(n,NODE_TYPE_UINT32);
+  }
+}
+
+void node_SetUint64(node *n,unsigned long long ll)
+{
+  if(node_IsType(n,NODE_TYPE_UINT64))
+     *(unsigned long long*)n->value = ll;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_UINT64,&ll);
+     node_SetType(n,NODE_TYPE_UINT64);
+  }
+}
+
+void node_SetSint8(node *n,char c)
+{
+  if(node_IsType(n,NODE_TYPE_SINT8))
+     *(char*)n->value = c;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_SINT8,&c);
+     node_SetType(n,NODE_TYPE_SINT8);
+  }
+}
+
+void node_SetSint16(node *n,short s)
+{
+  if(node_IsType(n,NODE_TYPE_SINT16))
+     *(short*)n->value = s;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_SINT16,&s);
+     node_SetType(n,NODE_TYPE_SINT16);
+  }
+}
+
+void node_SetSint32(node *n,long l)
+{
+  if(node_IsType(n,NODE_TYPE_SINT32))
+     *(long*)n->value = l;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_SINT32,&l);
+     node_SetType(n,NODE_TYPE_SINT32);
+  }
+}
+
+void node_SetSint64(node *n,long long ll)
+{
+  if(node_IsType(n,NODE_TYPE_SINT64))
+     *(long long*)n->value = ll;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_SINT64,&ll);
+     node_SetType(n,NODE_TYPE_SINT64);
+  }
+}
+
+
+long node_AddItem(node *n,node *s)
+{
+  return(list_Push(n->items,s));
+}
+
+int node_RemoveItem(node *n,node *s)
+{
+  return(list_RemoveItem(n->items,s));
+}
+
+int node_RemoveItemByIndex(node *n,long index)
+{
+  return(list_Remove(n->items,index));
+}
+
+int node_RemoveItemByKey(node *n,char *key)
+{
+  node *r = node_GetItemByKey(n,key);
+  return(node_RemoveItem(n,r));
+}
+
+long node_GetItemIndex(node *n,node *s)
+{
+  return(list_GetIndex(n->items,s));
+}
+
+void *node_GetItem(node *n,long index)
+{
+  return(list_Get(n->items,index));
+}
+
+long node_GetItemsNum(node *n)
+{
+  return(list_GetLen(n->items));
+}
+
+void *node_GetItemByKey(node *n,char *key)
+{
+  void *item = NULL;
+  long old_index = node_GetItemIterationIndex(n);
+  node_ItemIterationReset(n);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *i = node_ItemIterate(n);
+    //printf("iteration:%d:%s\n",n->items->iteration_index,i->key);
+    if(!strcmp(i->key,key))
+    {
+       //printf("key found\n");
+       item = i;
+       break;
+    }
+  }
+  node_SetItemIterationIndex(n,old_index);
+  return(item);
+}
+
+void node_FreeItems(node *n)
+{
+
+
+}
+
+void node_ClearItems(node *n)
+{
+  list_Clear(n->items);
+}
+
+void *node_ItemIterate(node *n)
+{
+  return(list_Iterate(n->items));
+}
+
+int node_ItemIterationUnfinished(node *n)
+{
+  return(list_IterationUnfinished(n->items)); 
+}
+
+void node_ItemIterationReset(node *n)
+{
+  list_IterationReset(n->items);
+}
+
+long node_GetItemIterationIndex(node *n)
+{
+  return(list_GetIterationIndex(n->items));
+}
+
+void node_SetItemIterationIndex(node *n,long iteration_index)
+{
+  list_SetIterationIndex(n->items,iteration_index);
+}
+
 

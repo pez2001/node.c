@@ -46,16 +46,41 @@ extern "C"  {
 #define NODE_TYPE_ARRAY 14
 #define NODE_TYPE_NODE 15
 #define NODE_TYPE_STUB 16
+#define NODE_TYPE_BINARY 17
 
 
-
-typedef struct
+typedef struct _node
 {
   char *key;
   void *value;
+  struct _node *parent;
   int type;
   item_list *items;
+  //int is_dirty;//TODO add handling of value updates
 } node;
+
+
+typedef struct _node_array 
+{
+  int type;
+  void **value;
+  unsigned long len;
+} node_array;
+
+typedef struct _node_stub 
+{
+  void *tag;
+} node_stub;
+
+typedef struct _node_binary 
+{
+  char *value;
+  unsigned long len;
+} node_binary;
+
+
+
+
 
 
 /*utilities*/
@@ -64,7 +89,7 @@ char *node_CopyString(char *string);
 
 /*basic node management*/
 node *node_Create(void);
-node *node_CreateFilled(char *key,void *value,int type,item_list *items);
+node *node_CreateFilled(node *parent,char *key,void *value,int type,item_list *items);
 void *node_CreateValue(int type,void *value);
 void node_Free(node *n,BOOL free_value);
 void node_FreeValue(int type,void *value);
@@ -75,10 +100,13 @@ void node_SetKey(node *n,char *key);
 void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
 void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_old_value);
 void node_SetType(node *n,int type);
+void node_SetParent(node *n,node *p);
 void node_SetItems(node *n, item_list *items);
 char *node_GetKey(node *n);
 void *node_GetValue(node *n);
 int node_GetType(node *n);
+int node_IsType(node *n, int type);
+node *node_GetParent(node *n);
 item_list *node_GetItems(node *n);
 
 
@@ -95,6 +123,10 @@ void node_ClearItems(node *n);
 void *node_ItemIterate(node *n);
 int node_ItemIterationUnfinished(node *n);
 void node_ItemIterationReset(node *n);
+long node_GetItemIterationIndex(node *n);
+void node_SetItemIterationIndex(node *n,long iteration_index);
+
+void node_FreeItems(node *n);
 
 
 /*standard value types quick access*/
@@ -125,6 +157,21 @@ void node_SetSint8(node *n,char c);
 void node_SetSint16(node *n,short s);
 void node_SetSint32(node *n,long l);
 void node_SetSint64(node *n,long long ll);
+
+
+/*special types*/
+
+node_array *node_CreateArray(long num);
+node_stub *node_CreateStub();
+node_binary *node_CreateBinary(unsigned long,char *binary);
+
+void node_FreeArray();
+void node_FreeStub();
+void node_FreeBinary();
+
+void node_FillStub(node *n);
+
+
 
 
 

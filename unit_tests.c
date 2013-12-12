@@ -102,6 +102,14 @@ void ptr_tests(void)
 	printf("ptr tests thru\n");
 }
 
+void ptr_iteration_tests(void)
+{
+
+
+}
+
+
+
 
 void node_tests(void)
 {
@@ -111,9 +119,24 @@ void node_tests(void)
   
   n = node_Create();
   node_SetKey(n,"root");
-  
+  node_SetSint8(n,127);
   printf("node key:%s\n",node_GetKey(n));
+  printf("node value: %d\n",node_GetSint8(n));
+  node_SetUint8(n,227);
+  printf("node value: %d\n",node_GetUint8(n));
+  
+  node *n2 = node_Create();
+  node_SetKey(n2,"version");
+  node_SetString(n2,"basic");
+  node_AddItem(n,n2);
+
+  node *query = node_GetItemByKey(n,"version");
+  if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
+    printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
+  if(query!=NULL)
+  	printf("query key:%s,type:%d\n",node_GetKey(query),node_GetType(query));
   node_Free(n,True);
+  node_Free(n2,True);
 
 
   printf("node tests thru\n");
