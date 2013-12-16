@@ -37,6 +37,7 @@ node *node_Create(void)
   n->type = 0;
   n->value = NULL;
   n->parent = NULL;
+  n->key = NULL;
   n->items = list_Create(0,0);
   return(n);
 }
@@ -100,6 +101,9 @@ void *node_CreateValue(int type,void *value)
          break;
     case NODE_TYPE_STUB:
          break;
+    case NODE_TYPE_BINARY:
+         r = (void*)node_CreateBinary(((node_binary*)value)->value,((node_binary*)value)->len);
+         break;
     default:
          break;
   }
@@ -140,6 +144,9 @@ void node_FreeValue(int type,void *value)
     case NODE_TYPE_NODE:
          break;
     case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_BINARY:
+         node_FreeBinary((node_binary*)value,False); //TODO recheck freeing style
          break;
     default:
          break;
@@ -289,6 +296,17 @@ char *node_GetString(node *n)
 int node_GetBool(node *n)
 {
     return(*(unsigned char*)n->value);
+}
+
+void node_SetNull(node *n)
+{
+  //printf("setting null\n");
+  if(!node_IsType(n,NODE_TYPE_NULL))
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_NULL,NULL);
+     node_SetType(n,NODE_TYPE_NULL);
+  }
 }
 
 void node_SetBool(node *n, int b)
@@ -492,10 +510,9 @@ void *node_GetItemByKey(node *n,char *key)
   while(node_ItemIterationUnfinished(n))
   {
     node *i = node_ItemIterate(n);
-    //printf("iteration:%d:%s\n",n->items->iteration_index,i->key);
-    if(!strcmp(i->key,key))
+    //printf("checking:%s,%d\n",i->key,n->items->num);
+    if(i->key!=NULL && !strcmp(i->key,key))
     {
-       //printf("key found\n");
        item = i;
        break;
     }
@@ -506,8 +523,18 @@ void *node_GetItemByKey(node *n,char *key)
 
 void node_FreeItems(node *n)
 {
+  node_ItemIterationReset(n);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *i = node_ItemIterate(n);
+    node_FreeTree(n);
+  }
+}
 
-
+void node_FreeTree(node *n)
+{
+  node_FreeItems(n);
+  node_Free(n,True);
 }
 
 void node_ClearItems(node *n)
@@ -539,5 +566,135 @@ void node_SetItemIterationIndex(node *n,long iteration_index)
 {
   list_SetIterationIndex(n->items,iteration_index);
 }
+
+
+
+
+node_array *node_CreateArray(long num)
+{
+  node_array *r = (node_array*)malloc(sizeof(node_array));
+  r->nodes = list_Create(num,0);
+  return(r);
+}
+
+void node_FreeArray(node_array *array,BOOL free_nodes)
+{
+  list_Close(array->nodes);
+  free(array);
+}
+
+void node_SetArray(node *n,long num)
+{
+  /*if(node_IsType(n,NODE_TYPE_ARRAY))
+  {
+     list_Close(((node_array*)n->value)->nodes);
+     ((node_array*)n->value)->nodes = binary;
+  }
+  else
+  {*/
+  node_FreeValue(n->type,n->value);
+  n->value = node_CreateArray(num);
+  node_SetType(n,NODE_TYPE_ARRAY);
+  //}
+}
+
+long node_array_Add(node *n,node *s)
+{
+  return(list_Push(((node_array*)n->value)->nodes,s));
+}
+
+int node_array_Remove(node *n,long index)
+{
+  return(list_Remove(((node_array*)n->value)->nodes,index));
+}
+
+void *node_array_Get(node *n,long index)
+{
+  return(list_Get(((node_array*)n->value)->nodes,index));
+}
+
+long node_array_GetNum(node *n)
+{
+  return(list_GetLen(((node_array*)n->value)->nodes));
+}
+
+void node_array_Clear(node *n)
+{
+   list_Clear(((node_array*)n->value)->nodes);
+}
+
+void *node_array_Iterate(node *n)
+{
+  return(list_Iterate(((node_array*)n->value)->nodes)); 
+}
+
+int node_array_IterationUnfinished(node *n)
+{
+  return(list_IterationUnfinished(((node_array*)n->value)->nodes));
+}
+
+void node_array_IterationReset(node *n)
+{
+  list_IterationReset(((node_array*)n->value)->nodes);
+}
+
+long node_array_GetIterationIndex(node *n)
+{
+  return(list_GetIterationIndex(((node_array*)n->value)->nodes));
+}
+
+void node_array_SetIterationIndex(node *n,long iteration_index)
+{
+  list_SetIterationIndex(((node_array*)n->value)->nodes,iteration_index);
+}
+
+
+
+node_binary *node_CreateBinary(char *binary,unsigned long len)
+{
+  node_binary *r = (node_binary*)malloc(sizeof(node_binary));
+  r->value = binary;
+  r->len = len;
+  return(r);
+}
+
+void node_FreeBinary(node_binary *binary,BOOL free_value)
+{
+  if(free_value)
+    free(binary->value);
+  free(binary);  
+}
+
+void node_SetBinary(node *n,char *binary,unsigned long len)
+{
+  if(node_IsType(n,NODE_TYPE_BINARY))
+  {
+     ((node_binary*)n->value)->value = binary;
+     ((node_binary*)n->value)->len = len;
+  }
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateBinary(binary,len);
+     node_SetType(n,NODE_TYPE_BINARY);
+  }
+}
+
+char *node_GetBinary(node *n)
+{
+    return(((node_binary*)n->value)->value);
+}
+
+unsigned long node_GetBinaryLength(node *n)
+{
+    return(((node_binary*)n->value)->len);
+}
+
+
+
+
+
+
+
 
 

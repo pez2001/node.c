@@ -62,9 +62,7 @@ typedef struct _node
 
 typedef struct _node_array 
 {
-  int type;
-  void **value;
-  unsigned long len;
+  item_list *nodes;
 } node_array;
 
 typedef struct _node_stub 
@@ -109,6 +107,8 @@ int node_IsType(node *n, int type);
 node *node_GetParent(node *n);
 item_list *node_GetItems(node *n);
 
+void node_Print(node *n);
+
 
 /*tree access*/
 long node_AddItem(node *n,node *s);
@@ -127,9 +127,11 @@ long node_GetItemIterationIndex(node *n);
 void node_SetItemIterationIndex(node *n,long iteration_index);
 
 void node_FreeItems(node *n);
+void node_FreeTree(node *n);
 
 
 /*standard value types quick access*/
+void node_SetNull(node *n);
 int node_GetInt(node *n);
 float node_GetFloat(node *n);
 double node_GetDouble(node *n);
@@ -162,15 +164,34 @@ void node_SetSint64(node *n,long long ll);
 /*special types*/
 
 node_array *node_CreateArray(long num);
+void node_FreeArray(node_array *array,BOOL free_nodes);
+
+
+/*binary type -> binary chunks managed by it need to be freed on its own at the moment*/
+node_binary *node_CreateBinary(char *binary,unsigned long len);
+void node_FreeBinary(node_binary *binary,BOOL free_value);
+void node_SetBinary(node *n,char *binary,unsigned long len);
+char *node_GetBinary(node *n);
+unsigned long node_GetBinaryLength(node *n);
+
+
 node_stub *node_CreateStub();
-node_binary *node_CreateBinary(unsigned long,char *binary);
-
-void node_FreeArray();
-void node_FreeStub();
-void node_FreeBinary();
-
 void node_FillStub(node *n);
+void node_FreeStub();
 
+
+/*node array access*/
+void node_SetArray(node *n,long num);
+long node_array_Add(node *n,node *s);
+int node_array_Remove(node *n,long index);
+void *node_array_Get(node *n,long index);
+long node_array_GetNum(node *n);
+void node_array_Clear(node *n);
+void *node_array_Iterate(node *n);
+int node_array_IterationUnfinished(node *n);
+void node_array_IterationReset(node *n);
+long node_array_GetIterationIndex(node *n);
+void node_array_SetIterationIndex(node *n,long iteration_index);
 
 
 

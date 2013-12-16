@@ -11,8 +11,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 28
-DEBUG_BUILD = 28
+BUILD = 135
+DEBUG_BUILD = 135
 
 CFLAGS= -W -w -O2 -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
@@ -20,11 +20,11 @@ CC=gcc
 AR=ar
 LD=ld
 
-NODE_FILES = lists.c node.c 
+NODE_FILES = lists.c node.c imports/json.c
 NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h lists.h 
-NODE_OBJ = node.o lists.o
-NODE_DEBUG_OBJ = node.do lists.do
+NODE_INCLUDE_FILES = node.h lists.h imports/json.h
+NODE_OBJ = node.o lists.o imports/json.o
+NODE_DEBUG_OBJ = node.do lists.do imports/json.do
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o

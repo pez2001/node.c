@@ -130,21 +130,74 @@ void node_tests(void)
   node_SetString(n2,"basic");
   node_AddItem(n,n2);
 
+  node *n3 = node_Create();
+  node_SetKey(n3,"format");
+  node_SetString(n3,"memory");
+  node_AddItem(n,n3);
+
+
+
   node *query = node_GetItemByKey(n,"version");
   if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
     printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
   if(query!=NULL)
   	printf("query key:%s,type:%d\n",node_GetKey(query),node_GetType(query));
+
+  query = node_GetItemByKey(n,"format");
+  if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
+    printf("query2:%s = %s\n",node_GetKey(query),node_GetString(query));
+
+
   node_Free(n,True);
   node_Free(n2,True);
+  node_Free(n3,True);
 
 
   printf("node tests thru\n");
 }
 
+void json_tests(void)
+{
+  printf("json tests\n");
+  node *root = json_LoadFile("test_wiki.json");
+  //node *root = json_LoadFile("test2.json");
+  //node *root = json_LoadFile("test3.json");
+  node *query = node_GetItemByKey(root,"address");
+  //if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
+  //  printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
+  if(query!= NULL)
+  	printf("found address object\n");
+  query = node_GetItemByKey(root,"connection");
+  if(query!= NULL)
+    printf("query:%d\n",query->type);
+  query = node_GetItemByKey(root,"customer");
+  if(query!= NULL)
+    printf("query customer:%d,%d\n",query->type,*(unsigned char*)query->value);
+  query = node_GetItemByKey(root,"callback");
+  if(query!= NULL)
+    printf("query callback:%d,%d\n",query->type,*(unsigned char*)query->value);
+  query = node_GetItemByKey(root,"maker");
+  if(query!= NULL)
+    printf("query maker:%d,%d\n",query->type,*(unsigned char*)query->value);
+  query = node_GetItemByKey(root,"phone");
+  //if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
+  //  printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
+  if(query!= NULL)
+  {
+  	printf("found phone object\n");
+    query = node_GetItemByKey(query,"home");
+    if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
+      printf("found:%s = %s\n",node_GetKey(query),node_GetString(query));
+    
+  }
+
+  printf("json tests thru\n");
+}
+
 
 int main(int argc, char *argv[])
 {
-	ptr_tests();
-        node_tests();
+	//ptr_tests();
+    //node_tests();
+    json_tests();
 }
