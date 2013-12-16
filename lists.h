@@ -30,6 +30,11 @@
 #include "string.h"
 
 
+#ifdef USE_DEBUGGING
+#include "memory.h"
+#endif
+
+
 #ifdef __cplusplus
 extern "C"  {
 #endif

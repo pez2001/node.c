@@ -25,7 +25,11 @@
 
 item_list *list_Create(long num, unsigned char flags)
 {
+	//#ifdef USE_DEBUGGING
+	//item_list *l = (item_list*)mem_malloc(sizeof(item_list));
+	//#else
 	item_list *l = (item_list*)malloc(sizeof(item_list));
+	//#endif
 	if(num)
 	{
 		l->items = malloc(num * sizeof(void*));

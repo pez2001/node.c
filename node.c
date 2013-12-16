@@ -112,8 +112,17 @@ void *node_CreateValue(int type,void *value)
 
 void node_Free(node *n,BOOL free_value)
 {
+  printf("freeing:%s\n[",n->key);
+  //node_Print(n,0);
+  printf("]\n");
   if(free_value)
+  {
+    printf("freeing value\n");
     node_FreeValue(n->type,n->value);
+  }
+  if(n->key != NULL)
+    free(n->key);
+  list_Close(n->items);
   free(n);
 }
 
@@ -140,6 +149,8 @@ void node_FreeValue(int type,void *value)
            free(value);
          break;
     case NODE_TYPE_ARRAY:
+         printf("freeing array\n");
+         node_FreeArray(value,True);
          break;
     case NODE_TYPE_NODE:
          break;
@@ -152,6 +163,243 @@ void node_FreeValue(int type,void *value)
          break;
   }
 }
+
+void node_print_tabs(int num)
+{
+  for(int i=0;i<num;i++)
+   printf("\t");
+}
+
+
+void node_PrintWithTabs(node *n,int with_key,int tabs_num)
+{
+  if(with_key)
+  {
+    if(n->key != NULL)
+    {
+      node_print_tabs(tabs_num);
+      printf("%s",n->key);
+    }
+    else
+      printf("[undefined]");
+    printf(" = ");
+  }
+
+  switch(n->type)
+  {
+    case NODE_TYPE_NULL:
+         if(with_key)
+         {
+           printf("null");
+         } 
+         break;
+    case NODE_TYPE_INT:
+         printf("%d",*(int*)n->value);
+         break;
+    case NODE_TYPE_FLOAT:
+         printf("%f",*(float*)n->value);
+         break;
+    case NODE_TYPE_DOUBLE:
+         printf("%f",*(double*)n->value);
+         break;
+    case NODE_TYPE_UINT8:
+         printf("%d",*(unsigned char*)n->value);
+         break;
+    case NODE_TYPE_SINT8:
+         printf("%d",*(char*)n->value);
+         break;
+    case NODE_TYPE_BOOL:
+         if(*(unsigned char*)n->value)
+           printf("True");
+         else
+          printf("False");
+         break;
+    case NODE_TYPE_UINT16:
+         printf("%d",*(unsigned short*)n->value);
+         break;
+    case NODE_TYPE_SINT16:
+         printf("%d",*(short*)n->value);
+         break;
+    case NODE_TYPE_UINT32:
+         printf("%d",*(unsigned long*)n->value);
+         break;
+    case NODE_TYPE_SINT32:
+         printf("%d",*(long*)n->value);
+         break;
+    case NODE_TYPE_SINT64:
+         printf("%d",*(long long*)n->value);
+         break;
+    case NODE_TYPE_UINT64:
+         printf("%d",*(unsigned long long*)n->value);
+         break;
+    case NODE_TYPE_STRING:
+         printf((char*)n->value);
+         break;
+    case NODE_TYPE_ARRAY:
+         {
+         node_print_tabs(tabs_num+1);
+         printf("[");
+         long old_index = node_array_GetIterationIndex(n);
+         node_array_IterationReset(n);
+         while(node_array_IterationUnfinished(n))
+         { 
+            node *i = node_array_Iterate(n);
+            node_PrintWithTabs(i,True,tabs_num+1);
+            if(node_array_IterationUnfinished(n))
+            {
+              node_print_tabs(tabs_num+1);
+              printf(" , ");
+            }
+         }
+         node_print_tabs(tabs_num+1);
+         printf("]\n");
+         node_array_SetIterationIndex(n,old_index);
+         break;
+         }
+    case NODE_TYPE_NODE:
+         if(node_HasItems(n))
+         { 
+           node_print_tabs(tabs_num+1);
+           printf("{\n");
+           long old_index = node_GetItemIterationIndex(n);
+           node_ItemIterationReset(n);
+           while(node_ItemIterationUnfinished(n))
+           {
+              node *i = node_ItemIterate(n);
+              node_PrintWithTabs(i,True,tabs_num+1);
+           }
+           node_SetItemIterationIndex(n,old_index);
+           node_print_tabs(tabs_num+1);
+           printf("}\n");
+         }
+         break;
+    case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_BINARY:
+         break;
+    default:
+         break;
+  }
+  if(with_key)
+    printf("\n");
+}
+
+void node_Print(node *n,int with_key)
+{
+  if(with_key)
+  {
+    if(n->key != NULL)
+      printf("%s",n->key);
+    else
+      printf("[undefined]");
+    printf(" = ");
+  }
+
+  switch(n->type)
+  {
+    case NODE_TYPE_NULL:
+         break;
+    case NODE_TYPE_INT:
+         printf("%d",*(int*)n->value);
+         break;
+    case NODE_TYPE_FLOAT:
+         printf("%f",*(float*)n->value);
+         break;
+    case NODE_TYPE_DOUBLE:
+         printf("%f",*(double*)n->value);
+         break;
+    case NODE_TYPE_UINT8:
+         printf("%d",*(unsigned char*)n->value);
+         break;
+    case NODE_TYPE_SINT8:
+         printf("%d",*(char*)n->value);
+         break;
+    case NODE_TYPE_BOOL:
+         if(*(unsigned char*)n->value)
+           printf("True");
+         else
+          printf("False");
+         break;
+    case NODE_TYPE_UINT16:
+         printf("%d",*(unsigned short*)n->value);
+         break;
+    case NODE_TYPE_SINT16:
+         printf("%d",*(short*)n->value);
+         break;
+    case NODE_TYPE_UINT32:
+         printf("%d",*(unsigned long*)n->value);
+         break;
+    case NODE_TYPE_SINT32:
+         printf("%d",*(long*)n->value);
+         break;
+    case NODE_TYPE_SINT64:
+         printf("%d",*(long long*)n->value);
+         break;
+    case NODE_TYPE_UINT64:
+         printf("%d",*(unsigned long long*)n->value);
+         break;
+    case NODE_TYPE_STRING:
+         printf((char*)n->value);
+         break;
+    case NODE_TYPE_ARRAY:
+         {
+         printf("[");
+         long old_index = node_array_GetIterationIndex(n);
+         node_array_IterationReset(n);
+         while(node_array_IterationUnfinished(n))
+         { 
+            node *i = node_array_Iterate(n);
+            node_Print(i,True);
+            if(node_array_IterationUnfinished(n))
+              printf(" , ");
+         }
+         printf("]\n");
+         node_array_SetIterationIndex(n,old_index);
+         break;
+         }
+    case NODE_TYPE_NODE:
+         if(node_HasItems(n))
+         { 
+           node_print_tabs(1);
+           printf("{\n");
+           long old_index = node_GetItemIterationIndex(n);
+           node_ItemIterationReset(n);
+           while(node_ItemIterationUnfinished(n))
+           {
+              node *i = node_ItemIterate(n);
+              node_Print(i,True);
+           }
+           node_SetItemIterationIndex(n,old_index);
+           node_print_tabs(1);
+           printf("}\n");
+         }
+         break;
+    case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_BINARY:
+         break;
+    default:
+         break;
+  }
+  if(with_key)
+    printf("\n");
+}
+
+
+
+
+
+void node_PrintTreeLevel(node *n,int level)
+{
+  node_PrintWithTabs(n,True,level);
+}
+
+void node_PrintTree(node *n)
+{
+  node_PrintTreeLevel(n,0);
+}
+
+
 
 void node_SetKey(node *n,char *key)
 {
@@ -231,6 +479,27 @@ item_list *node_GetItems(node *n)
 {
   return(n->items);
 }
+
+
+
+void node_ParseNumber(node *n,char *number_string)
+{
+  //printf("checking:[%s]\n",number_string);
+  double d = atof(number_string);
+  long l = (long)d;
+  if(d==0.0f || (d==(double)l))
+  {
+    long l = atol(number_string);
+    //printf("found long:%d\n",l);
+    node_SetSint32(n,l);
+  }
+  else 
+  {
+    node_SetDouble(n,d);
+    //printf("found float:%f\n",d);
+  }
+}
+
 
 
 int node_GetInt(node *n)
@@ -359,14 +628,18 @@ void node_SetDouble(node *n,double d)
 
 void node_SetString(node *n,char *s)
 {
-  if(node_IsType(n,NODE_TYPE_STRING))
-     n->value = s;
-  else
+  /*if(node_IsType(n,NODE_TYPE_STRING))
   {
+     if(n->value!=NULL)
+       free(n->value);
+     n->value = s;
+  }
+  else
+  {*/
      node_FreeValue(n->type,n->value);
      n->value = node_CreateValue(NODE_TYPE_STRING,s);
      node_SetType(n,NODE_TYPE_STRING);
-  }
+  //}
 }
 
 void node_SetUint8(node *n,unsigned char c)
@@ -476,7 +749,7 @@ int node_RemoveItem(node *n,node *s)
   return(list_RemoveItem(n->items,s));
 }
 
-int node_RemoveItemByIndex(node *n,long index)
+node *node_RemoveItemByIndex(node *n,long index)
 {
   return(list_Remove(n->items,index));
 }
@@ -498,6 +771,11 @@ void *node_GetItem(node *n,long index)
 }
 
 long node_GetItemsNum(node *n)
+{
+  return(list_GetLen(n->items));
+}
+
+int node_HasItems(node *n)
 {
   return(list_GetLen(n->items));
 }
@@ -527,7 +805,7 @@ void node_FreeItems(node *n)
   while(node_ItemIterationUnfinished(n))
   {
     node *i = node_ItemIterate(n);
-    node_FreeTree(n);
+    node_FreeTree(i);
   }
 }
 
@@ -579,6 +857,13 @@ node_array *node_CreateArray(long num)
 
 void node_FreeArray(node_array *array,BOOL free_nodes)
 {
+  list_IterationReset(array->nodes);
+  while(list_IterationUnfinished(array->nodes))
+  { 
+    node *i = (node*)list_Iterate(array->nodes);
+    printf("freeing node:%s\n",i->key);
+    node_Free(i,free_nodes);
+  }
   list_Close(array->nodes);
   free(array);
 }
@@ -603,14 +888,14 @@ long node_array_Add(node *n,node *s)
   return(list_Push(((node_array*)n->value)->nodes,s));
 }
 
-int node_array_Remove(node *n,long index)
+node *node_array_Remove(node *n,long index)
 {
-  return(list_Remove(((node_array*)n->value)->nodes,index));
+  return((node*)list_Remove(((node_array*)n->value)->nodes,index));
 }
 
-void *node_array_Get(node *n,long index)
+node *node_array_Get(node *n,long index)
 {
-  return(list_Get(((node_array*)n->value)->nodes,index));
+  return((node*)list_Get(((node_array*)n->value)->nodes,index));
 }
 
 long node_array_GetNum(node *n)
@@ -623,9 +908,9 @@ void node_array_Clear(node *n)
    list_Clear(((node_array*)n->value)->nodes);
 }
 
-void *node_array_Iterate(node *n)
+node *node_array_Iterate(node *n)
 {
-  return(list_Iterate(((node_array*)n->value)->nodes)); 
+  return((node*)list_Iterate(((node_array*)n->value)->nodes)); 
 }
 
 int node_array_IterationUnfinished(node *n)

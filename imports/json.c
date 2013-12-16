@@ -86,6 +86,32 @@ char json_ConvertEscapeChar(char escape_char)
   return(r);
 }
 
+node * json_CreateNode(char *key_string,char *value_string,int is_value_string)
+{
+  node *kv = node_Create();
+  if(key_string!=NULL)
+    node_SetKey(kv,key_string);
+  if(is_value_string)
+  {
+    node_SetString(kv,value_string);
+  }
+  else
+    if(!strcmp(value_string,"null"))
+      node_SetNull(kv);
+    else
+      if(!strcmp(value_string,"true"))
+        node_SetBool(kv,True);
+      else
+        if(!strcmp(value_string,"false"))
+          node_SetBool(kv,False);
+        else
+        {
+          node_ParseNumber(kv,value_string);
+        }
+  return(kv);
+}
+
+
 
 node *json_Load(char *json,unsigned long len)
 {
@@ -98,53 +124,41 @@ node *json_Load(char *json,unsigned long len)
   char *key_string = NULL;
   char *value_string =NULL;
   int is_value_string=0;
-  int is_value=0;
+  int is_obj=0;
 
   while(offset<len)
   {
     if((state & JSON_STATE_IN_STRING))
     {
       char add_char = json[offset];
-      if(json[offset]=='\\')
-      {
-         offset++;
-         char escape_char = json_ConvertEscapeChar(json[offset]);
-         if((state&JSON_STATE_IN_KEY))
-         {
-             key_string = json_AddCharToString(key_string,escape_char);
-         }	
-
-         if((state&JSON_STATE_IN_VALUE))
-         {
-            value_string = json_AddCharToString(value_string,escape_char);
-         }	 
-
-         offset++;
-         continue;
-      }
-      if(json[offset] == '"')
+      offset++;
+      if(add_char == '"')
       {
          state &= ~JSON_STATE_IN_STRING;
          is_value_string = 1;
-         offset++;
          continue;
-      }else
+      }
+      else
+      if(add_char=='\\')
       {
+         add_char = json_ConvertEscapeChar(json[offset]);
+         //printf("found escape:%d\n",add_char);
+         offset++;
+         if(add_char==0)
+          continue;
+      }
+
        if((state&JSON_STATE_IN_KEY))
        {
-          key_string = json_AddCharToString(key_string,json[offset]);
+          key_string = json_AddCharToString(key_string,add_char);
        }	
-
        if((state&JSON_STATE_IN_VALUE))
        {
-          value_string = json_AddCharToString(value_string,json[offset]);
+          value_string = json_AddCharToString(value_string,add_char);
        }	
-       offset++;
+       //offset++;
        continue;
-     }
     }
-
-
 
     switch(json[offset])
     {
@@ -155,196 +169,177 @@ node *json_Load(char *json,unsigned long len)
        case ' ':
             offset++;
             continue;
-            break;
        case '{':
             state |= JSON_STATE_IN_OBJ;
-
+           
             start_offset = offset;
 
             if((state & JSON_STATE_IN_ARRAY))
             {
-              printf("new array object found\n"); 
+              //printf("new array object found\n"); 
               parent_obj = actual_obj;
               actual_obj = node_Create();
+              node_SetType(actual_obj,NODE_TYPE_NODE);
               node_array_Add(parent_obj,actual_obj);
               state |= JSON_STATE_IN_KEY;     
             }
             else
             {
-            parent_obj = actual_obj;
-            actual_obj = node_Create();
-            if(root_obj==NULL)
-            {
-            	root_obj = actual_obj;
+              parent_obj = actual_obj;
+              actual_obj = node_Create();
+              node_SetType(actual_obj,NODE_TYPE_NODE);
+              if(root_obj==NULL)
+              {
+              	root_obj = actual_obj;
                 node_SetKey(actual_obj,"root");
-            }	
-            state |= JSON_STATE_IN_KEY;     
-            printf("new object found\n");
-            if((state & JSON_STATE_IN_VALUE))
-            {
-               printf("is child of object\n");
-               node_SetKey(actual_obj,key_string);
-               printf("key:%s\n",key_string);
-
-               node_SetParent(actual_obj,parent_obj);
-               if(parent_obj!=NULL)
-               {
-                 node_AddItem(parent_obj,actual_obj);
-                 printf("added item:%s to %s\n",actual_obj->key,parent_obj->key);
-               }
-            }
-
+                node_SetType(actual_obj,NODE_TYPE_NODE);
+              }	
+              state |= JSON_STATE_IN_KEY;     
+              //printf("new object found\n");
+              if((state & JSON_STATE_IN_VALUE))
+              {
+                //printf("is child of object\n");
+                node_SetKey(actual_obj,key_string);
+                //printf("key:%s\n",key_string);
+                free(key_string);
+                key_string=NULL;
+                node_SetParent(actual_obj,parent_obj);
+                if(parent_obj!=NULL)
+                {
+                  node_AddItem(parent_obj,actual_obj);
+                  //printf("added item:%s to %s\n",actual_obj->key,parent_obj->key);
+                }
+              }
             }
             state &= ~JSON_STATE_IN_VALUE;
             offset++;
             continue;
-            break;
        case '}':
-             if((state & JSON_STATE_IN_VALUE))
-             {
-               state |= JSON_STATE_IN_KEY;     
+            if((state & JSON_STATE_IN_VALUE))
+            {
+               //state |= JSON_STATE_IN_KEY;     
                state &= ~JSON_STATE_IN_VALUE;
-               //printf("key:%s\n",key_string);
-               //printf("value:%s\n",value_string);
-               node *kv = node_Create();
-               node_SetKey(kv,key_string);
-               if(is_value_string)
-               {
-                 node_SetString(kv,value_string);
-                 printf("string:%s\n",value_string);
-                 //printf(value_string);
-               }
-               else
-               	 if(!strcmp(value_string,"null"))
-               	 	node_SetNull(kv);
-                 else
-                   if(!strcmp(value_string,"true"))
-                 	 	node_SetBool(kv,True);
-                     else
-                       if(!strcmp(value_string,"false"))
-               	        	node_SetBool(kv,False);
-               	       else
-               	       {
-                          printf("number:%s\n",value_string);
-                          
-               	       }
+               printf("adding last key:%s : %s\n",key_string,value_string);
+               node *kv = json_CreateNode(key_string,value_string,is_value_string);
                node_AddItem(actual_obj,kv);
-               state &= ~JSON_STATE_IN_VALUE;
-               state |= JSON_STATE_IN_KEY;     
-               }
+               free(key_string);
+               free(value_string);
+               key_string=NULL;
+               value_string=NULL;
+            }
             state &= ~JSON_STATE_IN_OBJ;
+            is_obj = 1;
             if(parent_obj!=NULL)
             {
-            	actual_obj = parent_obj;
-            	printf("actual:%s\n",actual_obj->key);
-            	parent_obj = node_GetParent(actual_obj);
+            	 actual_obj = parent_obj;
+            	 //printf("actual:%s\n",actual_obj->key);
+            	 parent_obj = node_GetParent(actual_obj);
             }
-            //state &= ~JSON_STATE_IN_STRING;
-            //state &= ~JSON_STATE_IN_KEY;
-            //actual_obj=NULL;
             offset++;
             continue;
-            break;
-       case ',':
+       case ',': 
 
             if((state & JSON_STATE_IN_ARRAY) && !(state & JSON_STATE_IN_OBJ))
             {
-              printf("next array item\n"); 
-              printf("string:k:%s,v:%s\n",key_string,value_string);
+              //printf("reading next array item:%d\n",is_obj);
               state |= JSON_STATE_IN_VALUE;     
               state &= ~JSON_STATE_IN_KEY;
+              if(!is_obj)
+              {
+                printf("adding array key:%s : %s\n",key_string,value_string);
+                node *kv = json_CreateNode(NULL,value_string,is_value_string);
+                node_array_Add(actual_obj,kv);
+                free(value_string);
+                value_string = json_CreateEmptyString();
+              }
               value_string = json_CreateEmptyString();
+              //value_string = json_CreateEmptyString();
+
               //parent_obj = actual_obj;
               //actual_obj = node_Create();
               //node_array_Add(parent_obj,actual_obj);
               //state |= JSON_STATE_IN_KEY;     
             }else
-
+            {
+             state |= JSON_STATE_IN_KEY;     
              if((state & JSON_STATE_IN_VALUE))
              {
-               state |= JSON_STATE_IN_KEY;     
                state &= ~JSON_STATE_IN_VALUE;
-               //printf("key:%s\n",key_string);
-               node *kv = node_Create();
-               node_SetKey(kv,key_string);
-               if(is_value_string)
-               {
-                 node_SetString(kv,value_string);
-                 printf("string:%s\n",value_string);
-               }
-               else
-               	 if(!strcmp(value_string,"null"))
-               	 	node_SetNull(kv);
-                 else
-                   if(!strcmp(value_string,"true"))
-                 	 	node_SetBool(kv,True);
-                     else
-                       if(!strcmp(value_string,"false"))
-               	        	node_SetBool(kv,False);
-               	       else
-               	       {
-                          printf("number:%s\n",value_string);
-                          
-               	       }
-               node_AddItem(actual_obj,kv);
-             }
+               if(!is_obj)
+                {
+                  printf("adding key:%s : [%s]\n",key_string,value_string);
+                  node *kv = json_CreateNode(key_string,value_string,is_value_string);
+                  node_AddItem(actual_obj,kv);
+                  free(key_string);
+                  free(value_string);
+                  key_string=NULL;
+                  value_string=NULL;
+                }
+              }
+            }
+            is_obj = 0;
             offset++;
             continue;
-            break;
        case '[':
             state |= JSON_STATE_IN_ARRAY;
-            printf("adding array with key:%s\n",key_string);     
+            //printf("adding array with key:%s\n",key_string);     
             parent_obj = actual_obj;
             actual_obj = node_Create();
+            node_SetKey(actual_obj,key_string);
             node_SetArray(actual_obj,0);
             node_AddItem(parent_obj,actual_obj);
+            free(key_string);
+            key_string=NULL;
+            is_obj = 0;
             offset++;
             continue;
-            break;
        case ']':
+            //printf("last array item\n"); 
+            //printf("string:k:%s,v:%s\n",key_string,value_string);
 
-              printf("last array item\n"); 
-              printf("string:k:%s,v:%s\n",key_string,value_string);
-              state |= JSON_STATE_IN_VALUE;     
-              state &= ~JSON_STATE_IN_KEY;
-              value_string = (char*)malloc(1);
-              value_string[0] = 0;
-              //value_string_len=0;
+             if((state & JSON_STATE_IN_ARRAY) && (state & JSON_STATE_IN_VALUE))
+             {
+               //printf("key:%s\n",key_string);
+               state &= ~JSON_STATE_IN_VALUE;
+               printf("adding last array key:%s : %s\n",key_string,value_string);
+               node *kv = json_CreateNode(key_string,value_string,is_value_string);
+               node_array_Add(actual_obj,kv);
+               //free(key_string);
+               //key_string=NULL;
+               free(value_string);
+               value_string=NULL;
+             }
 
+            //state |= JSON_STATE_IN_VALUE;     
+            //state &= ~JSON_STATE_IN_KEY;
+            value_string = json_CreateEmptyString();
 
             state &= ~JSON_STATE_IN_ARRAY;
             if(parent_obj!=NULL)
             {
             	actual_obj = parent_obj;
-            	printf("actual:%s\n",actual_obj->key);
+            	//printf("actual:%s\n",actual_obj->key);
             	parent_obj = node_GetParent(actual_obj);
             }
             offset++;
             continue;
-            break;
        case ':':
             state |= JSON_STATE_IN_VALUE;     
             state &= ~JSON_STATE_IN_KEY;
             is_value_string = 0;
             if((state&JSON_STATE_IN_VALUE))
             {	
-              value_string = (char*)malloc(1);
-              value_string[0] = 0;
-              //value_string_len=0;
+              value_string = json_CreateEmptyString();
             }
-
             offset++;
             continue;
-            break;
        case '"':
             if(!(state&JSON_STATE_IN_STRING))
             {
             	state |= JSON_STATE_IN_STRING;
                 if((state&JSON_STATE_IN_KEY))
                 {	
-                   key_string = (char*)malloc(1);
-                   key_string[0] = 0;
-                   //key_string_len=0;
+                   key_string = json_CreateEmptyString();
                 }
             }
             else
@@ -353,30 +348,14 @@ node *json_Load(char *json,unsigned long len)
             }
             offset++;
             continue;
-            break;
-
     }
-    //if((state&JSON_STATE_IN_VALUE))
     if((state&JSON_STATE_IN_VALUE))
     {
       value_string = json_AddCharToString(value_string,json[offset]);
-      //value_string = (char*)realloc(value_string,value_string_len+2);
-      //value_string[value_string_len+1] = 0;
-      //value_string[value_string_len] = json[offset];
-      //value_string_len++;
-      offset++;
-      continue;
     }	
-
-
-    printf("%c",json[offset]);
-
-    //else
-    //  printf("[%c]",json[offset]);
     offset++;
   } 
  return(root_obj);
-
 }
 
 node *json_LoadFile(char *filename)

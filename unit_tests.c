@@ -159,6 +159,9 @@ void node_tests(void)
 void json_tests(void)
 {
   printf("json tests\n");
+  #ifdef USE_DEBUGGING
+  mem_Init();
+  #endif
   node *root = json_LoadFile("test_wiki.json");
   //node *root = json_LoadFile("test2.json");
   //node *root = json_LoadFile("test3.json");
@@ -190,8 +193,40 @@ void json_tests(void)
       printf("found:%s = %s\n",node_GetKey(query),node_GetString(query));
     
   }
+  printf("node tree:\n");
+  node_PrintTree(root);
+  node_FreeTree(root);
+  #ifdef USE_DEBUGGING
+  mem_Close();
+  #endif
 
   printf("json tests thru\n");
+}
+
+void mem_tests(void)
+{
+  #ifdef USE_DEBUGGING
+  printf("memory test\n");
+  mem_Init();
+  char *test = malloc(66);
+  free(test);
+  node *n = node_Create();
+  node_SetKey(n,"root");
+  node_SetString(n,"Hello World!");
+  node_SetString(n,"Hello World2!");
+  node_SetArray(n,0);
+  node *sub = node_Create();
+  node_SetKey(sub,"sub_node");
+  node_SetString(sub,"sub");
+  node *sub2 = node_Create();
+  node_SetString(sub2,"sub");
+  node_SetKey(sub2,"sub2_node");
+  node_array_Add(n,sub);
+  node_AddItem(n,sub2);
+  node_FreeTree(n);
+  mem_Close();
+  printf("memory test thru\n");
+  #endif
 }
 
 
@@ -199,5 +234,6 @@ int main(int argc, char *argv[])
 {
 	//ptr_tests();
     //node_tests();
+    mem_tests();
     json_tests();
 }

@@ -30,6 +30,10 @@
 #include "stdlib.h"
 #include "string.h"
 
+#ifdef USE_DEBUGGING
+#include "memory.h"
+#endif
+
 #define JSON_STATE_IN_NOTHING 0
 #define JSON_STATE_IN_OBJ 1
 #define JSON_STATE_IN_STRING 2

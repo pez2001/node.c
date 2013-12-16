@@ -25,6 +25,11 @@
 
 #include "lists.h"
 
+#ifdef USE_DEBUGGING
+#include "memory.h"
+#endif
+
+
 #ifdef __cplusplus
 extern "C"  {
 #endif
@@ -107,17 +112,21 @@ int node_IsType(node *n, int type);
 node *node_GetParent(node *n);
 item_list *node_GetItems(node *n);
 
-void node_Print(node *n);
+void node_Print(node *n,int with_key);
+void node_PrintWithTabs(node *n,int with_key,int tabs_num);
+void node_PrintTree(node *n);
 
+void node_ParseNumber(node *n,char *number_string);
 
 /*tree access*/
 long node_AddItem(node *n,node *s);
 int node_RemoveItem(node *n,node *s);
-int node_RemoveItemByIndex(node *n,long index);
+node *node_RemoveItemByIndex(node *n,long index);
 int node_RemoveItemByKey(node *n,char *key);
 long node_GetItemIndex(node *n,node *s);
 void *node_GetItem(node *n,long index);
 long node_GetItemsNum(node *n);
+int node_HasItems(node *n);
 void *node_GetItemByKey(node *n,char *key);
 void node_ClearItems(node *n);
 void *node_ItemIterate(node *n);
@@ -175,19 +184,19 @@ char *node_GetBinary(node *n);
 unsigned long node_GetBinaryLength(node *n);
 
 
-node_stub *node_CreateStub();
-void node_FillStub(node *n);
-void node_FreeStub();
+//node_stub *node_CreateStub();
+//void node_FillStub(node *n);
+//void node_FreeStub();
 
 
 /*node array access*/
 void node_SetArray(node *n,long num);
 long node_array_Add(node *n,node *s);
-int node_array_Remove(node *n,long index);
-void *node_array_Get(node *n,long index);
+node *node_array_Remove(node *n,long index);
+node *node_array_Get(node *n,long index);
 long node_array_GetNum(node *n);
 void node_array_Clear(node *n);
-void *node_array_Iterate(node *n);
+node *node_array_Iterate(node *n);
 int node_array_IterationUnfinished(node *n);
 void node_array_IterationReset(node *n);
 long node_array_GetIterationIndex(node *n);
