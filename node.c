@@ -160,10 +160,83 @@ void node_FreeValue(int type,void *value)
   }
 }
 
+int node_count_digits(char *number_string)
+{
+  unsigned long i = 0;
+  unsigned long len = strlen(number_string);
+  unsigned long digits = 0;
+  unsigned long both = 0;
+  unsigned long other = 0;
+  unsigned long num_e = 0;
+  unsigned long white_spaces = 0;
+  unsigned long leading_white_spaces = 0;
+  int leading_sign=0;
+  unsigned long middle_signs=0;
+  //printf("checking:[%s]\n",number_string);
+  while(i++<len)
+   if(number_string[i]==' ')
+     leading_white_spaces++;
+  else
+     break; 
+
+  if(number_string[leading_white_spaces]=='+' || number_string[leading_white_spaces]=='-')
+    leading_sign=1;
+
+  i=leading_white_spaces;
+  while(i<len)
+  {
+    switch(number_string[i])
+    {
+       case '0':
+       case '1':
+       case '2':
+       case '3':
+       case '4':
+       case '5':
+       case '6':
+       case '7':
+       case '8':
+       case '9':
+         digits++;
+         break;
+       case 'e':
+       case 'E':
+         both++;
+         num_e++;
+         break;
+       case '+':
+       case '-':
+         if(i!=leading_white_spaces)
+           middle_signs++;
+         break;      
+       case ' ':
+         white_spaces++;
+       case '.':
+       case ',':
+       case '\t':
+         both++;
+         break;
+       default:
+         other++;
+         break;
+    }
+
+    i++;
+  }
+  //printf("counting:[%s] [%d,%d,%d][%d,%d,%d,%d]\n",number_string,digits,both,other,white_spaces,num_e,leading_sign,middle_signs);
+  if(num_e>1 || middle_signs>1 || (middle_signs>0 && num_e == 0))
+    return(0);
+  return(digits+both>other+both);
+}
 
 void node_ParseNumber(node *n,char *number_string)
 {
   double d = atof(number_string);
+  if(!node_count_digits(number_string))
+  {
+    node_SetString(n,number_string);
+    return;
+  }
   long l = (long)d;
   if(d!=0.0f && (d==(double)l))
   {

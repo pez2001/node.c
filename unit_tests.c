@@ -156,6 +156,47 @@ void node_tests(void)
   printf("node tests thru\n");
 }
 
+
+void json_speed_tests(void)
+{
+  printf("json speed tests\n");
+  #ifdef USE_DEBUGGING
+  mem_Init();
+  for(int i=0;i<10;i++)
+  {	
+  	printf("test round:%d\n",i);
+  #else
+  for(int i=0;i<10000;i++)
+  {	
+  #endif
+  node *root = json_LoadFile("test_wiki.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test7_export.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test7_export2nicer.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test_a.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test2.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test3.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test4.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test5.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test6.json");
+  node_FreeTree(root);
+  root = json_LoadFile("test_broken2.json");
+  node_FreeTree(root);
+  }
+  #ifdef USE_DEBUGGING
+  mem_Close();
+  #endif
+  printf("json speed tests thru\n");
+
+}
+
 void json_tests(void)
 {
   printf("json tests\n");
@@ -163,7 +204,8 @@ void json_tests(void)
   mem_Init();
   #endif
   //node *root = json_LoadFile("test_wiki.json");
-  node *root = json_LoadFile("test7_export.json");
+  //node *root = json_LoadFile("test7_export.json");
+  node *root = json_LoadFile("test7_export2nicer.json");
   //node *root = json_LoadFile("test_a.json");
   //node *root = json_LoadFile("test2.json");
   //node *root = json_LoadFile("test3.json");
@@ -207,6 +249,35 @@ void json_tests(void)
   root = json_LoadFile("test_broken2.json");
   node_PrintTree(root);
   node_FreeTree(root);
+
+  printf("malformed #2 (total garbage)\n");
+  //root = json_LoadFile("test_broken1.json");
+  root = json_LoadFile("test_total_broken.json");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+  printf("malformed #3 (binary file garbage)\n");
+  //root = json_LoadFile("test_broken1.json");
+  root = json_LoadFile("unit_tests_debug.exe");
+  if(root!=NULL)
+  {
+  	node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  
+  printf("malformed #4 (binary .o file garbage)\n");
+  //root = json_LoadFile("test_broken1.json");
+  root = json_LoadFile("unit_tests.do");
+  if(root!=NULL)
+  {
+  	printf("found some structure\n");
+  	node_PrintTree(root);
+    node_FreeTree(root);
+  }
+  
   
 
   #ifdef USE_DEBUGGING
@@ -247,6 +318,7 @@ int main(int argc, char *argv[])
 {
 	//ptr_tests();
     //node_tests();
-    mem_tests();
+    //mem_tests();
     json_tests();
+    //json_speed_tests();
 }

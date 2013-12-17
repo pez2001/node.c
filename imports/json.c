@@ -125,6 +125,8 @@ node *json_Load(char *json,unsigned long len)
   int is_value_string=0;
   int is_obj=0;
 
+  state |= JSON_STATE_IN_KEY;
+
   while(offset<len)
   {
     if((state & JSON_STATE_IN_STRING))
@@ -159,6 +161,10 @@ node *json_Load(char *json,unsigned long len)
 
     switch(json[offset])
     {
+       case 0:
+             free(key_string);
+             free(value_string);
+             return(root_obj);
        case '\n':
        case '\r':
 
@@ -166,8 +172,11 @@ node *json_Load(char *json,unsigned long len)
              if((state & JSON_STATE_IN_VALUE))
              {
                state &= ~JSON_STATE_IN_VALUE;
-               node *kv = json_CreateNode(key_string,value_string,is_value_string);
-               node_AddItem(actual_obj,kv);
+               if(actual_obj!=NULL)//validity check here
+               {
+                 node *kv = json_CreateNode(key_string,value_string,is_value_string);
+                 node_AddItem(actual_obj,kv);
+               }
                if(strlen(key_string))
                {
                  free(key_string);
@@ -184,17 +193,21 @@ node *json_Load(char *json,unsigned long len)
 
        case '\t':
        case ' ':
-            offset++;
-            continue;
+            break;
+            //offset++;
+            //continue;
        case '{':
             state |= JSON_STATE_IN_OBJ;
             is_obj = 0;
             if((state & JSON_STATE_IN_ARRAY))
             {
               parent_obj = actual_obj;
-              actual_obj = node_Create();
-              node_SetType(actual_obj,NODE_TYPE_NODE);
-              node_array_Add(parent_obj,actual_obj);
+              if(parent_obj!=NULL && node_IsType(parent_obj,NODE_TYPE_ARRAY))//validity check here
+              {
+                actual_obj = node_Create();
+                node_SetType(actual_obj,NODE_TYPE_NODE);
+                node_array_Add(parent_obj,actual_obj);
+              }
               state |= JSON_STATE_IN_KEY;     
             }
             else
@@ -207,7 +220,6 @@ node *json_Load(char *json,unsigned long len)
               	root_obj = actual_obj;
                 node_SetKey(actual_obj,"root");
               }	
-              state |= JSON_STATE_IN_KEY;     
               if((state & JSON_STATE_IN_VALUE))
               {
                 node_SetKey(actual_obj,key_string);
@@ -222,6 +234,16 @@ node *json_Load(char *json,unsigned long len)
                   node_AddItem(parent_obj,actual_obj);
                 }
               }
+              if((state & JSON_STATE_IN_KEY))
+              {
+                node_SetParent(actual_obj,parent_obj);
+                if(parent_obj!=NULL)
+                {
+                  node_AddItem(parent_obj,actual_obj);
+                }
+              }
+              state |= JSON_STATE_IN_KEY;     
+
             }
             state &= ~JSON_STATE_IN_VALUE;
             offset++;
@@ -230,8 +252,11 @@ node *json_Load(char *json,unsigned long len)
             if((state & JSON_STATE_IN_VALUE))
             {
                state &= ~JSON_STATE_IN_VALUE;
-               node *kv = json_CreateNode(key_string,value_string,is_value_string);
-               node_AddItem(actual_obj,kv);
+               if(actual_obj!=NULL)//validity check here
+               {
+                 node *kv = json_CreateNode(key_string,value_string,is_value_string);
+                 node_AddItem(actual_obj,kv);
+               }
                if(strlen(key_string))
                {
                  free(key_string);
@@ -259,8 +284,11 @@ node *json_Load(char *json,unsigned long len)
               state &= ~JSON_STATE_IN_KEY;
               if(!is_obj)
               {
-                node *kv = json_CreateNode(NULL,value_string,is_value_string);
-                node_array_Add(actual_obj,kv);
+                if(actual_obj!=NULL)//validity check here
+                {
+                  node *kv = json_CreateNode(NULL,value_string,is_value_string);
+                  node_array_Add(actual_obj,kv);
+                }
                 if(strlen(value_string))
                 {
                   free(value_string);
@@ -275,8 +303,11 @@ node *json_Load(char *json,unsigned long len)
                state &= ~JSON_STATE_IN_VALUE;
                if(!is_obj)
                 {
-                  node *kv = json_CreateNode(key_string,value_string,is_value_string);
-                  node_AddItem(actual_obj,kv);
+                  if(actual_obj!=NULL)//validity check here
+                  {
+                    node *kv = json_CreateNode(key_string,value_string,is_value_string);
+                    node_AddItem(actual_obj,kv);
+                  }
                   if(strlen(key_string))
                   {
                     free(key_string);
@@ -298,10 +329,13 @@ node *json_Load(char *json,unsigned long len)
             state |= JSON_STATE_IN_ARRAY;
             state &= ~JSON_STATE_IN_OBJ;
             parent_obj = actual_obj;
-            actual_obj = node_Create();
-            node_SetKey(actual_obj,key_string);
-            node_SetArray(actual_obj,0);
-            node_AddItem(parent_obj,actual_obj);
+            if(parent_obj!=NULL)//validity check here
+            {
+              actual_obj = node_Create();
+              node_SetKey(actual_obj,key_string);
+              node_SetArray(actual_obj,0);
+              node_AddItem(parent_obj,actual_obj);
+            }
             if(strlen(key_string))
             {
               free(key_string);
@@ -316,8 +350,11 @@ node *json_Load(char *json,unsigned long len)
                state &= ~JSON_STATE_IN_VALUE;
                if(strlen(value_string))
                {
-                 node *kv = json_CreateNode(NULL,value_string,is_value_string);
-                 node_array_Add(actual_obj,kv);
+                 if(actual_obj!=NULL)//validity check here
+                 {
+                   node *kv = json_CreateNode(NULL,value_string,is_value_string);
+                   node_array_Add(actual_obj,kv);
+                 }
                }
              }
             if(strlen(value_string))
@@ -336,6 +373,7 @@ node *json_Load(char *json,unsigned long len)
             offset++;
             continue;
        case ':':
+       case '=':
             state |= JSON_STATE_IN_VALUE;     
             state &= ~JSON_STATE_IN_KEY;
             is_value_string = 0;
@@ -374,8 +412,8 @@ node *json_Load(char *json,unsigned long len)
     offset++;
   } 
 
-  free(key_string);
-  free(value_string);
+ free(key_string);
+ free(value_string);
  return(root_obj);
 }
 
@@ -383,6 +421,8 @@ node *json_LoadFile(char *filename)
 { 
   node *rn = NULL;
   FILE *json = fopen(filename,"rb");
+  if(json==NULL)
+    return(NULL);
   fseek(json, 0, SEEK_END);
   long json_len = ftell(json);
   fseek(json,0,SEEK_SET);
