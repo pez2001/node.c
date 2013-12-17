@@ -55,7 +55,7 @@ typedef struct
 } item_list;
 
 
-#define LIST_STATIC 1		// TODO add support for static lists , so indices wont change
+//#define LIST_STATIC 1		// TODO add support for static lists , so indices wont change
 
 item_list *list_Create(long num, unsigned char flags); /* returns item_list*/
 

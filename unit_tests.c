@@ -162,9 +162,14 @@ void json_tests(void)
   #ifdef USE_DEBUGGING
   mem_Init();
   #endif
-  node *root = json_LoadFile("test_wiki.json");
+  //node *root = json_LoadFile("test_wiki.json");
+  node *root = json_LoadFile("test7_export.json");
+  //node *root = json_LoadFile("test_a.json");
   //node *root = json_LoadFile("test2.json");
   //node *root = json_LoadFile("test3.json");
+  //node *root = json_LoadFile("test4.json");
+  //node *root = json_LoadFile("test5.json");
+  //node *root = json_LoadFile("test6.json");
   node *query = node_GetItemByKey(root,"address");
   //if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
   //  printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
@@ -196,6 +201,14 @@ void json_tests(void)
   printf("node tree:\n");
   node_PrintTree(root);
   node_FreeTree(root);
+  
+  printf("malformed json tests\n");
+  //root = json_LoadFile("test_broken1.json");
+  root = json_LoadFile("test_broken2.json");
+  node_PrintTree(root);
+  node_FreeTree(root);
+  
+
   #ifdef USE_DEBUGGING
   mem_Close();
   #endif

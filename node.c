@@ -112,16 +112,13 @@ void *node_CreateValue(int type,void *value)
 
 void node_Free(node *n,BOOL free_value)
 {
-  printf("freeing:%s\n[",n->key);
-  //node_Print(n,0);
-  printf("]\n");
   if(free_value)
   {
-    printf("freeing value\n");
     node_FreeValue(n->type,n->value);
   }
   if(n->key != NULL)
     free(n->key);
+  node_FreeItems(n);
   list_Close(n->items);
   free(n);
 }
@@ -149,7 +146,6 @@ void node_FreeValue(int type,void *value)
            free(value);
          break;
     case NODE_TYPE_ARRAY:
-         printf("freeing array\n");
          node_FreeArray(value,True);
          break;
     case NODE_TYPE_NODE:
@@ -164,6 +160,27 @@ void node_FreeValue(int type,void *value)
   }
 }
 
+
+void node_ParseNumber(node *n,char *number_string)
+{
+  double d = atof(number_string);
+  long l = (long)d;
+  if(d!=0.0f && (d==(double)l))
+  {
+    node_SetSint32(n,l);
+  }else
+  if(d==0.0f)
+  {
+    long l = atol(number_string);
+    node_SetSint32(n,l);
+  }
+  else 
+  {
+    node_SetDouble(n,d);
+  }
+}
+
+
 void node_print_tabs(int num)
 {
   for(int i=0;i<num;i++)
@@ -173,15 +190,10 @@ void node_print_tabs(int num)
 
 void node_PrintWithTabs(node *n,int with_key,int tabs_num)
 {
-  if(with_key)
+  if(with_key && node_HasKey(n) != NULL)
   {
-    if(n->key != NULL)
-    {
-      node_print_tabs(tabs_num);
-      printf("%s",n->key);
-    }
-    else
-      printf("[undefined]");
+    node_print_tabs(tabs_num);
+    printf("%s",n->key);
     printf(" = ");
   }
 
@@ -197,10 +209,10 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("%d",*(int*)n->value);
          break;
     case NODE_TYPE_FLOAT:
-         printf("%f",*(float*)n->value);
+         printf("%-7.7g",*(float*)n->value);
          break;
     case NODE_TYPE_DOUBLE:
-         printf("%f",*(double*)n->value);
+         printf("%-7.7g",*(double*)n->value);
          break;
     case NODE_TYPE_UINT8:
          printf("%d",*(unsigned char*)n->value);
@@ -237,29 +249,32 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          break;
     case NODE_TYPE_ARRAY:
          {
-         node_print_tabs(tabs_num+1);
+         if(!node_HasKey(n))
+           node_print_tabs(tabs_num+1);
          printf("[");
          long old_index = node_array_GetIterationIndex(n);
          node_array_IterationReset(n);
          while(node_array_IterationUnfinished(n))
          { 
             node *i = node_array_Iterate(n);
-            node_PrintWithTabs(i,True,tabs_num+1);
+            node_PrintWithTabs(i,False,tabs_num+1);
             if(node_array_IterationUnfinished(n))
             {
-              node_print_tabs(tabs_num+1);
-              printf(" , ");
+              //if(!node_HasKey(n))
+              //  node_print_tabs(tabs_num+1);
+              printf(",");
             }
          }
-         node_print_tabs(tabs_num+1);
-         printf("]\n");
+         //node_print_tabs(tabs_num+1);
+         printf("]");
+         if(!node_HasKey(n))
+           printf("\n");
          node_array_SetIterationIndex(n,old_index);
          break;
          }
     case NODE_TYPE_NODE:
          if(node_HasItems(n))
          { 
-           node_print_tabs(tabs_num+1);
            printf("{\n");
            long old_index = node_GetItemIterationIndex(n);
            node_ItemIterationReset(n);
@@ -270,8 +285,14 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
            }
            node_SetItemIterationIndex(n,old_index);
            node_print_tabs(tabs_num+1);
-           printf("}\n");
+           printf("}");
+         if(!node_HasKey(n))
+           printf("\n");
+          if(!node_HasKey(n))
+            node_print_tabs(tabs_num+1);
          }
+         else
+          printf("{}");
          break;
     case NODE_TYPE_STUB:
          break;
@@ -280,7 +301,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     default:
          break;
   }
-  if(with_key)
+  if(with_key && node_HasKey(n) != NULL)
     printf("\n");
 }
 
@@ -303,10 +324,10 @@ void node_Print(node *n,int with_key)
          printf("%d",*(int*)n->value);
          break;
     case NODE_TYPE_FLOAT:
-         printf("%f",*(float*)n->value);
+         printf("%13g",*(float*)n->value);
          break;
     case NODE_TYPE_DOUBLE:
-         printf("%f",*(double*)n->value);
+         printf("%13g",*(double*)n->value);
          break;
     case NODE_TYPE_UINT8:
          printf("%d",*(unsigned char*)n->value);
@@ -384,10 +405,6 @@ void node_Print(node *n,int with_key)
   if(with_key)
     printf("\n");
 }
-
-
-
-
 
 void node_PrintTreeLevel(node *n,int level)
 {
@@ -480,25 +497,16 @@ item_list *node_GetItems(node *n)
   return(n->items);
 }
 
-
-
-void node_ParseNumber(node *n,char *number_string)
+int node_HasKey(node *n)
 {
-  //printf("checking:[%s]\n",number_string);
-  double d = atof(number_string);
-  long l = (long)d;
-  if(d==0.0f || (d==(double)l))
-  {
-    long l = atol(number_string);
-    //printf("found long:%d\n",l);
-    node_SetSint32(n,l);
-  }
-  else 
-  {
-    node_SetDouble(n,d);
-    //printf("found float:%f\n",d);
-  }
+  return(n->key!=NULL);
 }
+
+int node_HasValue(node *n)
+{
+  return(n->value!=NULL);
+}
+
 
 
 
@@ -628,18 +636,9 @@ void node_SetDouble(node *n,double d)
 
 void node_SetString(node *n,char *s)
 {
-  /*if(node_IsType(n,NODE_TYPE_STRING))
-  {
-     if(n->value!=NULL)
-       free(n->value);
-     n->value = s;
-  }
-  else
-  {*/
-     node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_STRING,s);
-     node_SetType(n,NODE_TYPE_STRING);
-  //}
+  node_FreeValue(n->type,n->value);
+  n->value = node_CreateValue(NODE_TYPE_STRING,s);
+  node_SetType(n,NODE_TYPE_STRING);
 }
 
 void node_SetUint8(node *n,unsigned char c)
@@ -811,7 +810,7 @@ void node_FreeItems(node *n)
 
 void node_FreeTree(node *n)
 {
-  node_FreeItems(n);
+  //node_FreeItems(n);
   node_Free(n,True);
 }
 
@@ -861,7 +860,7 @@ void node_FreeArray(node_array *array,BOOL free_nodes)
   while(list_IterationUnfinished(array->nodes))
   { 
     node *i = (node*)list_Iterate(array->nodes);
-    printf("freeing node:%s\n",i->key);
+    //printf("freeing node:%s\n",i->key);
     node_Free(i,free_nodes);
   }
   list_Close(array->nodes);

@@ -120,9 +120,8 @@ node *json_Load(char *json,unsigned long len)
   node *actual_obj=NULL;
   node *parent_obj=NULL;
   unsigned long offset=0;
-  unsigned long start_offset=0;
-  char *key_string = NULL;
-  char *value_string =NULL;
+  char *key_string = json_CreateEmptyString();
+  char *value_string = json_CreateEmptyString();
   int is_value_string=0;
   int is_obj=0;
 
@@ -142,7 +141,6 @@ node *json_Load(char *json,unsigned long len)
       if(add_char=='\\')
       {
          add_char = json_ConvertEscapeChar(json[offset]);
-         //printf("found escape:%d\n",add_char);
          offset++;
          if(add_char==0)
           continue;
@@ -156,27 +154,43 @@ node *json_Load(char *json,unsigned long len)
        {
           value_string = json_AddCharToString(value_string,add_char);
        }	
-       //offset++;
        continue;
     }
 
     switch(json[offset])
     {
-       //interpret complete values (null,True,False)
        case '\n':
        case '\r':
+
+             state |= JSON_STATE_IN_KEY;     
+             if((state & JSON_STATE_IN_VALUE))
+             {
+               state &= ~JSON_STATE_IN_VALUE;
+               node *kv = json_CreateNode(key_string,value_string,is_value_string);
+               node_AddItem(actual_obj,kv);
+               if(strlen(key_string))
+               {
+                 free(key_string);
+                 key_string=json_CreateEmptyString();
+               }
+               if(strlen(value_string))
+               {
+                 free(value_string);
+                 value_string=json_CreateEmptyString();
+               }
+              }
+            offset++;
+            continue;
+
        case '\t':
        case ' ':
             offset++;
             continue;
        case '{':
             state |= JSON_STATE_IN_OBJ;
-           
-            start_offset = offset;
-
+            is_obj = 0;
             if((state & JSON_STATE_IN_ARRAY))
             {
-              //printf("new array object found\n"); 
               parent_obj = actual_obj;
               actual_obj = node_Create();
               node_SetType(actual_obj,NODE_TYPE_NODE);
@@ -192,22 +206,20 @@ node *json_Load(char *json,unsigned long len)
               {
               	root_obj = actual_obj;
                 node_SetKey(actual_obj,"root");
-                node_SetType(actual_obj,NODE_TYPE_NODE);
               }	
               state |= JSON_STATE_IN_KEY;     
-              //printf("new object found\n");
               if((state & JSON_STATE_IN_VALUE))
               {
-                //printf("is child of object\n");
                 node_SetKey(actual_obj,key_string);
-                //printf("key:%s\n",key_string);
-                free(key_string);
-                key_string=NULL;
+                if(strlen(key_string))
+                {
+                  free(key_string);
+                  key_string=json_CreateEmptyString();
+                }
                 node_SetParent(actual_obj,parent_obj);
                 if(parent_obj!=NULL)
                 {
                   node_AddItem(parent_obj,actual_obj);
-                  //printf("added item:%s to %s\n",actual_obj->key,parent_obj->key);
                 }
               }
             }
@@ -217,48 +229,44 @@ node *json_Load(char *json,unsigned long len)
        case '}':
             if((state & JSON_STATE_IN_VALUE))
             {
-               //state |= JSON_STATE_IN_KEY;     
                state &= ~JSON_STATE_IN_VALUE;
-               printf("adding last key:%s : %s\n",key_string,value_string);
                node *kv = json_CreateNode(key_string,value_string,is_value_string);
                node_AddItem(actual_obj,kv);
-               free(key_string);
-               free(value_string);
-               key_string=NULL;
-               value_string=NULL;
+               if(strlen(key_string))
+               {
+                 free(key_string);
+                 key_string=json_CreateEmptyString();
+               }
+               if(strlen(value_string))
+               {
+                 free(value_string);
+                 value_string=json_CreateEmptyString();
+               }
             }
             state &= ~JSON_STATE_IN_OBJ;
             is_obj = 1;
             if(parent_obj!=NULL)
             {
             	 actual_obj = parent_obj;
-            	 //printf("actual:%s\n",actual_obj->key);
             	 parent_obj = node_GetParent(actual_obj);
             }
             offset++;
             continue;
        case ',': 
-
             if((state & JSON_STATE_IN_ARRAY) && !(state & JSON_STATE_IN_OBJ))
             {
-              //printf("reading next array item:%d\n",is_obj);
               state |= JSON_STATE_IN_VALUE;     
               state &= ~JSON_STATE_IN_KEY;
               if(!is_obj)
               {
-                printf("adding array key:%s : %s\n",key_string,value_string);
                 node *kv = json_CreateNode(NULL,value_string,is_value_string);
                 node_array_Add(actual_obj,kv);
-                free(value_string);
-                value_string = json_CreateEmptyString();
+                if(strlen(value_string))
+                {
+                  free(value_string);
+                  value_string = json_CreateEmptyString();
+                }
               }
-              value_string = json_CreateEmptyString();
-              //value_string = json_CreateEmptyString();
-
-              //parent_obj = actual_obj;
-              //actual_obj = node_Create();
-              //node_array_Add(parent_obj,actual_obj);
-              //state |= JSON_STATE_IN_KEY;     
             }else
             {
              state |= JSON_STATE_IN_KEY;     
@@ -267,13 +275,18 @@ node *json_Load(char *json,unsigned long len)
                state &= ~JSON_STATE_IN_VALUE;
                if(!is_obj)
                 {
-                  printf("adding key:%s : [%s]\n",key_string,value_string);
                   node *kv = json_CreateNode(key_string,value_string,is_value_string);
                   node_AddItem(actual_obj,kv);
-                  free(key_string);
-                  free(value_string);
-                  key_string=NULL;
-                  value_string=NULL;
+                  if(strlen(key_string))
+                  {
+                    free(key_string);
+                    key_string=json_CreateEmptyString();
+                  }
+                  if(strlen(value_string))
+                  {
+                    free(value_string);
+                    value_string=json_CreateEmptyString();
+                  }
                 }
               }
             }
@@ -281,44 +294,43 @@ node *json_Load(char *json,unsigned long len)
             offset++;
             continue;
        case '[':
+            state |= JSON_STATE_IN_VALUE;
             state |= JSON_STATE_IN_ARRAY;
-            //printf("adding array with key:%s\n",key_string);     
+            state &= ~JSON_STATE_IN_OBJ;
             parent_obj = actual_obj;
             actual_obj = node_Create();
             node_SetKey(actual_obj,key_string);
             node_SetArray(actual_obj,0);
             node_AddItem(parent_obj,actual_obj);
-            free(key_string);
-            key_string=NULL;
+            if(strlen(key_string))
+            {
+              free(key_string);
+              key_string=json_CreateEmptyString();
+            }
             is_obj = 0;
             offset++;
             continue;
        case ']':
-            //printf("last array item\n"); 
-            //printf("string:k:%s,v:%s\n",key_string,value_string);
-
              if((state & JSON_STATE_IN_ARRAY) && (state & JSON_STATE_IN_VALUE))
              {
-               //printf("key:%s\n",key_string);
                state &= ~JSON_STATE_IN_VALUE;
-               printf("adding last array key:%s : %s\n",key_string,value_string);
-               node *kv = json_CreateNode(key_string,value_string,is_value_string);
-               node_array_Add(actual_obj,kv);
-               //free(key_string);
-               //key_string=NULL;
-               free(value_string);
-               value_string=NULL;
+               if(strlen(value_string))
+               {
+                 node *kv = json_CreateNode(NULL,value_string,is_value_string);
+                 node_array_Add(actual_obj,kv);
+               }
              }
+            if(strlen(value_string))
+            {
+              free(value_string);
+              value_string = json_CreateEmptyString();
+            }
 
-            //state |= JSON_STATE_IN_VALUE;     
-            //state &= ~JSON_STATE_IN_KEY;
-            value_string = json_CreateEmptyString();
-
+            state |= JSON_STATE_IN_OBJ;
             state &= ~JSON_STATE_IN_ARRAY;
             if(parent_obj!=NULL)
             {
             	actual_obj = parent_obj;
-            	//printf("actual:%s\n",actual_obj->key);
             	parent_obj = node_GetParent(actual_obj);
             }
             offset++;
@@ -327,8 +339,9 @@ node *json_Load(char *json,unsigned long len)
             state |= JSON_STATE_IN_VALUE;     
             state &= ~JSON_STATE_IN_KEY;
             is_value_string = 0;
-            if((state&JSON_STATE_IN_VALUE))
-            {	
+            if(strlen(value_string))
+            {
+              free(value_string);
               value_string = json_CreateEmptyString();
             }
             offset++;
@@ -337,8 +350,9 @@ node *json_Load(char *json,unsigned long len)
             if(!(state&JSON_STATE_IN_STRING))
             {
             	state |= JSON_STATE_IN_STRING;
-                if((state&JSON_STATE_IN_KEY))
+                if((state&JSON_STATE_IN_KEY) && strlen(key_string))
                 {	
+                   free(key_string);
                    key_string = json_CreateEmptyString();
                 }
             }
@@ -352,9 +366,16 @@ node *json_Load(char *json,unsigned long len)
     if((state&JSON_STATE_IN_VALUE))
     {
       value_string = json_AddCharToString(value_string,json[offset]);
-    }	
+    } 
+    if((state&JSON_STATE_IN_KEY))
+    {
+      key_string = json_AddCharToString(key_string,json[offset]);
+    } 
     offset++;
   } 
+
+  free(key_string);
+  free(value_string);
  return(root_obj);
 }
 

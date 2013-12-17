@@ -111,6 +111,9 @@ int node_GetType(node *n);
 int node_IsType(node *n, int type);
 node *node_GetParent(node *n);
 item_list *node_GetItems(node *n);
+int node_HasKey(node *n);
+int node_HasValue(node *n);
+
 
 void node_Print(node *n,int with_key);
 void node_PrintWithTabs(node *n,int with_key,int tabs_num);
