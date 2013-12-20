@@ -30,7 +30,7 @@ int debug_level = 0;
 void ptr_tests(void)
 {
 	printf("testing ptr list functions\n");
-	item_list *p = list_Create(0, 0);
+	list *p = list_Create(0, 0);
 	
 	list_Insert(p,0,(void*)2);
 	list_Insert(p,0,(void*)1);

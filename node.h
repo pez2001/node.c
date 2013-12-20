@@ -64,7 +64,7 @@ typedef struct _node
   void *value;
   struct _node *parent;
   int type;
-  item_list *items;
+  list *items;
   void *tag;
   //int is_dirty;//TODO add handling of value updates
 } node;
@@ -72,7 +72,7 @@ typedef struct _node
 
 typedef struct _node_array 
 {
-  item_list *nodes;
+  list *nodes;
 } node_array;
 
 typedef struct _node_stub 
@@ -97,7 +97,7 @@ char *node_CopyString(char *string);
 
 /*basic node management*/
 node *node_Create(void);
-node *node_CreateFilled(node *parent,char *key,void *value,int type,item_list *items);
+node *node_CreateFilled(node *parent,char *key,void *value,int type,list *items);
 void *node_CreateValue(int type,void *value);
 void node_Free(node *n,BOOL free_value);
 void node_FreeValue(int type,void *value);
@@ -111,13 +111,13 @@ void node_SetTag(node *n,void *tag);
 void *node_GetTag(node *n);
 void node_SetType(node *n,int type);
 void node_SetParent(node *n,node *p);
-void node_SetItems(node *n, item_list *items);
+void node_SetItems(node *n, list *items);
 char *node_GetKey(node *n);
 void *node_GetValue(node *n);
 int node_GetType(node *n);
 int node_IsType(node *n, int type);
 node *node_GetParent(node *n);
-item_list *node_GetItems(node *n);
+list *node_GetItems(node *n);
 int node_HasKey(node *n);
 int node_HasValue(node *n);
 

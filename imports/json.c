@@ -46,9 +46,7 @@ char *json_CreateEmptyString()
 
 char *json_TrimString(char *string)
 {
-  //printf("trimming [%s]\n",string);
   long len = strlen(string);
-  //printf("len:%d\n",len);
   if(!len)
     return(string);
   long s=0;
@@ -57,8 +55,7 @@ char *json_TrimString(char *string)
   while(e>0 && isspace(string[e]))e--;
   e=e+1;
   long nlen = e-s;
-  //printf("[%d,%d,%d,%d]\n",s,e,len,nlen);
-  if(nlen<0)
+  if(nlen<=0)
   {
     free(string);
     return(json_CreateEmptyString());
@@ -68,8 +65,6 @@ char *json_TrimString(char *string)
   char *r = (char*)malloc(nlen+1);
   memcpy(r,string+s,nlen);
   r[nlen] = 0;
-  //printf("to [%s]\n",r);
-  //printf("trimming string:[%s] to [%s] [%d,%d,%d,%d]",string,r,s,e,len,nlen);
   free(string);
   return(r);
 }

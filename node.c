@@ -42,7 +42,7 @@ node *node_Create(void)
   return(n);
 }
 
-node *node_CreateFilled(node *parent,char *key,void *value,int type,item_list *items)
+node *node_CreateFilled(node *parent,char *key,void *value,int type,list *items)
 {
   node *n = (node*)malloc(sizeof(node));
   n->key = node_CopyString(key);
@@ -172,7 +172,6 @@ int node_count_digits(char *number_string)
   unsigned long leading_white_spaces = 0;
   int leading_sign=0;
   unsigned long middle_signs=0;
-  //printf("checking:[%s]\n",number_string);
   while(i++<len)
    if(number_string[i]==' ')
      leading_white_spaces++;
@@ -223,7 +222,6 @@ int node_count_digits(char *number_string)
 
     i++;
   }
-  //printf("counting:[%s] [%d,%d,%d][%d,%d,%d,%d]\n",number_string,digits,both,other,white_spaces,num_e,leading_sign,middle_signs);
   if(num_e>1 || middle_signs>1 || (middle_signs>0 && num_e == 0))
     return(0);
   return((leading_sign*5)+digits+both>other+both);
@@ -266,7 +264,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
   if(with_key && node_HasKey(n))
   {
     node_print_tabs(tabs_num);
-    printf("(%s)",n->key);
+    printf("%s",n->key);
     printf(" = ");
   }
 
@@ -318,9 +316,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("%d",*(unsigned long long*)n->value);
          break;
     case NODE_TYPE_STRING:
-         printf("#");
          printf((char*)n->value);
-         printf("#");
          break;
     case NODE_TYPE_ARRAY:
          {
@@ -366,8 +362,8 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("}");
          if(!node_HasKey(n))
            printf("\n");
-          if(!node_HasKey(n))
-            node_print_tabs(tabs_num+1);
+          //if(!node_HasKey(n))
+          //  node_print_tabs(tabs_num+1);
          }
          else
           printf("{}");
@@ -537,7 +533,7 @@ void *node_GetTag(node *n)
 }
 
 
-void node_SetItems(node *n, item_list *items)
+void node_SetItems(node *n, list *items)
 {
   n->items = items;
 }
@@ -550,7 +546,7 @@ void node_SetParent(node *n,node *p)
 node *node_Copy(node *n,BOOL copy_value)
 {
   void *v = node_CreateValue(n->type,n->value); 
-  item_list *l = list_Copy(n->items);
+  list *l = list_Copy(n->items);
   node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
   return(r);
 }
@@ -580,7 +576,7 @@ char *node_GetKey(node *n)
   return(n->key);
 }
 
-item_list *node_GetItems(node *n)
+list *node_GetItems(node *n)
 {
   return(n->items);
 }
