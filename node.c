@@ -226,7 +226,7 @@ int node_count_digits(char *number_string)
   //printf("counting:[%s] [%d,%d,%d][%d,%d,%d,%d]\n",number_string,digits,both,other,white_spaces,num_e,leading_sign,middle_signs);
   if(num_e>1 || middle_signs>1 || (middle_signs>0 && num_e == 0))
     return(0);
-  return(digits+both>other+both);
+  return((leading_sign*5)+digits+both>other+both);
 }
 
 void node_ParseNumber(node *n,char *number_string)
@@ -263,10 +263,10 @@ void node_print_tabs(int num)
 
 void node_PrintWithTabs(node *n,int with_key,int tabs_num)
 {
-  if(with_key && node_HasKey(n) != NULL)
+  if(with_key && node_HasKey(n))
   {
     node_print_tabs(tabs_num);
-    printf("%s",n->key);
+    printf("(%s)",n->key);
     printf(" = ");
   }
 
@@ -318,7 +318,9 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("%d",*(unsigned long long*)n->value);
          break;
     case NODE_TYPE_STRING:
+         printf("#");
          printf((char*)n->value);
+         printf("#");
          break;
     case NODE_TYPE_ARRAY:
          {
@@ -348,6 +350,8 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     case NODE_TYPE_NODE:
          if(node_HasItems(n))
          { 
+          if(!node_HasKey(n))
+            node_print_tabs(tabs_num+1);
            printf("{\n");
            long old_index = node_GetItemIterationIndex(n);
            node_ItemIterationReset(n);
@@ -357,8 +361,9 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
               node_PrintWithTabs(i,True,tabs_num+1);
            }
            node_SetItemIterationIndex(n,old_index);
-           node_print_tabs(tabs_num+1);
-           printf("}");
+         //if(!node_HasKey(n))
+         node_print_tabs(tabs_num+1);
+         printf("}");
          if(!node_HasKey(n))
            printf("\n");
           if(!node_HasKey(n))
@@ -374,7 +379,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     default:
          break;
   }
-  if(with_key && node_HasKey(n) != NULL)
+  if(with_key && node_HasKey(n))
     printf("\n");
 }
 
@@ -519,6 +524,16 @@ void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_ol
 {
   node_SetType(n,type);
   node_SetValue(n,value,copy_value,free_old_value);
+}
+
+void node_SetTag(node *n,void *tag)
+{
+  n->tag = tag;
+}
+
+void *node_GetTag(node *n)
+{
+  return(n->tag);
 }
 
 

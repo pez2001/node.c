@@ -7,24 +7,27 @@ endif
 ifeq ($(UNAME), MINGW32_NT-6.1)
 PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
+else
+PLATFORM_NAME = Win32
+PLATFORM_EXT = .exe
 endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 422
-DEBUG_BUILD = 422
+BUILD = 466
+DEBUG_BUILD = 466
 
-CFLAGS= -W -w -O2 -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
+CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
 CC=gcc
 AR=ar
 LD=ld
 
-NODE_FILES = lists.c node.c memory.c imports/json.c
+NODE_FILES = list.c node.c memory.c imports/json.c
 NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h lists.h memory.h imports/json.h
-NODE_OBJ = node.o lists.o memory.o imports/json.o
-NODE_DEBUG_OBJ = node.do lists.do memory.do imports/json.do
+NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h
+NODE_OBJ = node.o list.o memory.o imports/json.o
+NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
@@ -56,10 +59,12 @@ debug: build_inc node_print_debug unit_tests_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests debug
+	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 
 unit_tests: node_static $(UT_OBJ) 
 	$(CC) $(UT_OBJ) node.a -lm -o unit_tests 
+	strip ./unit_tests$(PLATFORM_EXT)
 
 unit_tests_debug: node_static_debug $(UT_DEBUG_OBJ) 
 	$(CC) $(UT_DEBUG_OBJ) node.da -lm -o unit_tests_debug 
@@ -84,13 +89,15 @@ node_print_o: $(NODE_OBJ) $(NODE_PRINT_OBJ)
 	
 node_static: $(NODE_OBJ)
 	$(AR) -rs node.a $(NODE_OBJ)
+	#strip node.a
 
 node_static_debug: $(NODE_DEBUG_OBJ)
 	$(AR) -rs node.da $(NODE_DEBUG_OBJ)
 
 node_dynamic: $(NODE_OBJ)
 	$(CC) -DCREATELIB -shared $(NODE_OBJ) $(LDFLAGS) -o node.dll
-	
+	strip node.dll	
+
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $<
 

@@ -44,6 +44,38 @@ char *json_CreateEmptyString()
     return(string);
 }
 
+char *json_TrimString(char *string)
+{
+  //printf("trimming [%s]\n",string);
+  long len = strlen(string);
+  //printf("len:%d\n",len);
+  if(!len)
+    return(string);
+  long s=0;
+  long e=len-1;
+  while(s<len && isspace(string[s]))s++;
+  while(e>0 && isspace(string[e]))e--;
+  e=e+1;
+  long nlen = e-s;
+  //printf("[%d,%d,%d,%d]\n",s,e,len,nlen);
+  if(nlen<0)
+  {
+    free(string);
+    return(json_CreateEmptyString());
+  }
+  if(nlen==len)
+    return(string);
+  char *r = (char*)malloc(nlen+1);
+  memcpy(r,string+s,nlen);
+  r[nlen] = 0;
+  //printf("to [%s]\n",r);
+  //printf("trimming string:[%s] to [%s] [%d,%d,%d,%d]",string,r,s,e,len,nlen);
+  free(string);
+  return(r);
+}
+
+
+
 
 char json_ConvertEscapeChar(char escape_char)
 {
@@ -129,13 +161,23 @@ node *json_Load(char *json,unsigned long len)
 
   while(offset<len)
   {
-    if((state & JSON_STATE_IN_STRING))
+    if((state & JSON_STATE_IN_STRING) || (state & JSON_STATE_IN_SINGLE_QUOTE_STRING))
     {
       char add_char = json[offset];
       offset++;
       if(add_char == '"')
       {
-         state &= ~JSON_STATE_IN_STRING;
+         if(state & JSON_STATE_IN_STRING)
+           state &= ~JSON_STATE_IN_STRING;
+         is_value_string = 1;
+         continue;
+      }
+      else
+      if(add_char == '\'')
+      {
+         if(state & JSON_STATE_IN_SINGLE_QUOTE_STRING)
+           state &= ~JSON_STATE_IN_SINGLE_QUOTE_STRING;
+
          is_value_string = 1;
          continue;
       }
@@ -174,6 +216,9 @@ node *json_Load(char *json,unsigned long len)
                state &= ~JSON_STATE_IN_VALUE;
                if(actual_obj!=NULL)//validity check here
                {
+                 key_string = json_TrimString(key_string);
+                 if(!is_value_string)
+                   value_string = json_TrimString(value_string);
                  node *kv = json_CreateNode(key_string,value_string,is_value_string);
                  node_AddItem(actual_obj,kv);
                }
@@ -192,10 +237,10 @@ node *json_Load(char *json,unsigned long len)
             continue;
 
        case '\t':
+            offset++;
+            continue;
        case ' ':
             break;
-            //offset++;
-            //continue;
        case '{':
             state |= JSON_STATE_IN_OBJ;
             is_obj = 0;
@@ -222,6 +267,7 @@ node *json_Load(char *json,unsigned long len)
               }	
               if((state & JSON_STATE_IN_VALUE))
               {
+                key_string = json_TrimString(key_string);
                 node_SetKey(actual_obj,key_string);
                 if(strlen(key_string))
                 {
@@ -254,6 +300,9 @@ node *json_Load(char *json,unsigned long len)
                state &= ~JSON_STATE_IN_VALUE;
                if(actual_obj!=NULL)//validity check here
                {
+                 key_string = json_TrimString(key_string);
+                 if(!is_value_string)
+                   value_string = json_TrimString(value_string);
                  node *kv = json_CreateNode(key_string,value_string,is_value_string);
                  node_AddItem(actual_obj,kv);
                }
@@ -286,6 +335,8 @@ node *json_Load(char *json,unsigned long len)
               {
                 if(actual_obj!=NULL)//validity check here
                 {
+                  if(!is_value_string)
+                    value_string = json_TrimString(value_string);
                   node *kv = json_CreateNode(NULL,value_string,is_value_string);
                   node_array_Add(actual_obj,kv);
                 }
@@ -305,6 +356,9 @@ node *json_Load(char *json,unsigned long len)
                 {
                   if(actual_obj!=NULL)//validity check here
                   {
+                    key_string = json_TrimString(key_string);
+                    if(!is_value_string)
+                      value_string = json_TrimString(value_string);
                     node *kv = json_CreateNode(key_string,value_string,is_value_string);
                     node_AddItem(actual_obj,kv);
                   }
@@ -332,6 +386,7 @@ node *json_Load(char *json,unsigned long len)
             if(parent_obj!=NULL)//validity check here
             {
               actual_obj = node_Create();
+              key_string = json_TrimString(key_string);
               node_SetKey(actual_obj,key_string);
               node_SetArray(actual_obj,0);
               node_AddItem(parent_obj,actual_obj);
@@ -345,30 +400,31 @@ node *json_Load(char *json,unsigned long len)
             offset++;
             continue;
        case ']':
-             if((state & JSON_STATE_IN_ARRAY) && (state & JSON_STATE_IN_VALUE))
-             {
-               state &= ~JSON_STATE_IN_VALUE;
-               if(strlen(value_string))
-               {
-                 if(actual_obj!=NULL)//validity check here
-                 {
-                   node *kv = json_CreateNode(NULL,value_string,is_value_string);
-                   node_array_Add(actual_obj,kv);
-                 }
-               }
-             }
+            if((state & JSON_STATE_IN_ARRAY) && (state & JSON_STATE_IN_VALUE))
+            {
+              state &= ~JSON_STATE_IN_VALUE;
+              if(strlen(value_string))
+              {
+                if(actual_obj!=NULL)//validity check here
+                {
+                  if(!is_value_string)
+                    value_string = json_TrimString(value_string);
+                  node *kv = json_CreateNode(NULL,value_string,is_value_string);
+                  node_array_Add(actual_obj,kv);
+                }
+              }
+            }
             if(strlen(value_string))
             {
               free(value_string);
               value_string = json_CreateEmptyString();
             }
-
             state |= JSON_STATE_IN_OBJ;
             state &= ~JSON_STATE_IN_ARRAY;
             if(parent_obj!=NULL)
             {
-            	actual_obj = parent_obj;
-            	parent_obj = node_GetParent(actual_obj);
+           	  actual_obj = parent_obj;
+              parent_obj = node_GetParent(actual_obj);
             }
             offset++;
             continue;
@@ -377,6 +433,7 @@ node *json_Load(char *json,unsigned long len)
             state |= JSON_STATE_IN_VALUE;     
             state &= ~JSON_STATE_IN_KEY;
             is_value_string = 0;
+            value_string = json_TrimString(value_string);
             if(strlen(value_string))
             {
               free(value_string);
@@ -387,21 +444,44 @@ node *json_Load(char *json,unsigned long len)
        case '"':
             if(!(state&JSON_STATE_IN_STRING))
             {
-            	state |= JSON_STATE_IN_STRING;
-                if((state&JSON_STATE_IN_KEY) && strlen(key_string))
-                {	
-                   free(key_string);
-                   key_string = json_CreateEmptyString();
-                }
+              state |= JSON_STATE_IN_STRING;
+              //key_string = json_TrimString(key_string);
+              value_string = json_TrimString(value_string);
+              if((state&JSON_STATE_IN_KEY) && strlen(key_string))
+              { 
+                free(key_string);
+                key_string = json_CreateEmptyString();
+              }
             }
             else
             {
-            	state &= ~JSON_STATE_IN_STRING;
+              state &= ~JSON_STATE_IN_STRING;
             }
             offset++;
             continue;
+       case '\'':
+            if(!(state&JSON_STATE_IN_SINGLE_QUOTE_STRING))
+            {
+              state |= JSON_STATE_IN_SINGLE_QUOTE_STRING;
+              value_string = json_TrimString(value_string);
+              //key_string = json_TrimString(key_string);
+              if((state&JSON_STATE_IN_KEY) && strlen(key_string))
+              { 
+                free(key_string);
+                key_string = json_CreateEmptyString();
+              }
+            }
+            else
+            {
+              state &= ~JSON_STATE_IN_SINGLE_QUOTE_STRING;
+            }
+            offset++;
+            continue;
+
+
+
     }
-    if((state&JSON_STATE_IN_VALUE))
+    if((state&JSON_STATE_IN_VALUE)&& !is_value_string)
     {
       value_string = json_AddCharToString(value_string,json[offset]);
     } 

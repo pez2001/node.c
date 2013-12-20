@@ -23,11 +23,15 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "lists.h"
+#include "list.h"
 
 #ifdef USE_DEBUGGING
 #include "memory.h"
 #endif
+
+
+//#define USE_WHOLE_NODE_FUNCTION_SET ;TODO Later filter some functions to get even smaller code
+
 
 
 #ifdef __cplusplus
@@ -61,6 +65,7 @@ typedef struct _node
   struct _node *parent;
   int type;
   item_list *items;
+  void *tag;
   //int is_dirty;//TODO add handling of value updates
 } node;
 
@@ -102,6 +107,8 @@ node *node_Copy(node *n,BOOL copy_value);
 void node_SetKey(node *n,char *key);
 void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
 void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_old_value);
+void node_SetTag(node *n,void *tag);
+void *node_GetTag(node *n);
 void node_SetType(node *n,int type);
 void node_SetParent(node *n,node *p);
 void node_SetItems(node *n, item_list *items);

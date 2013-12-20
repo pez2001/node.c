@@ -205,14 +205,16 @@ void json_tests(void)
   #endif
   //node *root = json_LoadFile("test_wiki.json");
   //node *root = json_LoadFile("test7_export.json");
-  node *root = json_LoadFile("test7_export2nicer.json");
+  node *root = json_LoadFile("tests/test7_export2nicer.json");
   //node *root = json_LoadFile("test_a.json");
   //node *root = json_LoadFile("test2.json");
   //node *root = json_LoadFile("test3.json");
   //node *root = json_LoadFile("test4.json");
   //node *root = json_LoadFile("test5.json");
   //node *root = json_LoadFile("test6.json");
-  node *query = node_GetItemByKey(root,"address");
+  node *query = NULL;
+  if(root!=NULL)
+     query = node_GetItemByKey(root,"address");
   //if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
   //  printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
   if(query!= NULL)
@@ -246,13 +248,13 @@ void json_tests(void)
   
   printf("malformed json tests\n");
   //root = json_LoadFile("test_broken1.json");
-  root = json_LoadFile("test_broken2.json");
+  root = json_LoadFile("tests/test_broken2.json");
   node_PrintTree(root);
   node_FreeTree(root);
 
   printf("malformed #2 (total garbage)\n");
   //root = json_LoadFile("test_broken1.json");
-  root = json_LoadFile("test_total_broken.json");
+  root = json_LoadFile("tests/test_total_broken.json");
   if(root!=NULL)
   {
     node_PrintTree(root);
