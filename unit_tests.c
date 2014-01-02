@@ -288,9 +288,9 @@ void fbx_tests(void)
   mem_Init();
   #endif
   
-  node *root = fbx_LoadFile("tests/box.fbx");
+  //node *root = fbx_LoadFile("tests/box.fbx");
   //node *root = fbx_LoadFile("tests/ranger.fbx");
-  //node *root = fbx_LoadFile("tests/fbx_object.fbx");
+  node *root = fbx_LoadFile("tests/fbx_object.fbx");
   printf("node tree:\n");
   if(root!=NULL)
   {

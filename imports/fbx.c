@@ -206,7 +206,6 @@ node *fbx_Load(char *fbx,unsigned long len)
     }
 
 
-
     switch(fbx[offset])
     {
        case 0:
@@ -234,57 +233,22 @@ node *fbx_Load(char *fbx,unsigned long len)
             is_value_string=0;
             continue;
        case '{':
-            printf("found opening bracket\n");
-             /* node *new_obj = node_Create();
-              node_SetArray(new_obj,0);
-                key_string = fbx_TrimString(key_string);
-                printf("added new obj:%s\n",key_string);
-                node_SetKey(new_obj,key_string);
-                if(strlen(key_string))
-                {
-                  free(key_string);
-                  key_string=fbx_CreateEmptyString();
-                }
-                node_SetParent(new_obj,actual_obj);
-                node_AddItem(actual_obj,new_obj);
-                printf("added new obj V:[%s] to:[%s]\n",node_GetKey(new_obj),node_GetKey(actual_obj));
-             */
             list_Push(obj_stack,new_obj);
-
             offset++;
             continue;
        case '}':
-            printf("found closing bracket\n");//:%s\n",node_GetKey(parent_obj));
-            /*if(!is_value_string)
-              value_string = fbx_TrimString(value_string);
-            node *kv = fbx_CreateNode(key_string,value_string,is_value_string);
-               node_AddItem(actual_obj,kv);
-               node_SetParent(kv,actual_obj);
-               if(strlen(value_string))
-               {
-                 free(value_string);
-                 value_string=fbx_CreateEmptyString();
-               }
-
-            }
-            is_value_string=0;
-        	printf("a:[%s]\n",node_GetKey(actual_obj));
-            list_Pop(obj_stack);
-        	printf("p:[%s]\n",node_GetKey((node*)list_GetTop(obj_stack)));
-          */
             list_Pop(obj_stack);
             offset++;
             continue;
        case ':':
-            //printf("found ':' : [%s]\n",value_string);
             is_value_string = 0;
             value_string = fbx_TrimString(value_string);
             new_obj = node_Create();
+            //printf("new obj @:%x\n",&new_obj);
             node_SetArray(new_obj,0);
             node_SetKey(new_obj,value_string);
             node_SetParent(new_obj,actual_obj);
             node_AddItem(actual_obj,new_obj);
-            printf("added new obj V:[%s] to:[%s]\n",node_GetKey(new_obj),node_GetKey(actual_obj));
             if(strlen(value_string))
             {
               free(value_string);
@@ -311,6 +275,7 @@ node *fbx_Load(char *fbx,unsigned long len)
   } 
 
  free(value_string);
+ list_Close(obj_stack);
  return(root_obj);
 }
 
