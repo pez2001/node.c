@@ -279,14 +279,28 @@ void json_tests(void)
   	node_PrintTree(root);
     node_FreeTree(root);
   }
-  
-  
+}  
 
+void fbx_tests(void)
+{
+  printf("fbx tests\n");
+  #ifdef USE_DEBUGGING
+  mem_Init();
+  #endif
+  
+  node *root = fbx_LoadFile("tests/box.fbx");
+  //node *root = fbx_LoadFile("tests/ranger.fbx");
+  //node *root = fbx_LoadFile("tests/fbx_object.fbx");
+  printf("node tree:\n");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
   #ifdef USE_DEBUGGING
   mem_Close();
   #endif
-
-  printf("json tests thru\n");
+  printf("fbx tests thru\n");
 }
 
 void mem_tests(void)
@@ -321,6 +335,7 @@ int main(int argc, char *argv[])
 	//ptr_tests();
     //node_tests();
     //mem_tests();
-    json_tests();
+    //json_tests();
+    fbx_tests();
     //json_speed_tests();
 }

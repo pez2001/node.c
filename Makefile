@@ -14,8 +14,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 469
-DEBUG_BUILD = 469
+BUILD = 573
+DEBUG_BUILD = 573
 
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
@@ -23,11 +23,11 @@ CC=gcc
 AR=ar
 LD=ld
 
-NODE_FILES = list.c node.c memory.c imports/json.c
+NODE_FILES = list.c node.c memory.c imports/json.c imports/fbx.c
 NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h
-NODE_OBJ = node.o list.o memory.o imports/json.o
-NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do
+NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h imports/fbx.h
+NODE_OBJ = node.o list.o memory.o imports/json.o imports/fbx.o
+NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do imports/fbx.do
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o

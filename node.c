@@ -227,18 +227,49 @@ int node_count_digits(char *number_string)
   return((leading_sign*5)+digits+both>other+both);
 }
 
+int node_NumberIsFloat(char *number_string)
+{
+  unsigned long i = 0;
+  unsigned long len = strlen(number_string);
+  while(i++<len)
+  {
+     if(number_string[i]==',' || number_string[i]=='e' || number_string[i]=='E' || number_string[i]=='.')
+       return(True);
+  }
+  return(False);
+}
+
 void node_ParseNumber(node *n,char *number_string)
 {
-  double d = atof(number_string);
   if(!node_count_digits(number_string))
   {
     node_SetString(n,number_string);
     return;
   }
+  if(node_NumberIsFloat(number_string))
+  {
+    double d = atof(number_string);
+    node_SetDouble(n,d);
+  }
+  else
+  {
+    long long ll = atoll(number_string);
+    long l = atol(number_string);
+    if(l!=ll)
+      node_SetSint64(n,ll);
+    else
+      node_SetSint32(n,l);
+  }
+  /*double d = atof(number_string);
   long l = (long)d;
+  long long ll = (long long)d;
   if(d!=0.0f && (d==(double)l))
   {
     node_SetSint32(n,l);
+  }else
+  if(d!=0.0f && (d==(double)ll))
+  {
+    node_SetSint64(n,ll);
   }else
   if(d==0.0f)
   {
@@ -248,7 +279,7 @@ void node_ParseNumber(node *n,char *number_string)
   else 
   {
     node_SetDouble(n,d);
-  }
+  }*/
 }
 
 
@@ -310,13 +341,13 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("%d",*(long*)n->value);
          break;
     case NODE_TYPE_SINT64:
-         printf("%d",*(long long*)n->value);
+         printf("%I64d",*(long long*)n->value);
          break;
     case NODE_TYPE_UINT64:
-         printf("%d",*(unsigned long long*)n->value);
+         printf("%I64d",*(unsigned long long*)n->value);
          break;
     case NODE_TYPE_STRING:
-         printf((char*)n->value);
+         printf("\"%s\"",(char*)n->value);
          break;
     case NODE_TYPE_ARRAY:
          {
@@ -328,22 +359,20 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          while(node_array_IterationUnfinished(n))
          { 
             node *i = node_array_Iterate(n);
-            node_PrintWithTabs(i,False,tabs_num+1);
+            //node_PrintWithTabs(i,False,tabs_num+1);
+            node_PrintWithTabs(i,True,tabs_num+1);
             if(node_array_IterationUnfinished(n))
             {
-              //if(!node_HasKey(n))
-              //  node_print_tabs(tabs_num+1);
               printf(",");
             }
          }
-         //node_print_tabs(tabs_num+1);
          printf("]");
          if(!node_HasKey(n))
            printf("\n");
          node_array_SetIterationIndex(n,old_index);
          break;
          }
-    case NODE_TYPE_NODE:
+/*    case NODE_TYPE_NODE:
          if(node_HasItems(n))
          { 
           if(!node_HasKey(n))
@@ -357,17 +386,14 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
               node_PrintWithTabs(i,True,tabs_num+1);
            }
            node_SetItemIterationIndex(n,old_index);
-         //if(!node_HasKey(n))
          node_print_tabs(tabs_num+1);
          printf("}");
          if(!node_HasKey(n))
            printf("\n");
-          //if(!node_HasKey(n))
-          //  node_print_tabs(tabs_num+1);
          }
          else
           printf("{}");
-         break;
+         break;*/
     case NODE_TYPE_STUB:
          break;
     case NODE_TYPE_BINARY:
@@ -375,6 +401,28 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     default:
          break;
   }
+
+         if(node_HasItems(n))
+         { 
+          if(!node_HasKey(n))
+            node_print_tabs(tabs_num+1);
+           printf("{\n");
+           long old_index = node_GetItemIterationIndex(n);
+           node_ItemIterationReset(n);
+           while(node_ItemIterationUnfinished(n))
+           {
+              node *i = node_ItemIterate(n);
+              node_PrintWithTabs(i,True,tabs_num+1);
+           }
+           node_SetItemIterationIndex(n,old_index);
+         node_print_tabs(tabs_num+1);
+         printf("}");
+         if(!node_HasKey(n))
+           printf("\n");
+         }
+
+
+
   if(with_key && node_HasKey(n))
     printf("\n");
 }
@@ -903,7 +951,7 @@ void node_ClearItems(node *n)
   list_Clear(n->items);
 }
 
-void *node_ItemIterate(node *n)
+node *node_ItemIterate(node *n)
 {
   return(list_Iterate(n->items));
 }

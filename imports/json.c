@@ -23,10 +23,6 @@
 #include "json.h"
 
 
-node *json_ParseObject();
-node *json_ParseArray();
-node *json_ParseString();
-
 
 char *json_AddCharToString(char *string,char letter)
 { 
@@ -202,9 +198,10 @@ node *json_Load(char *json,unsigned long len)
              free(key_string);
              free(value_string);
              return(root_obj);
+       
        case '\n':
        case '\r':
-
+       
              state |= JSON_STATE_IN_KEY;     
              if((state & JSON_STATE_IN_VALUE))
              {
@@ -370,6 +367,7 @@ node *json_Load(char *json,unsigned long len)
                 }
               }
             }
+            is_value_string=0;
             is_obj = 0;
             offset++;
             continue;

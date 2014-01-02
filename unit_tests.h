@@ -26,6 +26,7 @@
 #include "list.h"
 #include "node.h"
 #include "imports/json.h"
+#include "imports/fbx.h"
 
 
 #include "stdio.h"

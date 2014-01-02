@@ -139,7 +139,7 @@ long node_GetItemsNum(node *n);
 int node_HasItems(node *n);
 void *node_GetItemByKey(node *n,char *key);
 void node_ClearItems(node *n);
-void *node_ItemIterate(node *n);
+node *node_ItemIterate(node *n);
 int node_ItemIterationUnfinished(node *n);
 void node_ItemIterationReset(node *n);
 long node_GetItemIterationIndex(node *n);

@@ -19,3 +19,32 @@
  * THIS SOFTWARE IS SUPPLIED AS IT IS WITHOUT ANY WARRANTY!
  *
  */
+
+
+#ifndef FBX_H
+#define FBX_H
+
+#include "../node.h"
+
+#include "stdio.h"
+#include "stdlib.h"
+#include "string.h"
+
+#ifdef USE_DEBUGGING
+#include "memory.h"
+#endif
+
+
+#define FBX_STATE_IN_NOTHING 0
+//#define FBX_STATE_IN_OBJ 1
+#define FBX_STATE_IN_STRING 2
+//#define FBX_STATE_IN_PROPS 4
+//#define FBX_STATE_IN_KEY 8
+#define FBX_STATE_IN_VALUE 16
+#define FBX_STATE_IN_COMMENT 32
+
+
+node *fbx_Load(char *fbx,unsigned long len); 
+node *fbx_LoadFile(char *filename); 
+
+#endif

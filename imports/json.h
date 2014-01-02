@@ -44,14 +44,6 @@
 
 
 //im not shooting for an ast , more of a stream and state based interpreter
-typedef struct _json_state 
-{
-  int state;   
-  node *actual_obj;
-  node *parent_obj;
-
-}json_state;
-
 
 node *json_Load(char *json,unsigned long len); 
 node *json_LoadFile(char *filename); 
