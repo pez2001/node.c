@@ -145,7 +145,9 @@ void fbx_SetNode(node *n,char *value_string,int is_value_string)
           node_SetBool(n,False);
         else
         {
-          node_ParseNumber(n,value_string);
+          double d = atof(value_string);
+          node_SetDouble(n,d);
+          //node_ParseNumber(n,value_string);
         }
 }
 
@@ -193,14 +195,14 @@ node *fbx_Load(char *fbx,unsigned long len)
          is_value_string = 1;
          continue;
       }
-      else
+      /*else
       if(add_char=='\\')
       {
          add_char = fbx_ConvertEscapeChar(fbx[offset]);
          offset++;
          if(add_char==0)
           continue;
-      }
+      }*/
      value_string = fbx_AddCharToString(value_string,add_char);
      continue;
     }
@@ -220,7 +222,7 @@ node *fbx_Load(char *fbx,unsigned long len)
        case ',': 
              if(!is_value_string)
                   value_string = fbx_TrimString(value_string);
-               if(strlen(value_string))
+               if(strlen(value_string) || is_value_string)
                {
                  node *array_obj = node_Create();
                  fbx_SetNode(array_obj,value_string,is_value_string);

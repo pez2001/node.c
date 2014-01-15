@@ -330,12 +330,55 @@ void mem_tests(void)
 }
 
 
+void hashing_tests(void)
+{
+  printf("hashing test\n");
+  printf("[Hi]:%u\n",node_ComputeHash("Hi"));
+  printf("[Hi2]:%u\n",node_ComputeHash("Hi2"));
+  printf("[Hi1]:%u\n",node_ComputeHash("Hi1"));
+  printf("[NodeReflectionType]:%u\n",node_ComputeHash("NodeReflectionType"));
+
+  node *root = node_Create();
+  node_SetKey(root,"root");
+  node_SetSint8(root,127);
+
+  node *n1 = node_Create();
+  node_SetKey(n1,"roots");
+  node *n2 = node_Create();
+  node_SetKey(n2,"test");
+  node *n3 = node_Create();
+  node_SetKey(n3,"hashing"); 
+  node_AddItem(root,n1);
+  node_AddItem(root,n2);
+  node_AddItem(root,n3);
+
+  int a,p;
+  node *query=NULL;
+  p = clock();
+  query = node_GetItemByKeyHash(root,node_ComputeHash("hashing"));
+  a = clock();
+  if(query!=NULL)
+    printf("found node:%s in %d\n",node_GetKey(query),(p-a));
+  query=NULL;
+  p = clock();
+  query = node_GetItemByKey(root,"hashing");
+  a = clock();
+  if(query!=NULL)
+    printf("found node:%s in %d\n",node_GetKey(query),(p-a));
+
+  node_FreeTree(root);
+  printf("hashing test thru\n");
+
+}
+
+
 int main(int argc, char *argv[])
 {
 	//ptr_tests();
     //node_tests();
     //mem_tests();
     //json_tests();
-    fbx_tests();
+    //fbx_tests();
+    hashing_tests();
     //json_speed_tests();
 }

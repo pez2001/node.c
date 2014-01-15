@@ -23,6 +23,57 @@
 #include "node.h"
 
 
+#ifdef USE_FNV_HASHES
+
+unsigned long node_ComputeHash(char *string)
+{
+  if(!strlen(string))
+    return(0);
+  int i = 0;
+  unsigned long hash = NODE_FNV_OFFSET;
+  while(string[i]!=0)
+  {
+    hash ^= string[i];
+    hash *= NODE_FNV_PRIME;
+    i++;
+  }
+  return(hash);
+}
+
+unsigned long node_GetKeyHash(node *n)
+{
+  return(n->key_hash);
+}
+
+void node_SetKeyHash(node *n,unsigned long key_hash)
+{
+  n->key_hash = key_hash;
+}
+
+void *node_GetItemByKeyHash(node *n,unsigned long key_hash)
+{
+  void *item = NULL;
+  long old_index = node_GetItemIterationIndex(n);
+  node_ItemIterationReset(n);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *i = node_ItemIterate(n);
+    //printf("checking:%s,%d\n",i->key,n->items->num);
+    //if(i->key_hash!=0 && !strcmp(i->key,key))
+    if(i->key_hash!=0 && i->key_hash == key_hash)
+    {
+       item = i;
+       break;
+    }
+  }
+  node_SetItemIterationIndex(n,old_index);
+  return(item);
+}
+
+
+
+#endif
+
 char *node_CopyString(char *string)
 {
   char *r = (char*)malloc(strlen(string) + 1);
@@ -38,6 +89,9 @@ node *node_Create(void)
   n->value = NULL;
   n->parent = NULL;
   n->key = NULL;
+  #ifdef USE_FNV_HASHES
+  n->key_hash = 0;
+  #endif
   n->items = list_Create(0,0);
   return(n);
 }
@@ -50,6 +104,9 @@ node *node_CreateFilled(node *parent,char *key,void *value,int type,list *items)
   n->type = type;
   n->items = items;
   n->parent = parent;
+  #ifdef USE_FNV_HASHES
+  n->key_hash = node_ComputeHash(key);
+  #endif
   return(n);
 }
 
@@ -101,6 +158,8 @@ void *node_CreateValue(int type,void *value)
          break;
     case NODE_TYPE_STUB:
          break;
+    case NODE_TYPE_USER:
+         break;
     case NODE_TYPE_BINARY:
          r = (void*)node_CreateBinary(((node_binary*)value)->value,((node_binary*)value)->len);
          break;
@@ -151,6 +210,8 @@ void node_FreeValue(int type,void *value)
     case NODE_TYPE_NODE:
          break;
     case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_USER:
          break;
     case NODE_TYPE_BINARY:
          node_FreeBinary((node_binary*)value,False); //TODO recheck freeing style
@@ -260,26 +321,6 @@ void node_ParseNumber(node *n,char *number_string)
     else
       node_SetSint32(n,l);
   }
-  /*double d = atof(number_string);
-  long l = (long)d;
-  long long ll = (long long)d;
-  if(d!=0.0f && (d==(double)l))
-  {
-    node_SetSint32(n,l);
-  }else
-  if(d!=0.0f && (d==(double)ll))
-  {
-    node_SetSint64(n,ll);
-  }else
-  if(d==0.0f)
-  {
-    long l = atol(number_string);
-    node_SetSint32(n,l);
-  }
-  else 
-  {
-    node_SetDouble(n,d);
-  }*/
 }
 
 
@@ -397,6 +438,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     case NODE_TYPE_STUB:
          break;
     case NODE_TYPE_BINARY:
+         printf("binary(%d)",node_GetBinaryLength(n));
          break;
     default:
          break;
@@ -545,6 +587,9 @@ void node_SetKey(node *n,char *key)
   if(n->key != NULL)
     free(n->key);
   n->key = node_CopyString(key);
+  #ifdef USE_FNV_HASHES
+  n->key_hash = node_ComputeHash(key);
+  #endif
 }
 
 void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value)
@@ -1066,7 +1111,7 @@ void node_array_SetIterationIndex(node *n,long iteration_index)
 
 
 
-node_binary *node_CreateBinary(char *binary,unsigned long len)
+node_binary *node_CreateBinary(void *binary,unsigned long len)
 {
   node_binary *r = (node_binary*)malloc(sizeof(node_binary));
   r->value = binary;
@@ -1081,7 +1126,7 @@ void node_FreeBinary(node_binary *binary,BOOL free_value)
   free(binary);  
 }
 
-void node_SetBinary(node *n,char *binary,unsigned long len)
+void node_SetBinary(node *n,void *binary,unsigned long len)
 {
   if(node_IsType(n,NODE_TYPE_BINARY))
   {
@@ -1096,7 +1141,7 @@ void node_SetBinary(node *n,char *binary,unsigned long len)
   }
 }
 
-char *node_GetBinary(node *n)
+void *node_GetBinary(node *n)
 {
     return(((node_binary*)n->value)->value);
 }

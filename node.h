@@ -34,9 +34,14 @@
 
 
 
+
 #ifdef __cplusplus
 extern "C"  {
 #endif
+
+
+#define USE_FNV_HASHES
+
 
 #define NODE_TYPE_NULL 0
 #define NODE_TYPE_INT 1
@@ -56,7 +61,7 @@ extern "C"  {
 #define NODE_TYPE_NODE 15
 #define NODE_TYPE_STUB 16
 #define NODE_TYPE_BINARY 17
-
+#define NODE_TYPE_USER 18
 
 typedef struct _node
 {
@@ -66,6 +71,10 @@ typedef struct _node
   int type;
   list *items;
   void *tag;
+  #ifdef USE_FNV_HASHES
+  unsigned long key_hash;
+  list *sorted_items;
+  #endif
   //int is_dirty;//TODO add handling of value updates
 } node;
 
@@ -88,7 +97,19 @@ typedef struct _node_binary
 
 
 
+/*key hashing*/
+#ifdef USE_FNV_HASHES
+#define NODE_FNV_OFFSET 2166136261
+#define NODE_FNV_PRIME 16777619
 
+unsigned long node_ComputeHash(char *string);
+
+unsigned long node_GetKeyHash(node *n);
+void node_SetKeyHash(node *n,unsigned long key_hash);
+void *node_GetItemByKeyHash(node *n,unsigned long key_hash);
+
+
+#endif
 
 
 /*utilities*/
@@ -138,6 +159,10 @@ void *node_GetItem(node *n,long index);
 long node_GetItemsNum(node *n);
 int node_HasItems(node *n);
 void *node_GetItemByKey(node *n,char *key);
+
+//void *node_GetItemByPath(node *n,...);
+
+
 void node_ClearItems(node *n);
 node *node_ItemIterate(node *n);
 int node_ItemIterationUnfinished(node *n);
@@ -187,10 +212,10 @@ void node_FreeArray(node_array *array,BOOL free_nodes);
 
 
 /*binary type -> binary chunks managed by it need to be freed on its own at the moment*/
-node_binary *node_CreateBinary(char *binary,unsigned long len);
+node_binary *node_CreateBinary(void *binary,unsigned long len);
 void node_FreeBinary(node_binary *binary,BOOL free_value);
-void node_SetBinary(node *n,char *binary,unsigned long len);
-char *node_GetBinary(node *n);
+void node_SetBinary(node *n,void *binary,unsigned long len);
+void *node_GetBinary(node *n);
 unsigned long node_GetBinaryLength(node *n);
 
 
