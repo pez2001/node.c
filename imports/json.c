@@ -19,10 +19,7 @@
  * THIS SOFTWARE IS SUPPLIED AS IT IS WITHOUT ANY WARRANTY!
  *
  */
-
 #include "json.h"
-
-
 
 char *json_AddCharToString(char *string,char letter)
 { 
@@ -33,7 +30,7 @@ char *json_AddCharToString(char *string,char letter)
   return(string);
 }
 
-char *json_CreateEmptyString()
+char *json_CreateEmptyString(void)
 {
     char *string = (char*)malloc(1);
     string[0] = 0;
@@ -47,8 +44,8 @@ char *json_TrimString(char *string)
     return(string);
   long s=0;
   long e=len-1;
-  while(s<len && isspace(string[s]))s++;
-  while(e>0 && isspace(string[e]))e--;
+  while(s<len && (isspace(string[s]) || string[s]=='\t'))s++;
+  while(e>0 && (isspace(string[e]) || string[s]=='\t'))e--;
   e=e+1;
   long nlen = e-s;
   if(nlen<=0)
@@ -64,9 +61,6 @@ char *json_TrimString(char *string)
   free(string);
   return(r);
 }
-
-
-
 
 char json_ConvertEscapeChar(char escape_char)
 {
@@ -109,7 +103,7 @@ char json_ConvertEscapeChar(char escape_char)
   return(r);
 }
 
-node * json_CreateNode(char *key_string,char *value_string,int is_value_string)
+node *json_CreateNode(char *key_string,char *value_string,int is_value_string)
 {
   node *kv = node_Create();
   if(key_string!=NULL)
@@ -134,41 +128,82 @@ node * json_CreateNode(char *key_string,char *value_string,int is_value_string)
   return(kv);
 }
 
+void json_SetNode(node *n,char *value_string,int is_value_string)
+{
+  if(is_value_string)
+  {
+    node_SetString(n,value_string);
+  }
+  else
+    if(!strcmp(value_string,"null"))
+      node_SetNull(n);
+    else
+      if(!strcmp(value_string,"true"))
+        node_SetBool(n,True);
+      else
+        if(!strcmp(value_string,"false"))
+          node_SetBool(n,False);
+        else
+        {
+          double d = atof(value_string);
+          node_SetDouble(n,d);
+          //node_ParseNumber(n,value_string);
+        }
+}
+
+
+
+
+
+
 
 
 node *json_Load(char *json,unsigned long len)
 {
   int state=0;   
-  node *root_obj=NULL;
-  node *actual_obj=NULL;
-  node *parent_obj=NULL;
+  list *obj_stack=list_Create(0,0);
   unsigned long offset=0;
-  char *key_string = json_CreateEmptyString();
   char *value_string = json_CreateEmptyString();
   int is_value_string=0;
-  int is_obj=0;
-
-  state |= JSON_STATE_IN_KEY;
+  int found_key = 0;
+  //state |= FBX_STATE_IN_VALUE;
+  node *new_obj  = NULL;
+  node *root_obj = node_Create();
+  node_SetType(root_obj,NODE_TYPE_NODE);
+  node_SetKey(root_obj,"root");
+  list_Push(obj_stack,root_obj);
+  //new_obj = root_obj;
 
   while(offset<len)
   {
-    if((state & JSON_STATE_IN_STRING) || (state & JSON_STATE_IN_SINGLE_QUOTE_STRING))
+    node *actual_obj = (node*)list_GetTop(obj_stack);
+    if(actual_obj == NULL) 
+    {
+       printf("no actual obj set\n");
+       free(value_string);
+       list_Close(obj_stack);
+       if(new_obj!=NULL)
+         node_Free(new_obj,True);
+       return(root_obj);
+    } 
+
+
+    /*if((state & FBX_STATE_IN_COMMENT))
+    {
+      if(json[offset]=='\r' || json[offset]=='\n')
+      {
+      	state &= ~FBX_STATE_IN_COMMENT;
+      }	
+      offset++;
+      continue;
+    }*/
+    if((state & JSON_STATE_IN_STRING))
     {
       char add_char = json[offset];
       offset++;
       if(add_char == '"')
       {
-         if(state & JSON_STATE_IN_STRING)
-           state &= ~JSON_STATE_IN_STRING;
-         is_value_string = 1;
-         continue;
-      }
-      else
-      if(add_char == '\'')
-      {
-         if(state & JSON_STATE_IN_SINGLE_QUOTE_STRING)
-           state &= ~JSON_STATE_IN_SINGLE_QUOTE_STRING;
-
+         state &= ~JSON_STATE_IN_STRING;
          is_value_string = 1;
          continue;
       }
@@ -180,315 +215,177 @@ node *json_Load(char *json,unsigned long len)
          if(add_char==0)
           continue;
       }
-
-       if((state&JSON_STATE_IN_KEY))
-       {
-          key_string = json_AddCharToString(key_string,add_char);
-       }	
-       if((state&JSON_STATE_IN_VALUE))
-       {
-          value_string = json_AddCharToString(value_string,add_char);
-       }	
-       continue;
+     value_string = json_AddCharToString(value_string,add_char);
+     continue;
     }
+
 
     switch(json[offset])
     {
        case 0:
-             free(key_string);
              free(value_string);
+             list_Close(obj_stack);
              return(root_obj);
-       
-       case '\n':
-       case '\r':
-       
-             state |= JSON_STATE_IN_KEY;     
-             if((state & JSON_STATE_IN_VALUE))
-             {
-               state &= ~JSON_STATE_IN_VALUE;
-               if(actual_obj!=NULL)//validity check here
-               {
-                 key_string = json_TrimString(key_string);
-                 if(!is_value_string)
-                   value_string = json_TrimString(value_string);
-                 node *kv = json_CreateNode(key_string,value_string,is_value_string);
-                 node_AddItem(actual_obj,kv);
-               }
-               if(strlen(key_string))
-               {
-                 free(key_string);
-                 key_string=json_CreateEmptyString();
-               }
-               if(strlen(value_string))
-               {
-                 free(value_string);
-                 value_string=json_CreateEmptyString();
-               }
-              }
+       //case ';':
+       //      state |= FBX_STATE_IN_COMMENT;
+
+       case '\t':
+       case ' ':
             offset++;
             continue;
 
-       case '\t':
+       case ']':
+            //printf("closed array\n");
+       case '}':
+            list_Pop(obj_stack);
+            //printf("obj above:%s\n",node_GetKey((node*)list_GetTop(obj_stack)));
+       case '\n':
+       case '\r':
+       case ',': 
+                 found_key = 0;
+       //case '\t':
+             if(!is_value_string)
+                  value_string = json_TrimString(value_string);
+               if((strlen(value_string) || is_value_string) && new_obj!=NULL)
+               {
+                 //if(actual_obj!=NULL && node_GetType(actual_obj)==NODE_TYPE_ARRAY)
+                 if(node_GetType(actual_obj)==NODE_TYPE_ARRAY)
+                 {
+                   //if(json[offset+1]!=']')
+                   //{
+                     new_obj = node_Create();
+                     json_SetNode(new_obj,value_string,is_value_string);
+                     node_array_Add(actual_obj,new_obj);
+                     node_SetParent(new_obj,actual_obj);
+                     //printf("created new array obj\n");
+                   //node_Print(new_obj,True);
+                   //}
+                 }
+                 else
+                   json_SetNode(new_obj,value_string,is_value_string);
+                 found_key = 0;
+
+                 free(value_string);
+                 value_string=json_CreateEmptyString();
+               }
+            is_value_string=0;
             offset++;
             continue;
-       case ' ':
-            break;
        case '{':
-            state |= JSON_STATE_IN_OBJ;
-            is_obj = 0;
-            if((state & JSON_STATE_IN_ARRAY))
+            //printf("new obj\n");
+
+            //if(actual_obj!=NULL && node_GetType(actual_obj)==NODE_TYPE_ARRAY)
+            if(node_GetType(actual_obj)==NODE_TYPE_ARRAY)
             {
-              parent_obj = actual_obj;
-              if(parent_obj!=NULL && node_IsType(parent_obj,NODE_TYPE_ARRAY))//validity check here
-              {
-                actual_obj = node_Create();
-                node_SetType(actual_obj,NODE_TYPE_NODE);
-                node_array_Add(parent_obj,actual_obj);
-              }
-              state |= JSON_STATE_IN_KEY;     
+              new_obj = node_Create();
+              node_SetType(new_obj,NODE_TYPE_NODE);
+              node_SetParent(new_obj,actual_obj);
+              node_array_Add(actual_obj,new_obj);
+              //printf("created new obj for array\n");
             }
             else
             {
-              parent_obj = actual_obj;
-              actual_obj = node_Create();
-              node_SetType(actual_obj,NODE_TYPE_NODE);
-              if(root_obj==NULL)
+              if(!found_key && actual_obj!=root_obj)
               {
-              	root_obj = actual_obj;
-                node_SetKey(actual_obj,"root");
-              }	
-              if((state & JSON_STATE_IN_VALUE))
-              {
-                key_string = json_TrimString(key_string);
-                node_SetKey(actual_obj,key_string);
-                if(strlen(key_string))
-                {
-                  free(key_string);
-                  key_string=json_CreateEmptyString();
-                }
-                node_SetParent(actual_obj,parent_obj);
-                if(parent_obj!=NULL)
-                {
-                  node_AddItem(parent_obj,actual_obj);
-                }
+                //printf("found no key for obj\n");
+                new_obj = node_Create();
+                //node_SetKey(new_obj,value_string);
+                node_SetType(new_obj,NODE_TYPE_NODE);
+                node_SetParent(new_obj,actual_obj);
+                //if(actual_obj!=NULL)
+                  node_AddItem(actual_obj,new_obj);
               }
-              if((state & JSON_STATE_IN_KEY))
-              {
-                node_SetParent(actual_obj,parent_obj);
-                if(parent_obj!=NULL)
-                {
-                  node_AddItem(parent_obj,actual_obj);
-                }
-              }
-              state |= JSON_STATE_IN_KEY;     
-
             }
-            state &= ~JSON_STATE_IN_VALUE;
+            if(new_obj != NULL)
+              list_Push(obj_stack,new_obj);
             offset++;
             continue;
+       /*
        case '}':
-            if((state & JSON_STATE_IN_VALUE))
-            {
-               state &= ~JSON_STATE_IN_VALUE;
-               if(actual_obj!=NULL)//validity check here
-               {
-                 key_string = json_TrimString(key_string);
-                 if(!is_value_string)
-                   value_string = json_TrimString(value_string);
-                 node *kv = json_CreateNode(key_string,value_string,is_value_string);
-                 node_AddItem(actual_obj,kv);
-               }
-               if(strlen(key_string))
-               {
-                 free(key_string);
-                 key_string=json_CreateEmptyString();
-               }
-               if(strlen(value_string))
-               {
-                 free(value_string);
-                 value_string=json_CreateEmptyString();
-               }
-            }
-            state &= ~JSON_STATE_IN_OBJ;
-            is_obj = 1;
-            if(parent_obj!=NULL)
-            {
-            	 actual_obj = parent_obj;
-            	 parent_obj = node_GetParent(actual_obj);
-            }
+            printf("closed obj\n");
+            list_Pop(obj_stack);
             offset++;
             continue;
-       case ',': 
-            if((state & JSON_STATE_IN_ARRAY) && !(state & JSON_STATE_IN_OBJ))
-            {
-              state |= JSON_STATE_IN_VALUE;     
-              state &= ~JSON_STATE_IN_KEY;
-              if(!is_obj)
-              {
-                if(actual_obj!=NULL)//validity check here
-                {
-                  if(!is_value_string)
-                    value_string = json_TrimString(value_string);
-                  node *kv = json_CreateNode(NULL,value_string,is_value_string);
-                  node_array_Add(actual_obj,kv);
-                }
-                if(strlen(value_string))
-                {
-                  free(value_string);
-                  value_string = json_CreateEmptyString();
-                }
-              }
-            }else
-            {
-             state |= JSON_STATE_IN_KEY;     
-             if((state & JSON_STATE_IN_VALUE))
-             {
-               state &= ~JSON_STATE_IN_VALUE;
-               if(!is_obj)
-                {
-                  if(actual_obj!=NULL)//validity check here
-                  {
-                    key_string = json_TrimString(key_string);
-                    if(!is_value_string)
-                      value_string = json_TrimString(value_string);
-                    node *kv = json_CreateNode(key_string,value_string,is_value_string);
-                    node_AddItem(actual_obj,kv);
-                  }
-                  if(strlen(key_string))
-                  {
-                    free(key_string);
-                    key_string=json_CreateEmptyString();
-                  }
-                  if(strlen(value_string))
-                  {
-                    free(value_string);
-                    value_string=json_CreateEmptyString();
-                  }
-                }
-              }
-            }
-            is_value_string=0;
-            is_obj = 0;
-            offset++;
-            continue;
+      */
        case '[':
-            state |= JSON_STATE_IN_VALUE;
-            state |= JSON_STATE_IN_ARRAY;
-            state &= ~JSON_STATE_IN_OBJ;
-            parent_obj = actual_obj;
-            if(parent_obj!=NULL)//validity check here
+            if(!found_key)
             {
-              actual_obj = node_Create();
-              key_string = json_TrimString(key_string);
-              node_SetKey(actual_obj,key_string);
-              node_SetArray(actual_obj,0);
-              node_AddItem(parent_obj,actual_obj);
+              //printf("found no key for array\n");
+              new_obj = node_Create();
+              //node_SetKey(new_obj,value_string);
+              node_SetType(new_obj,NODE_TYPE_NODE);
+              node_SetParent(new_obj,actual_obj);
+              //if(actual_obj!=NULL)
+                node_AddItem(actual_obj,new_obj);
             }
-            if(strlen(key_string))
-            {
-              free(key_string);
-              key_string=json_CreateEmptyString();
-            }
-            is_obj = 0;
+            //printf("new array\n");
+            node_SetArray(new_obj,0);
+            list_Push(obj_stack,new_obj);
+            /*actual_obj = new_obj;
+            new_obj = node_Create();
+            node_SetType(new_obj,NODE_TYPE_NODE);
+            //node_SetKey(new_obj,value_string);
+            node_SetParent(new_obj,actual_obj);
+            //node_AddItem(actual_obj,new_obj);
+            node_array_Add(actual_obj,new_obj);
+            printf("created new obj for array\n");*/
             offset++;
             continue;
+      /*
        case ']':
-            if((state & JSON_STATE_IN_ARRAY) && (state & JSON_STATE_IN_VALUE))
-            {
-              state &= ~JSON_STATE_IN_VALUE;
-              if(strlen(value_string))
-              {
-                if(actual_obj!=NULL)//validity check here
-                {
-                  if(!is_value_string)
-                    value_string = json_TrimString(value_string);
-                  node *kv = json_CreateNode(NULL,value_string,is_value_string);
-                  node_array_Add(actual_obj,kv);
-                }
-              }
-            }
-            if(strlen(value_string))
-            {
-              free(value_string);
-              value_string = json_CreateEmptyString();
-            }
-            state |= JSON_STATE_IN_OBJ;
-            state &= ~JSON_STATE_IN_ARRAY;
-            if(parent_obj!=NULL)
-            {
-           	  actual_obj = parent_obj;
-              parent_obj = node_GetParent(actual_obj);
-            }
+            printf("closed array\n");
+            list_Pop(obj_stack);
             offset++;
             continue;
+       */
+
        case ':':
        case '=':
-            state |= JSON_STATE_IN_VALUE;     
-            state &= ~JSON_STATE_IN_KEY;
             is_value_string = 0;
             value_string = json_TrimString(value_string);
+            //printf("new obj @:%x\n",&new_obj);
+            //node_SetArray(new_obj,0);
+            new_obj = node_Create();
+            node_SetType(new_obj,NODE_TYPE_NODE);
+            node_SetKey(new_obj,value_string);
+            node_SetParent(new_obj,actual_obj);
+            //if(actual_obj!=NULL)
+              node_AddItem(actual_obj,new_obj);
+            //printf("created new obj\n");
+            //node_Print(new_obj,True);
             if(strlen(value_string))
             {
               free(value_string);
               value_string = json_CreateEmptyString();
             }
+            found_key = 1;
             offset++;
             continue;
        case '"':
-            if(!(state&JSON_STATE_IN_STRING))
-            {
-              state |= JSON_STATE_IN_STRING;
-              //key_string = json_TrimString(key_string);
-              value_string = json_TrimString(value_string);
-              if((state&JSON_STATE_IN_KEY) && strlen(key_string))
-              { 
-                free(key_string);
-                key_string = json_CreateEmptyString();
-              }
-            }
-            else
-            {
-              state &= ~JSON_STATE_IN_STRING;
+            state |= JSON_STATE_IN_STRING;
+            value_string = json_TrimString(value_string);
+            if(strlen(value_string))
+            { 
+              free(value_string);
+              value_string = json_CreateEmptyString();
             }
             offset++;
             continue;
-       case '\'':
-            if(!(state&JSON_STATE_IN_SINGLE_QUOTE_STRING))
-            {
-              state |= JSON_STATE_IN_SINGLE_QUOTE_STRING;
-              value_string = json_TrimString(value_string);
-              //key_string = json_TrimString(key_string);
-              if((state&JSON_STATE_IN_KEY) && strlen(key_string))
-              { 
-                free(key_string);
-                key_string = json_CreateEmptyString();
-              }
-            }
-            else
-            {
-              state &= ~JSON_STATE_IN_SINGLE_QUOTE_STRING;
-            }
-            offset++;
-            continue;
-
-
-
     }
-    if((state&JSON_STATE_IN_VALUE)&& !is_value_string)
-    {
+    //if(!is_value_string)
+    //{
       value_string = json_AddCharToString(value_string,json[offset]);
-    } 
-    if((state&JSON_STATE_IN_KEY))
-    {
-      key_string = json_AddCharToString(key_string,json[offset]);
-    } 
+    //} 
     offset++;
   } 
 
- free(key_string);
  free(value_string);
+ list_Close(obj_stack);
  return(root_obj);
 }
+
+
+
 
 node *json_LoadFile(char *filename)
 { 
@@ -507,5 +404,4 @@ node *json_LoadFile(char *filename)
   fclose(json);
   return(rn);
 }
-
 

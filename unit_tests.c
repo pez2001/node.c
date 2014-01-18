@@ -169,25 +169,25 @@ void json_speed_tests(void)
   for(int i=0;i<10000;i++)
   {	
   #endif
-  node *root = json_LoadFile("test_wiki.json");
+  node *root = json_LoadFile("tests/test_wiki.json");
   node_FreeTree(root);
-  root = json_LoadFile("test7_export.json");
+  root = json_LoadFile("tests/test7_export.json");
   node_FreeTree(root);
-  root = json_LoadFile("test7_export2nicer.json");
+  root = json_LoadFile("tests/test7_export2nicer.json");
   node_FreeTree(root);
-  root = json_LoadFile("test_a.json");
+  root = json_LoadFile("tests/test_a.json");
   node_FreeTree(root);
-  root = json_LoadFile("test2.json");
+  root = json_LoadFile("tests/test2.json");
   node_FreeTree(root);
-  root = json_LoadFile("test3.json");
+  root = json_LoadFile("tests/test3.json");
   node_FreeTree(root);
-  root = json_LoadFile("test4.json");
+  root = json_LoadFile("tests/test4.json");
   node_FreeTree(root);
-  root = json_LoadFile("test5.json");
+  root = json_LoadFile("tests/test5.json");
   node_FreeTree(root);
-  root = json_LoadFile("test6.json");
+  root = json_LoadFile("tests/test6.json");
   node_FreeTree(root);
-  root = json_LoadFile("test_broken2.json");
+  root = json_LoadFile("tests/test_broken2.json");
   node_FreeTree(root);
   }
   #ifdef USE_DEBUGGING
@@ -201,13 +201,15 @@ void json_tests(void)
 {
   printf("json tests\n");
   #ifdef USE_DEBUGGING
+  printf("using memory debugger\n");
   mem_Init();
   #endif
   //node *root = json_LoadFile("test_wiki.json");
   //node *root = json_LoadFile("test7_export.json");
-  node *root = json_LoadFile("tests/test7_export2nicer.json");
+  //node *root = json_LoadFile("tests/test7_export2nicer.json");
+  //node *root = json_LoadFile("tests/skybox1.json");
   //node *root = json_LoadFile("test_a.json");
-  //node *root = json_LoadFile("test2.json");
+  node *root = json_LoadFile("tests/test2.json");
   //node *root = json_LoadFile("test3.json");
   //node *root = json_LoadFile("test4.json");
   //node *root = json_LoadFile("test5.json");
@@ -252,6 +254,11 @@ void json_tests(void)
   node_PrintTree(root);
   node_FreeTree(root);
 
+  printf("selfwritten json tests\n");
+  root = json_LoadFile("tests/skybox1.json");
+  node_PrintTree(root);
+  node_FreeTree(root);
+
   printf("malformed #2 (total garbage)\n");
   //root = json_LoadFile("test_broken1.json");
   root = json_LoadFile("tests/test_total_broken.json");
@@ -260,6 +267,7 @@ void json_tests(void)
     node_PrintTree(root);
     node_FreeTree(root);
   }
+
   printf("malformed #3 (binary file garbage)\n");
   //root = json_LoadFile("test_broken1.json");
   root = json_LoadFile("unit_tests_debug.exe");
@@ -269,7 +277,7 @@ void json_tests(void)
     node_FreeTree(root);
   }
 
-  
+
   printf("malformed #4 (binary .o file garbage)\n");
   //root = json_LoadFile("test_broken1.json");
   root = json_LoadFile("unit_tests.do");
@@ -279,6 +287,11 @@ void json_tests(void)
   	node_PrintTree(root);
     node_FreeTree(root);
   }
+
+  #ifdef USE_DEBUGGING
+    printf("closing memory debugger\n");
+    mem_Close();
+  #endif
 }  
 
 void fbx_tests(void)
@@ -377,8 +390,8 @@ int main(int argc, char *argv[])
 	//ptr_tests();
     //node_tests();
     //mem_tests();
-    //json_tests();
+    json_tests();
     //fbx_tests();
-    hashing_tests();
+    //hashing_tests();
     //json_speed_tests();
 }

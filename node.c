@@ -339,14 +339,21 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     printf("%s",n->key);
     printf(" = ");
   }
+  else
+  {
+    node_print_tabs(tabs_num);
+    printf("undefined = ");
+  }
 
   switch(n->type)
   {
     case NODE_TYPE_NULL:
-         if(with_key)
-         {
+         //if(with_key)
+         //{
+           //node_print_tabs(tabs_num);
            printf("null");
-         } 
+           //printf(" = ");
+         //} 
          break;
     case NODE_TYPE_INT:
          printf("%d",*(int*)n->value);
@@ -446,7 +453,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
 
          if(node_HasItems(n))
          { 
-          if(!node_HasKey(n))
+          if(!node_HasKey(n) && !with_key)
             node_print_tabs(tabs_num+1);
            printf("{\n");
            long old_index = node_GetItemIterationIndex(n);

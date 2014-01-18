@@ -29,6 +29,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "ctype.h"
 
 #ifdef USE_DEBUGGING
 #include "memory.h"
@@ -39,8 +40,8 @@
 #define JSON_STATE_IN_STRING 2
 #define JSON_STATE_IN_SINGLE_QUOTE_STRING 32
 #define JSON_STATE_IN_ARRAY 4
-#define JSON_STATE_IN_KEY 8
-#define JSON_STATE_IN_VALUE 16
+//#define JSON_STATE_IN_KEY 8
+//#define JSON_STATE_IN_VALUE 16
 
 
 //im not shooting for an ast , more of a stream and state based interpreter
