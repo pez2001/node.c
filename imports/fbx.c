@@ -30,7 +30,7 @@ char *fbx_AddCharToString(char *string,char letter)
   return(string);
 }
 
-char *fbx_CreateEmptyString()
+char *fbx_CreateEmptyString(void)
 {
     char *string = (char*)malloc(1);
     string[0] = 0;
@@ -167,9 +167,7 @@ node *fbx_Load(char *fbx,unsigned long len)
   list *obj_stack=list_Create(0,0);
   unsigned long offset=0;
   char *value_string = fbx_CreateEmptyString();
-  //int is_value_string=0;
   int is_last_digit = 0;
-  //state |= FBX_STATE_IN_VALUE;
   node *new_obj  = NULL;
   node *root_obj = node_Create();
   node_SetArray(root_obj,0);
@@ -196,31 +194,15 @@ node *fbx_Load(char *fbx,unsigned long len)
       if(add_char == '"')
       {
          state &= ~FBX_STATE_IN_STRING;
-         //is_value_string = 1;
-
-            value_string = fbx_TrimString(value_string);
-            //if(strlen(value_string))
-            //{
-              node *array_obj = node_Create();
-              fbx_SetNode(array_obj,value_string,True);
-              node_array_Add(new_obj,array_obj);
-              node_SetParent(array_obj,new_obj);
-              free(value_string);
-              value_string=fbx_CreateEmptyString();
-              //value_string = fbx_AddCharToString(value_string,fbx[offset]);
-            //}
-
-
+         value_string = fbx_TrimString(value_string);
+         node *array_obj = node_Create();
+         fbx_SetNode(array_obj,value_string,True);
+         node_array_Add(new_obj,array_obj);
+         node_SetParent(array_obj,new_obj);
+         free(value_string);
+         value_string=fbx_CreateEmptyString();
          continue;
       }
-      /*else
-      if(add_char=='\\')
-      {
-         add_char = fbx_ConvertEscapeChar(fbx[offset]);
-         offset++;
-         if(add_char==0)
-          continue;
-      }*/
      value_string = fbx_AddCharToString(value_string,add_char);
      continue;
     }
@@ -235,48 +217,35 @@ node *fbx_Load(char *fbx,unsigned long len)
             list_Push(obj_stack,new_obj);
             is_last_digit=0;
             offset++;
-
-             //if(!is_value_string)
-                value_string = fbx_TrimString(value_string);
-               if(strlen(value_string)) //|| is_value_string
-               {
-                 node *array_obj = node_Create();
-                 fbx_SetNode(array_obj,value_string,False);
-                 node_array_Add(new_obj,array_obj);
-                 node_SetParent(array_obj,new_obj);
-                 free(value_string);
-                 value_string=fbx_CreateEmptyString();
-                 //value_string = fbx_AddCharToString(value_string,fbx[offset]);
-               }
-            //is_value_string=0;
+            value_string = fbx_TrimString(value_string);
+            if(strlen(value_string))
+            {
+              node *array_obj = node_Create();
+              fbx_SetNode(array_obj,value_string,False);
+              node_array_Add(new_obj,array_obj);
+              node_SetParent(array_obj,new_obj);
+              free(value_string);
+              value_string=fbx_CreateEmptyString();
+            }
             break;
-            //continue;
        case '}':
             list_Pop(obj_stack);
             is_last_digit=0;
             offset++;
-
-             //if(!is_value_string)
-                  value_string = fbx_TrimString(value_string);
-               if(strlen(value_string))
-               {
-                 node *array_obj = node_Create();
-                 fbx_SetNode(array_obj,value_string,False);
-                 node_array_Add(new_obj,array_obj);
-                 node_SetParent(array_obj,new_obj);
-                 free(value_string);
-                 value_string=fbx_CreateEmptyString();
-                 //value_string = fbx_AddCharToString(value_string,fbx[offset]);
-               }
-            //is_value_string=0;
-            //offset++;
+            value_string = fbx_TrimString(value_string);
+            if(strlen(value_string))
+            {
+              node *array_obj = node_Create();
+              fbx_SetNode(array_obj,value_string,False);
+              node_array_Add(new_obj,array_obj);
+              node_SetParent(array_obj,new_obj);
+              free(value_string);
+              value_string=fbx_CreateEmptyString();
+            }
             break;
-            //continue;
        case ':':
-            //is_value_string = 0;
             value_string = fbx_TrimString(value_string);
             new_obj = node_Create();
-            //printf("new obj @:%x\n",&new_obj);
             node_SetArray(new_obj,0);
             node_SetKey(new_obj,value_string);
             node_SetParent(new_obj,actual_obj);
@@ -289,7 +258,6 @@ node *fbx_Load(char *fbx,unsigned long len)
             is_last_digit=0;
             offset++;
             break;
-            //continue;
        case '"':
             state |= FBX_STATE_IN_STRING;
             value_string = fbx_TrimString(value_string);
@@ -300,82 +268,56 @@ node *fbx_Load(char *fbx,unsigned long len)
             }
             is_last_digit=0;
             offset++;
-            //continue;
             break;
-
        case ';':
              state |= FBX_STATE_IN_COMMENT;
              is_last_digit=0;
        case '\n':
        case '\r'://to catch multiline values just skip these->breaks normal single value objs -> arghh
        case '\t': 
-       //case ' ':
               offset++;
-             //is_last_digit=0;
-              //continue;
               break;
        default:
-            //printf("%c",fbx[offset]);
             if((is_last_digit==1 && fbx_isdigit(fbx[offset])==0 ))
             {
-              //printf("val/key switch:[%s],[%c],%d,%d\n",value_string,fbx[offset],is_last_digit,fbx_isdigit(fbx[offset]));
-              is_last_digit = fbx_isdigit(fbx[offset]);
-              //value_string = fbx_AddCharToString(value_string,fbx[offset]);
-
-                  value_string = fbx_TrimString(value_string);
-               if(strlen(value_string))// || is_value_string)
+               is_last_digit = fbx_isdigit(fbx[offset]);
+               value_string = fbx_TrimString(value_string);
+               if(strlen(value_string))
                {
                  node *array_obj = node_Create();
                  fbx_SetNode(array_obj,value_string,False);
                  node_array_Add(new_obj,array_obj);
                  node_SetParent(array_obj,new_obj);
-                 //printf(",:[%s]:[%c]\n",value_string,fbx[offset]);
                  free(value_string);
                  value_string=fbx_CreateEmptyString();
                  value_string = fbx_AddCharToString(value_string,fbx[offset]);
                }
-
               offset++;
               break;
             }
             else
             {
               is_last_digit = fbx_isdigit(fbx[offset]);
-              //printf("[%c][%s]:%d,%d\n",fbx[offset],value_string,is_last_digit,fbx_isdigit(fbx[offset]));
-              //is_value_string=0;
-              //if(!is_value_string)
-              //{
                value_string = fbx_AddCharToString(value_string,fbx[offset]);
-              //} 
               offset++;
               break;
             }
        case ' ':
        case ',': 
-             //if(!is_value_string)
                   value_string = fbx_TrimString(value_string);
-               if(strlen(value_string))// || is_value_string)
+               if(strlen(value_string))
                {
                  node *array_obj = node_Create();
                  fbx_SetNode(array_obj,value_string,False);
                  node_array_Add(new_obj,array_obj);
                  node_SetParent(array_obj,new_obj);
-                 //printf(",:[%s]:[%c]\n",value_string,fbx[offset]);
                  free(value_string);
                  value_string=fbx_CreateEmptyString();
-                 //value_string = fbx_AddCharToString(value_string,fbx[offset]);
                }
             is_last_digit=0;
             offset++;
-            //is_value_string=0;
             break;
-            //continue;
     }
-    //if(!is_value_string)
-    //{
-    //  value_string = fbx_AddCharToString(value_string,fbx[offset]);
-    //} 
-    //offset++;
   } 
 
  free(value_string);
