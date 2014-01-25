@@ -209,6 +209,26 @@ void json_tests(void)
   //node *root = json_LoadFile("tests/test7_export2nicer.json");
   //node *root = json_LoadFile("tests/skybox1.json");
   //node *root = json_LoadFile("test_a.json");
+  node *roots = json_LoadFile("tests/test_s.json");
+  printf("root items:%d\n",node_GetItemsNum(roots));
+  node *fn = node_GetItemByKey(roots,"firstName");
+  printf("a items:%d\n",node_array_GetNum(fn));
+  printf("items:%d\n",node_GetItemsNum(fn));
+  node_ItemIterationReset(fn);
+  while(node_ItemIterationUnfinished(fn))
+  {
+    node *s = node_ItemIterate(fn);
+    printf("s :\n");
+    node_PrintTree(s);
+
+  }
+
+  printf("node tree:\n");
+  node_PrintTree(roots);
+
+  node_FreeTree(roots);
+
+
   node *root = json_LoadFile("tests/test2.json");
   //node *root = json_LoadFile("test3.json");
   //node *root = json_LoadFile("test4.json");
@@ -283,10 +303,23 @@ void json_tests(void)
   root = json_LoadFile("unit_tests.do");
   if(root!=NULL)
   {
-  	printf("found some structure\n");
-  	node_PrintTree(root);
+    printf("found some structure\n");
+    node_PrintTree(root);
     node_FreeTree(root);
   }
+
+
+  printf("malformed #5 (multi line acceptable)\n");
+  //root = json_LoadFile("test_broken1.json");
+  root = json_LoadFile("tests/simple_shader.json");
+  if(root!=NULL)
+  {
+    printf("found some structure\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+
 
   #ifdef USE_DEBUGGING
     printf("closing memory debugger\n");
@@ -304,6 +337,7 @@ void fbx_tests(void)
   //node *root = fbx_LoadFile("tests/box.fbx");
   //node *root = fbx_LoadFile("tests/ranger.fbx");
   node *root = fbx_LoadFile("tests/fbx_object.fbx");
+  //node *root = fbx_LoadFile("tests/ranger_tris2.fbx");
   printf("node tree:\n");
   if(root!=NULL)
   {
@@ -391,7 +425,7 @@ int main(int argc, char *argv[])
     //node_tests();
     //mem_tests();
     json_tests();
-    //fbx_tests();
+    fbx_tests();
     //hashing_tests();
     //json_speed_tests();
 }

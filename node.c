@@ -341,8 +341,8 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
   }
   else
   {
-    node_print_tabs(tabs_num);
-    printf("undefined = ");
+    //node_print_tabs(tabs_num);
+    //printf("undefined = ");
   }
 
   switch(n->type)
@@ -443,6 +443,9 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
           printf("{}");
          break;*/
     case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_USER:
+         printf("user(%x)",n->value);
          break;
     case NODE_TYPE_BINARY:
          printf("binary(%d)",node_GetBinaryLength(n));
