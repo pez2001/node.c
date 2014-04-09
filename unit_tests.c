@@ -425,39 +425,114 @@ void yeti_tests(void)
   mem_Init();
   #endif
   
-
-  node *root = yeti_LoadFile("tests/test.yeti");
-  printf("node tree:\n");
+  printf("loading test_block2.yeti\n");
+  node *root = yeti_LoadFile("tests/test_block2.yeti");
   if(root!=NULL)
   {
+    printf("test_block2.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+
+  printf("loading test.yeti\n");
+  root = yeti_LoadFile("tests/test.yeti");
+  if(root!=NULL)
+  {
+    printf("test.yeti node tree:\n");
     node_PrintTree(root);
     node_FreeTree(root);
   }
   
+  printf("loading test_comment.yeti\n");
   root = yeti_LoadFile("tests/test_comment.yeti");
-  printf("node tree:\n");
   if(root!=NULL)
   {
+    printf("test_comment.yeti node tree:\n");
     node_PrintTree(root);
     node_FreeTree(root);
   }
 
+  printf("loading test_print.yeti\n");
   root = yeti_LoadFile("tests/test_print.yeti");
-  printf("node tree:\n");
   if(root!=NULL)
   {
+    printf("test_print.yeti node tree:\n");
     node_PrintTree(root);
     node_FreeTree(root);
   }
 
+  printf("loading test_block.yeti\n");
   root = yeti_LoadFile("tests/test_block.yeti");
-  printf("node tree:\n");
   if(root!=NULL)
   {
+    printf("test_block.yeti node tree:\n");
     node_PrintTree(root);
     node_FreeTree(root);
   }
 
+  printf("loading test_empty.yeti\n");
+  root = yeti_LoadFile("tests/test_empty.yeti");
+  if(root!=NULL)
+  {
+    printf("test_empty.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  printf("loading test_empty2.yeti\n");
+  root = yeti_LoadFile("tests/test_empty2.yeti");
+  if(root!=NULL)
+  {
+    printf("test_empty2.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  printf("loading test_empty3.yeti\n");
+  root = yeti_LoadFile("tests/test_empty3.yeti");
+  if(root!=NULL)
+  {
+    printf("test_empty3.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  printf("loading test_empty4.yeti\n");
+  root = yeti_LoadFile("tests/test_empty4.yeti");
+  if(root!=NULL)
+  {
+    printf("test_empty4.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  printf("loading test_broken.yeti\n");
+  root = yeti_LoadFile("tests/test_broken.yeti");
+  if(root!=NULL)
+  {
+    printf("test_broken.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  printf("loading test_block2.yeti\n");
+  root = yeti_LoadFile("tests/test_block2.yeti");
+  if(root!=NULL)
+  {
+    printf("test_block2.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  printf("loading test_nesting.yeti\n");
+  root = yeti_LoadFile("tests/test_nesting.yeti");
+  if(root!=NULL)
+  {
+    printf("test_nesting.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
 
   /*root = yeti_LoadFile("tests/test_comment_strings.yeti");
   printf("node tree:\n");
