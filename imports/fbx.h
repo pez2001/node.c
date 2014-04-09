@@ -31,8 +31,8 @@
 #include "string.h"
 #include "ctype.h"
 
-#ifdef USE_DEBUGGING
-#include "memory.h"
+#ifdef USE_MEMORY_DEBUGGING
+#include "../memory.h"
 #endif
 
 

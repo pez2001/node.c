@@ -160,7 +160,7 @@ void node_tests(void)
 void json_speed_tests(void)
 {
   printf("json speed tests\n");
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
   mem_Init();
   for(int i=0;i<10;i++)
   {	
@@ -190,7 +190,7 @@ void json_speed_tests(void)
   root = json_LoadFile("tests/test_broken2.json");
   node_FreeTree(root);
   }
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
   printf("json speed tests thru\n");
@@ -200,7 +200,7 @@ void json_speed_tests(void)
 void json_tests(void)
 {
   printf("json tests\n");
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
   printf("using memory debugger\n");
   mem_Init();
   #endif
@@ -321,7 +321,7 @@ void json_tests(void)
 
 
 
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
     printf("closing memory debugger\n");
     mem_Close();
   #endif
@@ -330,7 +330,7 @@ void json_tests(void)
 void fbx_tests(void)
 {
   printf("fbx tests\n");
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
   mem_Init();
   #endif
   
@@ -344,7 +344,7 @@ void fbx_tests(void)
     node_PrintTree(root);
     node_FreeTree(root);
   }
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
   printf("fbx tests thru\n");
@@ -352,7 +352,7 @@ void fbx_tests(void)
 
 void mem_tests(void)
 {
-  #ifdef USE_DEBUGGING
+  #ifdef USE_MEMORY_DEBUGGING
   printf("memory test\n");
   mem_Init();
   char *test = malloc(66);
@@ -418,14 +418,72 @@ void hashing_tests(void)
 
 }
 
+void yeti_tests(void)
+{
+  printf("yeti tests\n");
+  #ifdef USE_MEMORY_DEBUGGING
+  mem_Init();
+  #endif
+  
+
+  node *root = yeti_LoadFile("tests/test.yeti");
+  printf("node tree:\n");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+  
+  root = yeti_LoadFile("tests/test_comment.yeti");
+  printf("node tree:\n");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  root = yeti_LoadFile("tests/test_print.yeti");
+  printf("node tree:\n");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+  root = yeti_LoadFile("tests/test_block.yeti");
+  printf("node tree:\n");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+
+  /*root = yeti_LoadFile("tests/test_comment_strings.yeti");
+  printf("node tree:\n");
+  if(root!=NULL)
+  {
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }*/
+
+
+  #ifdef USE_MEMORY_DEBUGGING
+  mem_Close();
+  #endif
+  printf("yeti tests thru\n");
+}
+
+
 
 int main(int argc, char *argv[])
 {
 	//ptr_tests();
     //node_tests();
     //mem_tests();
-    json_tests();
-    fbx_tests();
+    //json_tests();
+    //fbx_tests();
+    yeti_tests();
     //hashing_tests();
     //json_speed_tests();
 }

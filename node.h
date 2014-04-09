@@ -25,7 +25,7 @@
 
 #include "list.h"
 
-#ifdef USE_DEBUGGING
+#ifdef USE_MEMORY_DEBUGGING
 #include "memory.h"
 #endif
 

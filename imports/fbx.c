@@ -151,15 +151,11 @@ void fbx_SetNode(node *n,char *value_string,int is_value_string)
         }
 }
 
-
-
 int fbx_isdigit(char c)
 {
+
   return(isdigit(c) || c == '.'|| c== '-' || c=='+');
 }
-
-
-
 
 node *fbx_Load(char *fbx,unsigned long len)
 {
@@ -273,14 +269,37 @@ node *fbx_Load(char *fbx,unsigned long len)
              state |= FBX_STATE_IN_COMMENT;
              is_last_digit=0;
        case '\n':
-       case '\r'://to catch multiline values just skip these->breaks normal single value objs -> arghh
+       case '\r':
        case '\t': 
               offset++;
               break;
        default:
-            if((is_last_digit==1 && fbx_isdigit(fbx[offset])==0 ))
-            {
-               is_last_digit = fbx_isdigit(fbx[offset]);
+              if((is_last_digit==1 && fbx_isdigit(fbx[offset])==0 ))
+              {
+                is_last_digit = fbx_isdigit(fbx[offset]);
+                value_string = fbx_TrimString(value_string);
+                if(strlen(value_string))
+                {
+                  node *array_obj = node_Create();
+                  fbx_SetNode(array_obj,value_string,False);
+                  node_array_Add(new_obj,array_obj);
+                  node_SetParent(array_obj,new_obj);
+                  free(value_string);
+                  value_string=fbx_CreateEmptyString();
+                  value_string = fbx_AddCharToString(value_string,fbx[offset]);
+                }
+                offset++;
+                break;
+              }
+               else
+              {
+                is_last_digit = fbx_isdigit(fbx[offset]);
+                value_string = fbx_AddCharToString(value_string,fbx[offset]);
+                offset++;
+                break;
+              }
+       case ' ':
+       case ',': 
                value_string = fbx_TrimString(value_string);
                if(strlen(value_string))
                {
@@ -290,33 +309,10 @@ node *fbx_Load(char *fbx,unsigned long len)
                  node_SetParent(array_obj,new_obj);
                  free(value_string);
                  value_string=fbx_CreateEmptyString();
-                 value_string = fbx_AddCharToString(value_string,fbx[offset]);
                }
-              offset++;
-              break;
-            }
-            else
-            {
-              is_last_digit = fbx_isdigit(fbx[offset]);
-               value_string = fbx_AddCharToString(value_string,fbx[offset]);
-              offset++;
-              break;
-            }
-       case ' ':
-       case ',': 
-                  value_string = fbx_TrimString(value_string);
-               if(strlen(value_string))
-               {
-                 node *array_obj = node_Create();
-                 fbx_SetNode(array_obj,value_string,False);
-                 node_array_Add(new_obj,array_obj);
-                 node_SetParent(array_obj,new_obj);
-                 free(value_string);
-                 value_string=fbx_CreateEmptyString();
-               }
-            is_last_digit=0;
-            offset++;
-            break;
+               is_last_digit=0;
+               offset++;
+               break;
     }
   } 
 

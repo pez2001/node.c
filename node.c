@@ -285,7 +285,10 @@ int node_count_digits(char *number_string)
   }
   if(num_e>1 || middle_signs>1 || (middle_signs>0 && num_e == 0))
     return(0);
-  return((leading_sign*5)+digits+both>other+both);
+  int lead_worth = 5;
+  if(len==1)
+    lead_worth = 0;
+  return((leading_sign*lead_worth)+digits+both>other+both);
 }
 
 int node_NumberIsFloat(char *number_string)
