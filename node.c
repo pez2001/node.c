@@ -153,6 +153,7 @@ void *node_CreateValue(int type,void *value)
          r = (void*)node_CopyString(value);
          break;
     case NODE_TYPE_ARRAY:
+         r = (void*)node_CopyArray(value,True);
          break;
     case NODE_TYPE_NODE:
          break;
@@ -285,7 +286,7 @@ int node_count_digits(char *number_string)
   }
   if(num_e>1 || middle_signs>1 || (middle_signs>0 && num_e == 0))
     return(0);
-  int lead_worth = 5;
+  int lead_worth = 1;
   if(len==1)
     lead_worth = 0;
   return((leading_sign*lead_worth)+digits+both>other+both);
@@ -655,6 +656,48 @@ node *node_Copy(node *n,BOOL copy_value)
   list *l = list_Copy(n->items);
   node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
   return(r);
+}
+
+node *node_CopySub(node *n,BOOL copy_value)
+{
+  void *v = node_CreateValue(n->type,n->value); 
+  //list *l = list_Copy(n->items);
+  list *l = list_Create(0,0);
+  node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+  return(r);
+}
+
+
+node *node_CopySubTree(node *n,node *parent,BOOL copy_values,BOOL update_parents)
+{
+  node *new = node_CopySub(n,copy_values);
+  //printf("copied node:\n");
+  node_Print(new,True);
+  if(update_parents)
+  {
+    node_SetParent(new,parent);
+  }
+  node_AddItem(parent,new);
+  node_ItemIterationReset(n);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *sub = node_ItemIterate(n);
+    node_CopySubTree(sub,new,copy_values,update_parents);
+  }
+}
+
+node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents)
+{
+  node *new = node_CopySub(n,copy_values);
+  //printf("copied tree node:\n");
+  node_Print(new,True);
+  node_ItemIterationReset(n);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *sub = node_ItemIterate(n);
+    node_CopySubTree(sub,new,copy_values,update_parents);
+  }
+  return(new);
 }
 
 int node_IsType(node *n, int type)
@@ -1056,6 +1099,21 @@ void node_FreeArray(node_array *array,BOOL free_nodes)
   list_Close(array->nodes);
   free(array);
 }
+
+node_array *node_CopyArray(node_array *array,BOOL copy_values)
+{
+  node_array *new_array = node_CreateArray(0);
+  list_IterationReset(array->nodes);
+  while(list_IterationUnfinished(array->nodes))
+  { 
+    node *i = (node*)list_Iterate(array->nodes);
+    node *copy = node_CopyTree(i,copy_values,True);
+    list_Push(new_array->nodes,copy);
+  }
+  return(new_array);
+}
+
+
 
 void node_SetArray(node *n,long num)
 {

@@ -366,11 +366,28 @@ void mem_tests(void)
   node_SetKey(sub,"sub_node");
   node_SetString(sub,"sub");
   node *sub2 = node_Create();
-  node_SetString(sub2,"sub");
+  node_SetString(sub2,"sub2");
   node_SetKey(sub2,"sub2_node");
   node_array_Add(n,sub);
   node_AddItem(n,sub2);
+  node_SetParent(sub2,n);
+  printf("copying tree\n");
+  node_PrintTree(n);
+  node *n2=node_Create();
+  node_SetKey(n2,"root2");
+  node_SetString(n2,"Hello World!");
+  node *sub3 = node_Create();
+  node_SetKey(sub3,"sub3");
+  node_SetString(sub3,"Test");
+  node_AddItem(n2,sub3);
+  node *copy = node_CopyTree(n,True,True);
+  //node *copy = node_CopyTree(n2,True,True);
   node_FreeTree(n);
+  node_FreeTree(n2);
+  printf("copied tree\n");
+
+  node_PrintTree(copy);
+  node_FreeTree(copy);
   mem_Close();
   printf("memory test thru\n");
   #endif
@@ -555,10 +572,10 @@ int main(int argc, char *argv[])
 {
 	//ptr_tests();
     //node_tests();
-    //mem_tests();
+    mem_tests();
     //json_tests();
     //fbx_tests();
-    yeti_tests();
+    //yeti_tests();
     //hashing_tests();
     //json_speed_tests();
 }

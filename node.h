@@ -124,6 +124,8 @@ void node_Free(node *n,BOOL free_value);
 void node_FreeValue(int type,void *value);
 node *node_Copy(node *n,BOOL copy_value);
 
+node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents);
+
 /*basic node access*/
 void node_SetKey(node *n,char *key);
 void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
@@ -209,6 +211,7 @@ void node_SetSint64(node *n,long long ll);
 
 node_array *node_CreateArray(long num);
 void node_FreeArray(node_array *array,BOOL free_nodes);
+node_array *node_CopyArray(node_array *array,BOOL copy_values);
 
 
 /*binary type -> binary chunks managed by it need to be freed on its own at the moment*/
