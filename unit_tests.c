@@ -566,16 +566,40 @@ void yeti_tests(void)
   printf("yeti tests thru\n");
 }
 
+void yeti_tests2(void)
+{
+  printf("yeti tests 2\n");
+  #ifdef USE_MEMORY_DEBUGGING
+  mem_Init();
+  #endif
+  
+
+  printf("loading test_nesting.yeti\n");
+  node *root = yeti_LoadFile("tests/test_nesting.yeti");
+  if(root!=NULL)
+  {
+    printf("test_nesting.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+  #ifdef USE_MEMORY_DEBUGGING
+  mem_Close();
+  #endif
+  printf("yeti tests 2 thru\n");
+}
+
+
 
 
 int main(int argc, char *argv[])
 {
 	//ptr_tests();
     //node_tests();
-    mem_tests();
+    //mem_tests();
     //json_tests();
     //fbx_tests();
     //yeti_tests();
+    yeti_tests2();
     //hashing_tests();
     //json_speed_tests();
 }
