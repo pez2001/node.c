@@ -1,0 +1,21 @@
+{
+    "firstName": "John",
+    "lastName": "Smith",
+    "connection" : null,
+    "customer":  true,
+    "callback":  false,
+    "maker":  true,
+    "age": 25,
+    "test": "hello world!\n",
+    "quotes":  "Hi\nnewline\"r\rn\nb\bt\tf\fslash\\\nend of message\n",
+    "address": {
+        "streetAddress": "21 2nd Street",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": 10021
+    },
+    "phone": {
+        "home": "04343-23233",
+        "cell": "0172-3232342"
+    }
+}

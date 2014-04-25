@@ -1,0 +1,26 @@
+root = {
+    firstName = John
+	Data2 = [-1.17453e-008,0.08631,-1.17453e-007]
+	Data3 = {
+		dtest = [-1.17453e-007,0.08631]
+		}
+	lastName = Smith
+	empty_Array = []
+	empty_object = {}
+	Data = [1.17453e-007,0.08631]
+	age = 25
+	base_fee = 1e-005 
+	base_fee2 = 1.1e-006
+	base_fee4 = 1100
+	hacker = True Leet
+	address = {
+		streetAddress = 21 2nd Street
+		city = New York
+		state = NY
+		postalCode = 10021
+		}
+	phone = {
+		home = 04343-23233
+		cell = 0172-3232342
+		}
+	}

@@ -1,0 +1,20 @@
+{
+    "shaders" : [
+            {
+            "Name" : "simple",
+            "VertexProgram": "
+                                void main()\n
+	                            {\n
+	                            \n	
+                                  gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;\n
+	                            }\n
+	                          ",
+            "FragmentProgram": "
+                                void main()\n
+                                {\n	
+	                              gl_FragColor = gl_Color;\n
+                                }\n 
+                                "
+            }
+        ]
+}

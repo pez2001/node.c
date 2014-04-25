@@ -1,0 +1,8 @@
+{
+    "phoneNumbers": [
+        {
+            "type": "home",
+            "number": "212 555-1234"
+        },"string_in\n_array",666,"last_String in array"
+    ]
+}

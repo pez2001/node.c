@@ -1,0 +1,16 @@
+/*
+language types /*comment level 2*/
+call(internal) "hi"
+"incomplete
+
+*/
+
+keyed=["hi":2,"name":"pez"];
+print(keyed.name);
+
+
+/*obop  = object->operation
+comment
+*/
+
+

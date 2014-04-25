@@ -1,0 +1,16 @@
+/*
+language types /*comment level 2*/
+call(internal)
+*/
+
+keyed=["hi":2,"name":"pez"];/*single line comment*/
+print(keyed)/*hi there*/;
+	/*single comment only line*/
+print(keyed.name);
+
+/* hi="test"*/
+/*obop  = object->operation
+comment
+*/
+
+

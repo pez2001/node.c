@@ -598,7 +598,7 @@ int main(int argc, char *argv[])
     //mem_tests();
     //json_tests();
     //fbx_tests();
-    //yeti_tests();
+    yeti_tests();
     yeti_tests2();
     //hashing_tests();
     //json_speed_tests();

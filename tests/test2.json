@@ -1,0 +1,15 @@
+{
+    "firstName": "John",
+    "lastName": "Smith",
+    "age": 25,
+    "address": {
+        "streetAddress": "21 2nd Street",
+        "city": "New York",
+        "state": "NY",
+        "postalCode": 10021
+    },
+    "phone": {
+        "home": "04343-23233",
+        "cell": "0172-3232342"
+    }
+}

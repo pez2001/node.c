@@ -1,0 +1,266 @@
+/*
+language types
+
+int
+float 
+string
+array
+bool
+null
+function
+call(internal)
+
+every type is a key value pair
+
+a key value pair can be created using :
+
+an array is a list of types in brackets [,..]
+
+an object is represented by an array
+
+the & symbol refers to the parent object and can be chained (used as self for objects)
+
+the . symbol is used to dive into arrays by key
+array[key_or_index] is equivalent
+array.0 can be used too
+
+the ; symbol is used as splitter of statements
+
+
+
+a function is a list of obops in brackets {,..} a functions value is set via = , if the functions is used in an assignment its return value will be used
+ to return the functions body use the internal |() function
+
+assignments are just calls to operator overload function =
+which can in turn just be an object() call to return another object instance
+
+so basically everything is just a list of objects and functions to be used on the objects
+
+
+internal language functions
+
+?(expression,true_func,false_func,loop_while_true); 
+ execute based on expression value (0,1,..) ,loops if needed
+ returns(expression)
+
+>(message); 
+ outputs message to stdout
+
+|(object,info);
+ returns the object infos
+ if(info==0) -> type enumeration value
+ if(info==1) -> array length
+ if(info==2) -> function body
+
+'object'(); 
+ returns a new instance of object
+
+return(value); /*not implemented as language keyword -> just as convention*/
+ sets return value
+
+ 
+
+
+
+
+hellow world example: 
+
+i="hello world";
+print(i);
+
+->
+{
+ i(object("hello world").return);
+ -->(vm) name_space_above.append(kv("i",call_object([object("hello world")]).return));
+ {
+  >(i);
+ }
+}
+
+check for i
+search i for method '='
+call i's '=' method with string 'hello world' as parameters
+
+check for function print
+check for i
+call print function with found i as parameter
+
+
+function chain till ; seperator
+use stack to 
+push i.= 
+push object("hello world")
+hit ;
+work stack
+read next function chain
+
+
+
+
+
+or just
+
+print("hello world");
+
+->
+{
+ {
+  >(object("hello world"));
+ }
+}
+
+*/
+
+
+return(&,object)
+{
+ &.return = object; 
+}
+
+
+
+print(output)
+{
+ >(output);
+}
+
+type(object)
+{
+ return(|(object,0));
+}
+
+len(object)
+{
+ return(|(object,1));
+}
+
+
+
+if(expression,kv) /*defining if construct as function using a key/value object as parameter */
+{
+  return(?(expression,kv.key,kv.value,0));/*the last parameter tells the interpreter if it shall repeat the op as long as expression is true*/
+}
+
+
+while(expression,loop)
+{
+ ?(expression,loop,0,1);
+}
+
+range(start,end)
+{
+  r.key=start;
+  r.value=end;
+  return(r);
+}
+
+
+for(counter,range,loop)
+{
+  counter=range.key;
+  while(counter<range.value,{loop(counter);counter++;});
+}
+
+switch(value,cases) /*cases is an array of kv's */
+{
+  for(i,range(0,len(cases)),
+  {
+    if(value==cases[i].key,cases[i].value : 0);
+  });
+}
+
+integer.key = "int";
+integer.value = 0;
+integer(&,value) = 
+{
+  i = &();
+  /*internally transformed into i(object())*/
+  i.value = value;
+  return(&); 
+};
+integer.inc(&) = 
+{
+ &.value++;
+ return(&.value);
+};
+integer.dec(&) = 
+{
+ &.value--;
+ return(&.value);
+};
+
+integer.==(&,i) = 
+{
+  return(if(&.value == i,return(1),return(0)));
+};
+
+o = integer(0);
+
+better_integer = integer(0); /*single morphism*/
+better_integer.*(&,i)=
+{
+  return(&.value * i);
+};
+
+test.print(&)=
+{
+  print(&.value);
+}
+
+poly_int = (integer(0),test); /*polymorphism*/
+/*transforms into*/
+poly_int = object(integer(0),test);
+
+
+
+
+
+test = "key" : 0;
+
+l=1;
+l.inc();
+array=[1,2,3,l.dec()];
+ob.v=array;
+ob.o = l.inc();
+ob.str = "hello world";
+print(ob.str);
+ex(a,b)= /*implicit = not needed*/
+{
+l=a*b;
+return(l);
+};/*implicit semicolon here*/
+i=ex(1,3);
+print("i:"+i);
+print("i:"+i.str());
+n = ex(1,l.inc());
+print("n:"+n);
+c = 0;
+while(c<10,{print(c);c++;});
+if(c==10,{print("true");}:{print("false");});
+/*the above is just a simplified representation of the next line*/
+if(c==(10),{print("true");}:{print("false");});
+
+for(i,range(0,10),{print("i:"+i);});
+
+keyed=["hi":2,"name":"pez"];
+print(keyed["hi"]);
+print(keyed[1]);
+print(keyed.name);
+print(array[0]);
+
+obj=[(&)={obj=&();obj.key=1;return(obj);},member(&)={print("key:"+&.key);},"key":1];
+obj2 = obj.copy();
+obj.key=2;
+obj.member();
+obj2.member();
+obj3 = obj(); /*array function call -> first method gets executed*/
+keyed[0]++;
+
+/*obop  = object->operation
+  minkey = minimal keywords
+  jstruc = just structure
+  seaol = simple everything's an object language
+  yeti = ' yearning and eager tiny interpreter '
+*/
+
+

@@ -483,7 +483,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     printf("\n");
 }
 
-void node_Print(node *n,int with_key)
+void node_Print(node *n,int with_key,int include_items)
 {
   if(with_key)
   {
@@ -548,7 +548,7 @@ void node_Print(node *n,int with_key)
          while(node_array_IterationUnfinished(n))
          { 
             node *i = node_array_Iterate(n);
-            node_Print(i,True);
+            node_Print(i,True,include_items);
             if(node_array_IterationUnfinished(n))
               printf(" , ");
          }
@@ -557,7 +557,7 @@ void node_Print(node *n,int with_key)
          break;
          }
     case NODE_TYPE_NODE:
-         if(node_HasItems(n))
+         if(include_items && node_HasItems(n))
          { 
            node_print_tabs(1);
            printf("{\n");
@@ -566,7 +566,7 @@ void node_Print(node *n,int with_key)
            while(node_ItemIterationUnfinished(n))
            {
               node *i = node_ItemIterate(n);
-              node_Print(i,True);
+              node_Print(i,True,True);
            }
            node_SetItemIterationIndex(n,old_index);
            node_print_tabs(1);
@@ -672,7 +672,7 @@ node *node_CopySubTree(node *n,node *parent,BOOL copy_values,BOOL update_parents
 {
   node *new = node_CopySub(n,copy_values);
   //printf("copied node:\n");
-  node_Print(new,True);
+  //node_Print(new,True);
   if(update_parents)
   {
     node_SetParent(new,parent);
@@ -690,7 +690,7 @@ node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents)
 {
   node *new = node_CopySub(n,copy_values);
   //printf("copied tree node:\n");
-  node_Print(new,True);
+  //node_Print(new,True);
   node_ItemIterationReset(n);
   while(node_ItemIterationUnfinished(n))
   {

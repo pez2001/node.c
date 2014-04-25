@@ -1,0 +1,22 @@
+func(a,b)=
+{
+  print("a:"+a+" b:"+b);
+};
+ret()=
+{
+&.value=1;
+};
+
+func(0,ret());
+b = ret();
+c += ret() +ret();
+print("finished");
+print();
+
+f=1;
+f.method = func;
+f.val=2;
+g=2;
+
+f.method(f.val,g);
+

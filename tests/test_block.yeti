@@ -1,0 +1,11 @@
+keyed=["hi":2,"name":"pez"];
+print(keyed.name);
+func(a,b)=
+{
+  print(a,b);
+};
+
+func(keyed[0],keyed[1]);
+print("finished");
+
+

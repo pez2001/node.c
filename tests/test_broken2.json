@@ -1,0 +1,31 @@
+{
+    "firstName": "John",
+    "Data2":[-1.17453e-08,0.08631,-1.17453e-07,],
+
+    "Data3":{dtest:[-1.17453e-07,0.08631]},
+    "lastName": "Smith",
+    "empty_Array": [],
+    "empty_Array2": [,],
+    "empty_object": {},
+     "Data":[1.17453E-07,0.08631],
+    "age": 25,
+    "base_fee":1e-005
+    "base_fee2":1.1e-6,
+    "base_fee4":1.1e03
+    hacker:"True Leet",
+    "address": {
+        "streetAddress": "21 2nd Street",
+        "city": "New York",
+        "state": ""NY,
+        "postalCode": 10021
+    }
+    "phone": {
+        "home": "04343-23233",
+        "cell": "0172-3232342",
+        elite={home="true grit"},
+        elite2={'home'="fargo"},
+        ex:[],
+        [],
+        {"power":"tothepeople"}
+    },
+}
