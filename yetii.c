@@ -1008,8 +1008,8 @@ int main(int argc, char** argv)
   node *base_class = create_class_object();
   yeti_state *state = create_yeti_state(base_class);
 
-  printf("yeti compiler\n");
-  printf("base class address:%x\n",base_class);
+  printf("yeti interpreter 0.1\n");
+  //printf("base class address:%x\n",base_class);
 
   //node *yeti_stream = yeti_LoadFile("node.c/tests/test_print.yeti");
   //node *yeti = yeti_LoadFile("node.c/tests/test_block2.yeti");
@@ -1017,7 +1017,13 @@ int main(int argc, char** argv)
   //node *yeti_stream = yeti_LoadFile("node.c/tests/test_simple4.yeti");
   
   //node *yeti_stream = yeti_LoadFile("node.c/tests/test_simple_nest.yeti");
-  node *yeti_stream = yeti_LoadFile("node.c/tests/test_simple_nest3.yeti");
+  //node *yeti_stream = yeti_LoadFile("node.c/tests/test_simple_nest3.yeti");
+  if(argc<2)
+  {
+    printf("error: no input file given as parameter\n");
+    return(1);
+  }
+  node *yeti_stream = yeti_LoadFile(argv[1]);
 
   //node *yeti_stream = yeti_LoadFile("node.c/tests/test_simple9.yeti");
   

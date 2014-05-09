@@ -21,15 +21,15 @@
  */
 
 
-#ifndef YETIC_H
-#define YETIC_H
+#ifndef YETII_H
+#define YETII_H
 
 
-#include "node.c/list.h"
-#include "node.c/node.h"
-#include "node.c/imports/json.h"
-#include "node.c/imports/fbx.h"
-#include "node.c/imports/yeti.h"
+#include "list.h"
+#include "node.h"
+#include "imports/json.h"
+#include "imports/fbx.h"
+#include "imports/yeti.h"
 
 
 #include "math.h"

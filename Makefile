@@ -14,8 +14,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 717
-DEBUG_BUILD = 1019
+BUILD = 720
+DEBUG_BUILD = 1022
 
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DUSE_MEMORY_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
@@ -62,10 +62,10 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc node_print_debug unit_tests_debug
+debug: build_inc node_print_debug unit_tests_debug yetii_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
-all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests debug
+all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests yetii debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 
@@ -77,7 +77,7 @@ unit_tests_debug: node_static_debug $(UT_DEBUG_OBJ)
 	$(CC) $(UT_DEBUG_OBJ) node.da -lm -o unit_tests_debug 
 
 yetii: node_static $(YETII_OBJ) 
-	$(CC) $(UT_OBJ) node.a -lm -o yetii 
+	$(CC) $(YETII_OBJ) node.a -lm -o yetii 
 	strip ./yetii$(PLATFORM_EXT)
 
 yetii_debug: node_static_debug $(YETII_DEBUG_OBJ) 
