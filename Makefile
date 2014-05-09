@@ -14,8 +14,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 714
-DEBUG_BUILD = 1016
+BUILD = 717
+DEBUG_BUILD = 1019
 
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DUSE_MEMORY_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
@@ -40,6 +40,13 @@ NODE_PRINT_BINS = node_print$(PLATFORM_EXT)
 NODE_PRINT_INCLUDE_FILES = node_print.h 
 NODE_PRINT_OBJ = node_print.o 
 NODE_PRINT_DEBUG_OBJ = node_print.do 
+
+YETII_FILES = yetii.c
+YETII_OBJ = yetii.o
+YETII_BINS = yetii$(PLATFORM_EXT)
+YETII_DEBUG_OBJ = yetii.do
+YETII_INCLUDE_FILES = yetii.h
+
 
 
 
@@ -68,6 +75,17 @@ unit_tests: node_static $(UT_OBJ)
 
 unit_tests_debug: node_static_debug $(UT_DEBUG_OBJ) 
 	$(CC) $(UT_DEBUG_OBJ) node.da -lm -o unit_tests_debug 
+
+yetii: node_static $(YETII_OBJ) 
+	$(CC) $(UT_OBJ) node.a -lm -o yetii 
+	strip ./yetii$(PLATFORM_EXT)
+
+yetii_debug: node_static_debug $(YETII_DEBUG_OBJ) 
+	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_debug 
+
+yetii_o: $(NODE_OBJ) $(YETII_OBJ)
+	$(CC) $(NODE_OBJ) $(YETII_OBJ)  -lm -o yetii 
+
 
 unit_tests_o: $(NODE_OBJ) $(UT_OBJ)
 	$(CC) $(NODE_OBJ) $(UT_OBJ)  -lm -o unit_tests 

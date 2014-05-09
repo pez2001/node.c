@@ -5,6 +5,7 @@ print(c+1,b+2,a+3);
 c.beta=c+b+3;/*25*/
 print(c.beta);
 /*d=test(c)+test(b);*/
-d=c+test(b)+9;
+d=10;/*10*/
+d=c+test(b)+9;/*51*/
 print(d);
 print("Hello World!");

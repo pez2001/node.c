@@ -156,6 +156,9 @@ void *node_CreateValue(int type,void *value)
          r = (void*)node_CopyArray(value,True);
          break;
     case NODE_TYPE_NODE:
+         //r = malloc(sizeof(void*));
+         //memcpy(r, value, sizeof(void*));
+         r = value;
          break;
     case NODE_TYPE_STUB:
          break;
@@ -874,6 +877,21 @@ void node_SetString(node *n,char *s)
   node_SetType(n,NODE_TYPE_STRING);
 }
 
+void node_SetNode(node *n,node *dst)
+{
+  if(node_IsType(n,NODE_TYPE_NODE))
+     //*(void*)n->value = c;
+    n->value = dst;
+  else
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = dst; //node_CreateValue(NODE_TYPE_UINT8,&c);
+     node_SetType(n,NODE_TYPE_NODE);
+  }
+}
+
+
+
 void node_SetUint8(node *n,unsigned char c)
 {
   if(node_IsType(n,NODE_TYPE_UINT8))
@@ -1056,6 +1074,17 @@ node *node_ItemIterate(node *n)
 {
   return(list_Iterate(n->items));
 }
+
+node *node_ItemPeek(node *n)
+{
+  if(!list_IterationUnfinished(n->items))
+    return(NULL);
+  long old = list_GetIterationIndex(n->items);
+  node *r = list_Iterate(n->items);
+  list_SetIterationIndex(n->items,old);
+  return(r);
+}
+
 
 int node_ItemIterationUnfinished(node *n)
 {

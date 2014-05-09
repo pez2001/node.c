@@ -1,0 +1,29 @@
+
+a.func(a,b)=
+{
+  /*print("a:",a," b:",b);*/
+  /*b=21;
+  d=18;*/
+  /*@.members.hallo=2;*/
+  /*@.value=3;
+  @=a;*/
+  /*e=99;*/
+  @:99;
+};
+
+/*c=*/
+/*a.func(12+6,15);*/
+/*print("tricka:",a.func.a," c:",c," d:",a.func.d);*/
+/*print("value: ",a.func.value);*/
+/*print("value: ",a.func);*/
+haha=a.func(29,15);
+/*a.func.e = 66;*/
+/*print("value: ",a.func," d:",d);*/
+/*print("value: ",a.func.e);*/
+
+print("return value: ",haha);
+
+/*print(["3::","2::"]);*/
+/*func={print("hello world!");};
+func(5);*/
+/*print({});*/
