@@ -40,13 +40,7 @@
 
 typedef struct _yeti_state 
 {
-	node *il_stream;
 	node *top_scope;
-	list *statement_stack;
-	list *obj_stack;
-	node *root_obj;
-	list *id_stack;
-	list *parameter_stack;
 	node *base_class;
 
 }yeti_state;
