@@ -32,7 +32,7 @@ char *AddCharToString(char *string,char letter)
   return(string);
 }
 
-char *CreateEmptyString()
+char *CreateEmptyString(void)
 {
     char *string = (char*)malloc(1);
     string[0] = 0;
@@ -44,6 +44,7 @@ node *create_obj(char *name)
   node *obj = node_Create();
   node_SetType(obj,NODE_TYPE_NODE);
   node_SetKey(obj,name);
+  printf("created obj :%s @:%x\n",name,obj);
   return(obj);
 }
 
@@ -52,7 +53,6 @@ void add_obj_kv(node *obj,node *kv)
   node_AddItem(obj,kv);
   node_SetParent(kv,obj);
 }
-
 
 void add_obj_string(node *obj,char *key,char *string)
 {
@@ -85,7 +85,6 @@ void set_obj_node(node *obj,char *key,node *n)
   kv->value = n;
 }
 
-
 char *get_obj_name(node *obj)
 {
   node *kv = node_GetItemByKey(obj,"name");
@@ -97,7 +96,6 @@ char *get_obj_type(node *obj)
   node *kv = node_GetItemByKey(obj,"type");
   return(node_GetString(kv));
 }
-
 
 void add_obj_int(node *obj,char *key,long i)
 {
@@ -117,6 +115,7 @@ void add_obj_double(node *obj,char *key,double d)
 
 node *get_value(node *obj)
 {
+  /*returns the object's value*/
   return(node_GetItemByKey(obj,"value"));
 }
 
@@ -139,7 +138,7 @@ node *get_member(node *obj,char *key)
     if(!strcmp(node_GetString(member_name),key))
       return(member);
   }
-  node *instance = (node*)node_GetItemByKey(obj,"base_class_instance");
+  //node *instance = (node*)node_GetItemByKey(obj,"base_class_instance");
   node *base_class_instance = (node*)node_GetValue(node_GetItemByKey(obj,"base_class_instance"));
   if(base_class_instance!=NULL)
     return(get_member(base_class_instance,key));
@@ -170,7 +169,6 @@ node *get_item(node *obj,node *key)
   return(NULL);
 }
 
-
 node *create_class_instance(node *class_obj)
 {
   node *child = node_CopyTree(class_obj,True,True);
@@ -180,9 +178,26 @@ node *create_class_instance(node *class_obj)
     node *base_class_instance = create_class_instance(base_class_type);
     set_obj_node(child,"base_class_instance",base_class_instance);
   }
+  printf("created class instance:%x\n",child);
   return(child);
 }
 
+void free_obj(yeti_state *state,node *obj)
+{
+  node *base_class_instance = node_GetItemByKey(obj,"base_class_instance");
+  if(base_class_instance!=NULL && base_class_instance != state->base_class)
+    free_obj(state,base_class_instance);
+  node *members = node_GetItemByKey(obj,"members");
+  if(members==NULL)
+    return;
+  node_ItemIterationReset(members);
+  while(node_ItemIterationUnfinished(members))
+  {
+    node *member = node_ItemIterate(members);
+    free_obj(state,member);
+  }
+  node_FreeTree(obj);
+}
 
 node *create_base_obj_layout(char *obj_name)
 {
@@ -205,22 +220,21 @@ void add_class_object_internal_function(node *class,char *method_name)//void *ad
   add_member(class,base);
 }
 
-
-node *create_class_object()
+node *create_class_object(void)
 {
   node *base = create_base_obj_layout("object");
   add_class_object_internal_function(base,"=");
   add_class_object_internal_function(base,":");
-  //add_internal_function(base,"-");
   add_class_object_internal_function(base,"+");
+  add_class_object_internal_function(base,"print");
+
+  //add_internal_function(base,"-");
   //add_internal_function(base,"/");
   //add_internal_function(base,"*");
-  add_class_object_internal_function(base,"print");
   //add_class_object_internal_function(base,"get");
   //add_class_object_internal_function(base,"test");
   return(base);
 }
-
 
 node *create_block_obj(node *base_class,node *block)
 {
@@ -231,6 +245,47 @@ node *create_block_obj(node *base_class,node *block)
   add_obj_kv(base,il_block);  
   return(base);
 }
+
+void free_execution_obj(yeti_state * state,node *exe_obj)
+{
+  node *parameters = node_GetItemByKey(exe_obj,"parameters");
+  if(parameters!=NULL)
+  {
+    node_ItemIterationReset(parameters);
+    while(node_ItemIterationUnfinished(parameters))
+    {
+      node *parameter = node_ItemIterate(parameters);
+      if(!strcmp(node_GetKey(parameter),"exe_object"))
+      {
+        printf("freeing exe_object in parameters\n");
+        free_execution_obj(state,parameter);
+      }
+    }
+  }
+  node_ClearItems(parameters);
+  node *sub_exe_obj = node_GetItemByKey(exe_obj,"sub_execution_obj");
+  if(sub_exe_obj!=NULL)
+    free_execution_obj(state,sub_exe_obj);
+  node *obj = node_GetItem(exe_obj,0);
+  //free_obj(state,obj);
+  node_Free(parameters,False);
+  node_ClearItems(exe_obj);
+  node_Free(exe_obj,False);
+  //node_Free(parameters);
+}
+
+void free_garbage(yeti_state * state)
+{
+  printf("freeing garbage:%d\n",node_GetItemsNum(state->garbage));
+  node_ItemIterationReset(state->garbage);
+  while(node_ItemIterationUnfinished(state->garbage))
+  {
+    node *gc = node_ItemIterate(state->garbage);
+    node_FreeTree(gc);
+  }
+  node_ClearItems(state->garbage);
+}
+
 
 node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj)
 {
@@ -245,13 +300,14 @@ node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj
   return(base);
 }
 
-
 yeti_state *create_yeti_state(node *base_class)
 {
   yeti_state *state = (yeti_state*)malloc(sizeof(yeti_state));
   state->base_class = base_class;
+  state->garbage = create_obj("garbage");
   return(state);
 }
+
 
 node *execute_obj(yeti_state *state,node *execution_obj,node *block,BOOL dont_execute_block)
 {
@@ -307,7 +363,7 @@ node *execute_obj(yeti_state *state,node *execution_obj,node *block,BOOL dont_ex
     node *exe_block = node_GetItemByKey(exe_obj,"execute_block");
     if( exe_block!= NULL && !strcmp(node_GetString(exe_block),"True") && dont_execute_block==False )
     {
-      node *il_block = node_GetItemByKey(exe_obj,"yeti_block");
+      //node *il_block = node_GetItemByKey(exe_obj,"yeti_block");
       node *block_parameters = node_GetItemByKey(exe_obj,"yeti_parameters");
       if(block_parameters!=NULL)
       {
@@ -375,6 +431,7 @@ node *execute_obj(yeti_state *state,node *execution_obj,node *block,BOOL dont_ex
       node *obj_name = node_GetItemByKey(parent,"name");
       node *real_parent = node_GetParent(parent);
       node_RemoveItem(real_parent,parent);
+      node_AddItem(state->garbage,parent);
       value = node_CopyTree(node_GetItem(real_parameters,0),True,True);
       set_obj_string(value,"name",node_GetString(obj_name));
       node_AddItem(real_parent,value);
@@ -427,13 +484,14 @@ node *execute_obj(yeti_state *state,node *execution_obj,node *block,BOOL dont_ex
   {
     value = execute_obj(state,sub_exe_obj,block,False);
   }
+  node_ClearItems(real_parameters);
+  node_Free(real_parameters,False);
   return(value);
 }
 
-
 node *evaluate_statement(yeti_state *state,node *statement,node *block,long iteration_start_index)
 {
-  long old_iteration_index = node_GetItemIterationIndex(statement);
+  //long old_iteration_index = node_GetItemIterationIndex(statement);
   node_SetItemIterationIndex(statement,iteration_start_index);
   long index = iteration_start_index;
   node *parameters = create_obj("parameters");
@@ -488,17 +546,20 @@ node *evaluate_statement(yeti_state *state,node *statement,node *block,long iter
         node *sub_obj = evaluate_statement(state,statement,block,index+1);
         sub_exe_obj = sub_obj;
       }
+      node_AddItem(state->garbage,array);
     }
     else if(!strcmp(node_GetKey(token),"yeti_block"))
     {
       node *block_class_instance = create_block_obj(state->base_class,token);
       add_obj_string(block_class_instance,"execute_block","True");
+      node_AddItem(state->garbage,block_class_instance);
       actual_obj = block_class_instance;
     }
     else if(!strcmp(node_GetKey(token),"str"))
     {
       node *child = create_class_instance(state->base_class);
       set_obj_string(child,"value",node_GetValue(token));
+      node_AddItem(state->garbage,child);
       actual_obj = child;
     }
     else if(!strcmp(node_GetKey(token),"val"))
@@ -519,8 +580,7 @@ node *evaluate_statement(yeti_state *state,node *statement,node *block,long iter
             actual_obj = child;
           }
         }
-        else
-        if(!strcmp(node_GetValue(token),"@"))
+        else if(!strcmp(node_GetValue(token),"@"))
         {
         }
         else
@@ -561,6 +621,7 @@ node *evaluate_statement(yeti_state *state,node *statement,node *block,long iter
         node *child = create_class_instance(state->base_class);
         set_obj_int(child,"value",node_GetSint32(token));
         actual_obj = child;//get_member(child,"get");
+        node_AddItem(state->garbage,child);
       }
     }
     else if(!strcmp(node_GetKey(token),"ops"))
@@ -591,7 +652,6 @@ node *evaluate_statement(yeti_state *state,node *statement,node *block,long iter
   return(exe_obj);
 }
 
-
 void evaluate_block(yeti_state *state,node *block)
 {
     node *block_class_instance = create_block_obj(state->base_class,block);
@@ -600,11 +660,23 @@ void evaluate_block(yeti_state *state,node *block)
     while(node_ItemIterationUnfinished(il_block))
     {
         node *yeti_statement = node_ItemIterate(il_block);
+        printf("evaluating statement\n");
         node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
+        printf("executing statement\n");
         execute_obj(state,obj,block_class_instance,False);
-    }
-}
+        //node_PrintTree(obj);
+        //node_FreeTree(obj);
+        printf("finished execution object\n");
 
+        free_garbage(state);
+        printf("freeing execution object\n");
+        free_execution_obj(state,obj);
+    }
+    node_PrintTree(block_class_instance);
+    //free_obj(state,block_class_instance);
+    printf("freeing block_class_instance\n");
+    node_FreeTree(block_class_instance);
+}
 
 void evaluate_block_instance(yeti_state *state,node *block_class_instance)
 {
@@ -615,10 +687,9 @@ void evaluate_block_instance(yeti_state *state,node *block_class_instance)
         node *yeti_statement = node_ItemIterate(il_block);
         node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
         execute_obj(state,obj,block_class_instance,False);
+        node_FreeTree(obj);
     }
 }
-
-
 
 
 int main(int argc, char** argv)
@@ -644,7 +715,16 @@ int main(int argc, char** argv)
   {
     evaluate_block(state,state->top_scope);
   }
-  node_FreeTree(state->top_scope);
+  //node *c = create_class_instance(base_class);
+  //node_FreeTree(state->top_scope);
+  //printf("bc:%x,c:%x\n",base_class,c);
+  //node_FreeTree(c);
+  node_FreeTree(base_class);
+  
+  node_FreeTree(yeti_stream);
+  node_ClearItems(state->garbage);
+  node_Free(state->garbage,False);
+
   free(state);
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();

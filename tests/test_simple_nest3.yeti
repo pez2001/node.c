@@ -1,19 +1,10 @@
 
-/*func(a,b,c)=
-{
-  @:99+a+b+c;
-};
-haha=func(1,2,3);*/
-
-/*print({@:99});*/
-
 func(a)=
 {
 	@:9+a;
 };
 
 haha=func(1);
-/*print(haha);*/
 
-print([{@:"99t"}," ",100+40," stephi ",haha," ",func(11)]);
+/*print([{@:"99t"}," ",100+40," stephi ",haha," ",func(11)]);*/
 

@@ -175,6 +175,8 @@ void *node_CreateValue(int type,void *value)
 
 void node_Free(node *n,BOOL free_value)
 {
+  printf("freeing node:%x\n",n);
+  node_PrintTree(n);
   if(free_value)
   {
     node_FreeValue(n->type,n->value);
@@ -212,6 +214,12 @@ void node_FreeValue(int type,void *value)
          node_FreeArray(value,True);
          break;
     case NODE_TYPE_NODE:
+
+         /*if(value!=NULL)
+         {
+           node_PrintTree(value);
+           node_FreeTree(value);
+         }*/
          break;
     case NODE_TYPE_STUB:
          break;
@@ -427,28 +435,19 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          node_array_SetIterationIndex(n,old_index);
          break;
          }
-/*    case NODE_TYPE_NODE:
-         if(node_HasItems(n))
-         { 
-          if(!node_HasKey(n))
-            node_print_tabs(tabs_num+1);
-           printf("{\n");
-           long old_index = node_GetItemIterationIndex(n);
-           node_ItemIterationReset(n);
-           while(node_ItemIterationUnfinished(n))
-           {
-              node *i = node_ItemIterate(n);
-              node_PrintWithTabs(i,True,tabs_num+1);
-           }
-           node_SetItemIterationIndex(n,old_index);
-         node_print_tabs(tabs_num+1);
-         printf("}");
-         if(!node_HasKey(n))
-           printf("\n");
+    case NODE_TYPE_NODE:
+         //node_print_tabs(tabs_num+1);
+         //printf("");
+         if(n->value != NULL)
+         {
+           printf("(@%x)",n->value);
+           //node_PrintWithTabs(n->value,True,tabs_num+1);
          }
-         else
-          printf("{}");
-         break;*/
+         else 
+          printf("{NULL}");
+         //node_print_tabs(tabs_num);
+         //printf("\n");
+         break;
     case NODE_TYPE_STUB:
          break;
     case NODE_TYPE_USER:
@@ -461,27 +460,24 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          break;
   }
 
-         if(node_HasItems(n))
-         { 
-          if(!node_HasKey(n) && !with_key)
-            node_print_tabs(tabs_num+1);
-           printf("{\n");
-           long old_index = node_GetItemIterationIndex(n);
-           node_ItemIterationReset(n);
-           while(node_ItemIterationUnfinished(n))
-           {
-              node *i = node_ItemIterate(n);
-              node_PrintWithTabs(i,True,tabs_num+1);
-           }
-           node_SetItemIterationIndex(n,old_index);
-         node_print_tabs(tabs_num+1);
-         printf("}");
-         if(!node_HasKey(n))
-           printf("\n");
-         }
-
-
-
+  if(node_HasItems(n))
+  { 
+    if(!node_HasKey(n) && !with_key)
+      node_print_tabs(tabs_num+1);
+    printf("{\n");
+    long old_index = node_GetItemIterationIndex(n);
+    node_ItemIterationReset(n);
+    while(node_ItemIterationUnfinished(n))
+    {
+      node *i = node_ItemIterate(n);
+      node_PrintWithTabs(i,True,tabs_num+1);
+    }
+    node_SetItemIterationIndex(n,old_index);
+    node_print_tabs(tabs_num+1);
+    printf("}");
+    if(!node_HasKey(n))
+      printf("\n");
+  }
   if(with_key && node_HasKey(n))
     printf("\n");
 }

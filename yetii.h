@@ -42,28 +42,49 @@ typedef struct _yeti_state
 {
 	node *top_scope;
 	node *base_class;
-
+	node *garbage;
 }yeti_state;
 
+/*internal use functions*/
+char *AddCharToString(char *string,char letter);
+char *CreateEmptyString(void);
+
+/*basic object handling*/
+node *create_obj(char *name);
+void add_obj_kv(node *obj,node *kv);
+void add_obj_string(node *obj,char *key,char *string);
+void set_obj_string(node *obj,char *key,char *string);
+void set_obj_int(node *obj,char *key,long i);
+void set_obj_node(node *obj,char *key,node *n);
+char *get_obj_name(node *obj);
+char *get_obj_type(node *obj);
+void add_obj_int(node *obj,char *key,long i);
+void add_obj_double(node *obj,char *key,double d);
+node *get_value(node *obj);
+
+/*class handling internal*/
+void add_class_object_internal_function(node *class,char *method_name);
+
+
+/*class handling*/
+void add_member(node *obj,node *member);
+node *get_member(node *obj,char *key);
+node *get_item(node *obj,node *key);
+node *create_class_instance(node *class_obj);
+node *create_base_obj_layout(char *obj_name);
+node *create_class_object(void);
+
+node *create_block_obj(node *base_class,node *block);
+node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj);
+
+yeti_state *create_yeti_state(node *base_class);
+
+node *execute_obj(yeti_state *state,node *execution_obj,node *block,BOOL dont_execute_block);
 
 node *evaluate_statement(yeti_state *state,node *statement,node *block,long iteration_start_index);
-
-/*
-object system layout
-
-using class instances
-originating from a class tree
-
-
-
-
-
-
-
-*/
-
-
-
+node *evaluate_statement(yeti_state *state,node *statement,node *block,long iteration_start_index);
+void evaluate_block_instance(yeti_state *state,node *block_class_instance);
+void evaluate_block(yeti_state *state,node *block);
 
 
 
