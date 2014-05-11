@@ -175,8 +175,9 @@ void *node_CreateValue(int type,void *value)
 
 void node_Free(node *n,BOOL free_value)
 {
-  printf("freeing node:%x\n",n);
-  node_PrintTree(n);
+  //printf("freeing node:%x\n",n);
+  //node_PrintTree(n);
+  //node_Print(n,True,True);
   if(free_value)
   {
     node_FreeValue(n->type,n->value);
@@ -351,7 +352,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
   if(with_key && node_HasKey(n))
   {
     node_print_tabs(tabs_num);
-    printf("%s",n->key);
+    printf("(%x)%s",n,n->key);
     printf(" = ");
   }
   else
@@ -1010,6 +1011,15 @@ long node_GetItemIndex(node *n,node *s)
 {
   return(list_GetIndex(n->items,s));
 }
+
+int node_HasItem(node *n,node *s)
+{
+  if(node_GetItemIndex(n,s)!=-1)
+    return(True);
+  return(False);
+
+}
+
 
 void *node_GetItem(node *n,long index)
 {

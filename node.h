@@ -162,6 +162,7 @@ long node_GetItemsNum(node *n);
 int node_HasItems(node *n);
 void *node_GetItemByKey(node *n,char *key);
 //int node_SetItemByKey(node *n,char *key,)
+int node_HasItem(node *n,node *s);
 
 //void *node_GetItemByPath(node *n,...);
 

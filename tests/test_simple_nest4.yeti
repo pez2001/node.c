@@ -7,13 +7,22 @@ haha=func(1,2,3);*/
 
 /*print({@:99});*/
 
+
 func(a)=
 {
 	@:9+a;
 };
 
 haha=func(1);
-/*print(haha);*/
-
+print(haha);
+/*
 print([{@:"99t"}," ",100+40," stephi ",haha," ",func(11)]);
-
+*/
+h2=[{@:"99t"}];
+print([1,2,3]);
+print([{@:"99t"}]);
+print(h2);
+a = [haha];
+a.b = haha+20;
+print(a," ",{@:"hi"}," ",a.b+30);
+/*print(func(11));*/
