@@ -44,7 +44,7 @@ node *create_obj(char *name)
   node *obj = node_Create();
   node_SetType(obj,NODE_TYPE_NODE);
   node_SetKey(obj,name);
-  printf("created obj :%s @:%x\n",name,obj);
+  //printf("created obj :%s @:%x\n",name,obj);
   return(obj);
 }
 
@@ -114,7 +114,7 @@ void dec_obj_refcount(node *obj)
   node *refcount = node_GetItemByKey(obj,"refcount");
   if((node_GetSint32(refcount)-1)<0)
   {
-    printf("decrementing beneath 0 refs!\n");
+    //printf("decrementing beneath 0 refs!\n");
     //int i=1/0;
   }
   node_SetSint32(refcount,node_GetSint32(refcount)-1);
@@ -208,7 +208,7 @@ node *create_class_instance(node *class_obj)
     node *base_class_instance = create_class_instance(base_class_type);
     set_obj_node(child,"base_class_instance",base_class_instance);
   }
-  printf("created class instance:%x :%s\n",child,get_obj_name(child));
+  //printf("created class instance:%x :%s\n",child,get_obj_name(child));
   return(child);
 }
 
@@ -290,7 +290,7 @@ void free_execution_obj(yeti_state * state,node *exe_obj)
       node *parameter = node_ItemIterate(parameters);
       if(!strcmp(node_GetKey(parameter),"exe_object"))
       {
-        printf("freeing exe_object in parameters\n");
+        //printf("freeing exe_object in parameters\n");
         free_execution_obj(state,parameter);
       }
     }
@@ -311,7 +311,7 @@ void add_garbage(yeti_state *state,node *obj)
 {
   if(node_HasItem(state->garbage,obj))
   {
-    printf("dupe in garbage\n");
+    //printf("dupe in garbage\n");
     return;
   }  
   node_AddItem(state->garbage,obj);
@@ -319,7 +319,7 @@ void add_garbage(yeti_state *state,node *obj)
 
 void free_garbage(yeti_state * state)
 {
-  printf("freeing garbage:%d\n",node_GetItemsNum(state->garbage));
+  //printf("freeing garbage:%d\n",node_GetItemsNum(state->garbage));
   //node_PrintTree(state->garbage);
   node_ItemIterationReset(state->garbage);
   while(node_ItemIterationUnfinished(state->garbage))
@@ -330,7 +330,7 @@ void free_garbage(yeti_state * state)
       node_FreeTree(gc);
     else
     {
-      printf("object not collected ->still has refs:%d\n",get_obj_refcount(gc));
+      //printf("object not collected ->still has refs:%d\n",get_obj_refcount(gc));
 
     }
   }
@@ -757,21 +757,21 @@ void evaluate_block(yeti_state *state,node *block)
     while(node_ItemIterationUnfinished(il_block))
     {
         node *yeti_statement = node_ItemIterate(il_block);
-        printf("evaluating statement\n");
+        //printf("evaluating statement\n");
         node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
-        printf("executing statement\n");
+        //printf("executing statement\n");
         execute_obj(state,obj,block_class_instance,False);
         //node_PrintTree(obj);
         //node_FreeTree(obj);
-        printf("finished execution object\n");
+        //printf("finished execution object\n");
 
         free_garbage(state);
-        printf("freeing execution object\n");
+        //printf("freeing execution object\n");
         free_execution_obj(state,obj);
     }
     //node_PrintTree(block_class_instance);
     //free_obj(state,block_class_instance);
-    printf("freeing block_class_instance\n");
+    //printf("freeing block_class_instance\n");
     node_FreeTree(block_class_instance);
 }
 

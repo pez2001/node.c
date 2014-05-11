@@ -13,6 +13,11 @@ func(a)=
 	@:9+a;
 };
 
+func.sub(b)=
+{
+	@:b+b;
+};
+
 haha=func(1);
 print(haha);
 /*
@@ -24,5 +29,5 @@ print([{@:"99t"}]);
 print(h2);
 a = [haha];
 a.b = haha+20;
-print(a," ",{@:"hi"}," ",a.b+30);
+print(a," ",{@:"hi"}," ",a.b+30,func.sub(20),func.sub(20));
 /*print(func(11));*/
