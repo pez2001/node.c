@@ -213,6 +213,18 @@ node *yeti_Load(char *yeti,unsigned long len)
   node_SetParent(new_s_obj,new_obj);
   list_Push(obj_stack,new_s_obj);      
 
+  if(len>2 && yeti[offset]=='#' && yeti[offset+1]=='!')
+  {
+    //printf("shebang found\n");
+    while(offset<len)
+    {
+      if(yeti[offset]==10)
+        break;
+      offset++;
+    }
+  }
+
+
   while(offset<len)
   {
     node *actual_obj = (node*)list_GetTop(obj_stack);

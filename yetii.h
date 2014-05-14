@@ -37,13 +37,15 @@
 #include "stdlib.h"
 #include "string.h"
 
-
+/*
 typedef struct _yeti_state 
 {
-	node *top_scope;
-	node *base_class;
+	node *top_block_obj;
+	//node *base_class;
+	node *classes;
 	node *garbage;
 }yeti_state;
+*/
 
 /*internal use functions*/
 char *AddCharToString(char *string,char letter);
@@ -63,13 +65,13 @@ void add_obj_double(node *obj,char *key,double d);
 node *get_value(node *obj);
 
 /*class handling internal*/
-void add_class_object_internal_function(node *class,char *method_name);
-
+void add_class_object_internal_function(node *class,node *base_class,char *method_name);
 
 /*class handling*/
 void add_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
 node *get_item(node *obj,node *key);
+
 node *create_class_instance(node *class_obj);
 node *create_base_obj_layout(char *obj_name);
 node *create_class_object(void);
@@ -77,14 +79,14 @@ node *create_class_object(void);
 node *create_block_obj(node *base_class,node *block);
 node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj);
 
-yeti_state *create_yeti_state(node *base_class);
+/*yeti_state *create_yeti_state(node *base_class);*/
+node *create_yeti_state(node *yeti_block,node *base_class);
 
-node *execute_obj(yeti_state *state,node *execution_obj,node *block,BOOL dont_execute_block);
+node *execute_obj(node *state,node *execution_obj,node *block,BOOL dont_execute_block);
 
-node *evaluate_statement(yeti_state *state,node *statement,node *block,long iteration_start_index);
-node *evaluate_statement(yeti_state *state,node *statement,node *block,long iteration_start_index);
-void evaluate_block_instance(yeti_state *state,node *block_class_instance);
-void evaluate_block(yeti_state *state,node *block);
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index);
+void evaluate_block_instance(node *state,node *block_class_instance);
+void evaluate_block(node *state,node *block);
 
 
 

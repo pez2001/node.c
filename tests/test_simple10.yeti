@@ -1,1 +1,19 @@
-print("hi");
+#!c:/space_race/node.c/yetii.exe
+/*h = test(1)+1;*/
+
+print("Connection: close");
+print("Content-Type: text/html");
+print("");
+print("<html>");
+print({@:1;},2);
+
+h=1+1;
+c = h+3;
+d =test(12)+h+h+test(30)+c+12;
+d.e = c;
+print(test(1)+1);
+print([d," ",22," ",33," this:",{@:23;}," ",d.e]);
+print("<h3>HALLO STEPHI</h3>");
+
+
+print("</html>");

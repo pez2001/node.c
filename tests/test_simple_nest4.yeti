@@ -15,6 +15,7 @@ func(a)=
 
 func.sub(b)=
 {
+	c=23;
 	@:b+b;
 };
 
