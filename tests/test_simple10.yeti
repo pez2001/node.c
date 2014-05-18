@@ -1,19 +1,77 @@
 #!c:/space_race/node.c/yetii.exe
-/*h = test(1)+1;*/
-
-print("Connection: close");
+/*print("Connection: close");
 print("Content-Type: text/html");
 print("");
 print("<html>");
+*/
+/*
 print({@:1;},2);
 
 h=1+1;
 c = h+3;
 d =test(12)+h+h+test(30)+c+12;
 d.e = c;
+g = [1,2];
+print("g:",g[1]);
 print(test(1)+1);
 print([d," ",22," ",33," this:",{@:23;}," ",d.e]);
 print("<h3>HALLO STEPHI</h3>");
 
 
+
+*/
+
+/*d = b = 1;*/
+
+/*h[0]="hallo";
+h[10]="ende";
+*/
+beta(alpha)={
+	@:99;
+};
+
+hallo = beta(1);
+
+beta(gamma,s)={
+	@:88+s;
+};
+
+print("hallo: ",hallo);
+
+/*beta=beta2;*/
+
+hallo = beta(1,1);
+hallo = beta(1,2);
+/*print("hallo2: ",hallo);*/
+
+
+/*
+beta=1;
+print(beta);
+*/
+/*
+
+h=[1000];
+g=h[0];
+print(g);
+hallo = beta(1);
+*/
+
+/*beta(alpha)={
+	@:88;
+};
+print(beta("alpha"));
+
+print("hallo",hallo);
+*/
+
+/*g=h[0];*/
+
+
+/*g = [1,2];
+print("g:",g[1]);
+
 print("</html>");
+*/
+/*h = test(1)+1;*/
+
