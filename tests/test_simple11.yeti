@@ -5,26 +5,24 @@ print("");
 print("<html>");
 
 
-/*b(g)={@:99;};
-a = b(1);
-t=1;
-c = b(1,1);*/
-
-/*c=1+1;
-print(c);*/
-
-/*b(f)={@:1+f;};*/
 
 b()={print("hi");@:1;};
-/*print(b());*/
+gamma=b();
+
+hat(a,be)={@:a+b();};
+print("hat:",hat(1,2));
+
+
 
 c=[b(),"to:",1];
-/*d=b();*/
 print(c);
 print(b());
 print("b:",b);
 print(["last:",{@:1+1;}(),":end"]);
 
+
+/*print(b());*/
+/*d=b();*/
 /*c(h) = {@:1+b(1)+1;};
 e=c(1);
 */
@@ -38,5 +36,16 @@ print("c:",c);
 print("d:",d);
 @.@.member
 @@.member*/
+
+/*b(g)={@:99;};
+a = b(1);
+t=1;
+c = b(1,1);*/
+
+/*c=1+1;
+print(c);*/
+
+/*b(f)={@:1+f;};*/
+
 
 print("</html>");

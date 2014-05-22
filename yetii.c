@@ -157,6 +157,8 @@ void add_member(node *obj,node *member)
 
 node *get_member(node *obj,char *key)
 {
+  if(obj==NULL)
+    return(NULL);
   node *members = node_GetItemByKey(obj,"members");
   if(members!=NULL)
   {
@@ -722,6 +724,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         node *func_exe_obj = create_execution_obj(block_class_instance,exe_parameters,NULL);
         actual_obj = execute_obj(state,func_exe_obj,block,True);//,False);/*TODO move to execute somehow*/
         free_execution_obj(func_exe_obj);
+        //node_Free(exe_parameters,True);
       }
       else
       {
@@ -762,23 +765,27 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node *found_obj = get_member(actual_obj,node_GetValue(token));
           if(found_obj==NULL)
           {
-            node *child = create_class_instance(base_class);
-            set_obj_string(child,"name",node_GetValue(token));
-            add_member(actual_obj,child);
-            actual_obj = child;
-            node *peek = node_ItemPeek(statement);
-            if(peek!=NULL && !strcmp(node_GetKey(peek),"yeti_parameters"))
-            {
-              //printf("found function def parameters\n");
-              node *parameters_definition = node_ItemIterate(statement);
-              node *pars = node_CopyTree(parameters_definition,True,True);
-              //node_AddItem(child,parameters_definition);
-              node_AddItem(child,pars);
-              //add_obj_string(child,"empty_function_shell","True");
-              //set_obj_string(child,"execute_block","False");
-              //node_RemoveItem(statement,parameters_definition);
-              index++;
-            }
+            //if(actual_obj != NULL)
+            //{
+              node *child = create_class_instance(base_class);
+              set_obj_string(child,"name",node_GetValue(token));
+              //if(actual_obj != NULL)
+                add_member(actual_obj,child);
+              actual_obj = child;
+              node *peek = node_ItemPeek(statement);
+              if(peek!=NULL && !strcmp(node_GetKey(peek),"yeti_parameters"))
+              {
+                //printf("found function def parameters\n");
+                node *parameters_definition = node_ItemIterate(statement);
+                node *pars = node_CopyTree(parameters_definition,True,True);
+                //node_AddItem(child,parameters_definition);
+                node_AddItem(child,pars);
+                //add_obj_string(child,"empty_function_shell","True");
+                //set_obj_string(child,"execute_block","False");
+                //node_RemoveItem(statement,parameters_definition);
+                index++;
+              }
+            //}
           }
           else
           {
@@ -798,7 +805,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 while(node_ItemIterationUnfinished(sub_parameters))
                 {
                   node *parameter_token = node_ItemIterate(sub_parameters);
-                  node *sub_obj = evaluate_statement(state,parameter_token,block,0);
+                  //node *sub_obj = evaluate_statement(state,parameter_token,block,0);
+                  node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
+                  //node *sub_obj = evaluate_statement(state,parameter_token,NULL,0);
                   node_AddItem(exe_parameters,sub_obj);
                 }
                 /*
