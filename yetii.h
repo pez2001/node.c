@@ -82,7 +82,7 @@ node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj
 /*yeti_state *create_yeti_state(node *base_class);*/
 node *create_yeti_state(node *yeti_block,node *base_class);
 
-node *execute_obj(node *state,node *execution_obj,node *block,BOOL dont_execute_block);
+node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block);//,BOOL dont_execute_block);
 
 node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index);
 void evaluate_block_instance(node *state,node *block_class_instance);
