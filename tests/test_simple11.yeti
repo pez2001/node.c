@@ -1,24 +1,31 @@
-#!c:/space_race/node.c/yetii.exe
+/*#!c:/space_race/node.c/yetii.exe
 print("Connection: close");
 print("Content-Type: text/html");
 print("");
 print("<html>");
 
+*/
 
-
-b()={print("hi");@:1;};
+/*b()={print("hi");@:1;};
 gamma=b();
-
-hat(a,be)={@:a+b();};
+*/
+b=4;
+klops=4;
+klops=4;
+klops4=4;
+/*hat(a,b)={@:a+b();};*/
+hat(a,b)={felix=5;@:a+b+felix+klops;};
 print("hat:",hat(1,2));
 
 
-
+/*
 c=[b(),"to:",1];
 print(c);
 print(b());
 print("b:",b);
 print(["last:",{@:1+1;}(),":end"]);
+
+*/
 
 
 /*print(b());*/
@@ -47,5 +54,6 @@ print(c);*/
 
 /*b(f)={@:1+f;};*/
 
-
+/*
 print("</html>");
+*/
