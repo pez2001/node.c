@@ -1,25 +1,41 @@
 /*println("eq:",1==1);
 println("!eq:",2==1);
-*/
-
 i=10;
 ?({i==1},{println("IF_TRUE");},{println("IF_FALSE");},0);
 ?({i==10},{println("IF_TRUE2");},{println("IF_FALSE2");},0);
+i=0;
+?({10>i},{println("loop:",i);i=i+1;},{},1);
+println("i:",i," i==1?:",i==1);
+if(e,do)={println("e:",e);?(e,do,{},0);};
+i=0;
+i=10;
+i=10;
+i=10;
+i=10;
+i=10;
+print("i:",1+i);
+i=10;
+i=240;
+if({i==240},{println("its working")});
+if({i==240},{println("its working")});*/
 
+
+/*if(e,do)={?(e,do,{},0);};
+gamma={println("doing stuff")};
+if({i==10},gamma);
+if({i==10},gamma);*/
+/*i=10;*/
+/*gamma={println("doing stuff")};
+*/
+a={};
+a();
+
+gamma={println("doing stuff")};
+if(e,do)={?(e,do,{},0);};
+if({1==1},gamma);
+if({2==1},gamma);
+?({1},{?({0.test(2)},gamma,{},0)},{},0);
+?({1},{?({1},gamma,{},0)},{},0);
 
 i=0;
 ?({10>i},{println("loop:",i);i=i+1;},{},1);
-
-/*
-i=0;
-?(10>i,{println("loop:",i);i=i+1;},{},1);
-*/
-
-if(e,do)={println("e:",e);?(e,do,{},0);};
-
-println("i:",i," i==1?:",i==1);
-
-gamma={println("doing stuff")};
-/*gamma();*/
-if({i==102},gamma);
-
