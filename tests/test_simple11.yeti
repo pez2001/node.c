@@ -5,25 +5,55 @@ print("");
 print("<html>");
 
 */
-
-/*b()={print("hi");@:1;};
+/*
+beta()={print("hi");@:1;};
+*/
+/*
 gamma=b();
 */
-b=4;
+/*
+alpha.be=4;
 klops=4;
 klops=4;
 klops4=4;
+*/
 /*hat(a,b)={@:a+b();};*/
-hat(a,b)={felix=5;@:a+b+felix+klops;};
+/*hat(a,b)={felix=5+6;@:a+b+felix+klops+beta()+alpha.be;};
 print("hat:",hat(1,2));
+*/
 
+/*print(["last:",{@:{@:1+1;}();}(),":end"]);*/
+/*print({@:{@:1+1;}();}());*/
+/*print(a);*/
+
+/*a={@:{@:1+1+8;}();}();
+a=a*3.test(13);
+a=a+20/5;
+a.print();
+*/
+println("");
+
+/*if(e,b)={};*/
+?({1==1},{println("IF_TRUE");},{println("IF_FALSE");},0);
+?({1==2},{println("IF_TRUE2");},{println("IF_FALSE2");},0);
+
+println("eq:",1==1);
+println("!eq:",2==1);
 
 /*
+i=0;
+?({10>i},{println("loop:",i);i=i+1;},{},1);
+*/
+/*i=0;
+?(10>i,{println("loop:",i);i=i+1;},{},1);
+*/
+
+/*
++{@:99;}()
 c=[b(),"to:",1];
 print(c);
 print(b());
 print("b:",b);
-print(["last:",{@:1+1;}(),":end"]);
 
 */
 

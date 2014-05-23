@@ -172,6 +172,12 @@ void mem_free(void *ptr)
 	long index = mem_get_chunk(ptr);
 	if(!mem_chunk_items[index]->is_freed)
 	{
+		unsigned long i =0;
+		/*for(i=0;i<mem_chunk_items[index]->size;i++)
+		{
+
+		}*/
+		memset(ptr,0,mem_chunk_items[index]->size);
 		free_ptr(ptr);
 		mem_chunk_items[index]->is_freed = 1;
 		mem_chunk_items[index]->ptr = NULL;

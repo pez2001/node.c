@@ -14,11 +14,12 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 832
-DEBUG_BUILD = 1136
+BUILD = 908
+DEBUG_BUILD = 1212
 
+#-DUSE_MEMORY_DEBUGGING
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
-DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DUSE_MEMORY_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
+DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
 CC=gcc
 AR=ar
 LD=ld
@@ -88,6 +89,9 @@ yetii: node_static $(YETII_OBJ)
 yetii_debug: node_static_debug $(YETII_DEBUG_OBJ) 
 	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_debug 
 
+yetii_debug_no_memm: node_static_debug $(YETII_DEBUG_OBJ) 
+	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_debug 
+
 yetii_o: $(NODE_OBJ) $(YETII_OBJ)
 	$(CC) $(NODE_OBJ) $(YETII_OBJ)  -lm -o yetii 
 
@@ -130,7 +134,7 @@ node_dynamic: $(NODE_OBJ)
 
 	
 clean:
-	rm -f *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o 
+	rm -f *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
 
 clean_binaries:
 	rm -f node_print$(PLATFORM_EXT) unit_tests$(PLATFORM_EXT) node_print_debug$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

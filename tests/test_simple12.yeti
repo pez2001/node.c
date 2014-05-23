@@ -1,0 +1,25 @@
+/*println("eq:",1==1);
+println("!eq:",2==1);
+*/
+
+i=10;
+?({i==1},{println("IF_TRUE");},{println("IF_FALSE");},0);
+?({i==10},{println("IF_TRUE2");},{println("IF_FALSE2");},0);
+
+
+i=0;
+?({10>i},{println("loop:",i);i=i+1;},{},1);
+
+/*
+i=0;
+?(10>i,{println("loop:",i);i=i+1;},{},1);
+*/
+
+if(e,do)={println("e:",e);?(e,do,{},0);};
+
+println("i:",i," i==1?:",i==1);
+
+gamma={println("doing stuff")};
+/*gamma();*/
+/*if({i==10},gamma);*/
+
