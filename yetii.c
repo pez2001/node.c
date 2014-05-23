@@ -447,7 +447,8 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     if(!strcmp(node_GetKey(token),"exe_object"))
     {
       //printf("getting par:\n");
-      node *sub = execute_obj(state,token,block,execute_block);//,tmp_dont_execute_block);
+      //node *sub = execute_obj(state,token,block,execute_block);//,tmp_dont_execute_block);
+      node *sub = execute_obj(state,token,block,False);//,tmp_dont_execute_block);
       //node_PrintTree(sub);
       node_AddItem(real_parameters,sub);
       //add_garbage(state,sub);
@@ -507,7 +508,8 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
             node_SetParent(exe_obj,NULL);
 
             node *obj = evaluate_statement(state,token,exe_obj,0);
-            node *sub = execute_obj(state,obj,exe_obj,execute_block);
+            //node *sub = execute_obj(state,obj,exe_obj,execute_block);
+            node *sub = execute_obj(state,obj,exe_obj,False);
             //free_garbage(state);
             node_SetParent(exe_obj,tmp_parent);
 
@@ -810,7 +812,8 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
   node *sub_exe_obj = node_GetItemByKey(execution_obj,"sub_exe_object");
   if(sub_exe_obj!=NULL)
   {
-    value = execute_obj(state,sub_exe_obj,block,execute_block);//,False);
+    //value = execute_obj(state,sub_exe_obj,block,execute_block);//,False);
+    value = execute_obj(state,sub_exe_obj,block,False);
   }
   node_ClearItems(real_parameters);
   node_Free(real_parameters,False);
@@ -904,6 +907,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         index++;
         node *func_exe_obj = create_execution_obj(block_class_instance,exe_parameters,NULL);
         actual_obj = execute_obj(state,func_exe_obj,block,True);//,False);/*TODO move to execute somehow*/
+        //actual_obj = execute_obj(state,func_exe_obj,block,False);/*TODO move to execute somehow*/
         free_execution_obj(func_exe_obj);
         add_garbage(state,block_class_instance);
         //node_Free(exe_parameters,True);

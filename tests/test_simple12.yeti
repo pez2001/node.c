@@ -21,5 +21,5 @@ println("i:",i," i==1?:",i==1);
 
 gamma={println("doing stuff")};
 /*gamma();*/
-/*if({i==10},gamma);*/
+if({i==102},gamma);
 
