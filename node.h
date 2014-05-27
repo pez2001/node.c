@@ -40,7 +40,7 @@ extern "C"  {
 #endif
 
 
-#define USE_FNV_HASHES
+//#define USE_FNV_HASHES
 
 
 #define NODE_TYPE_NULL 0

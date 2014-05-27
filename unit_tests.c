@@ -396,6 +396,7 @@ void mem_tests(void)
 
 void hashing_tests(void)
 {
+  #ifdef USE_FNV_HASHES
   printf("hashing test\n");
   printf("[Hi]:%u\n",node_ComputeHash("Hi"));
   printf("[Hi2]:%u\n",node_ComputeHash("Hi2"));
@@ -432,7 +433,7 @@ void hashing_tests(void)
 
   node_FreeTree(root);
   printf("hashing test thru\n");
-
+  #endif
 }
 
 void yeti_tests(void)

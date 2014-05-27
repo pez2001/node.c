@@ -55,12 +55,12 @@ char *CreateEmptyString(void);
 node *create_obj(char *name);
 void add_obj_kv(node *obj,node *kv);
 void add_obj_string(node *obj,char *key,char *string);
+void add_obj_int(node *obj,char *key,long i);
 void set_obj_string(node *obj,char *key,char *string);
 void set_obj_int(node *obj,char *key,long i);
 void set_obj_node(node *obj,char *key,node *n);
 char *get_obj_name(node *obj);
 char *get_obj_type(node *obj);
-void add_obj_int(node *obj,char *key,long i);
 void add_obj_double(node *obj,char *key,double d);
 node *get_value(node *obj);
 
@@ -87,7 +87,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
 node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index);
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
-void evaluate_block(node *state,node *block);
+node *evaluate_block(node *state,node *block);
 
 
 

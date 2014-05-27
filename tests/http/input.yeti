@@ -1,0 +1,40 @@
+#!c:/space_race/node.c/yetii.exe
+println("Connection: close");
+println("Content-Type: text/html");
+println("");
+println("<html>");
+
+println("
+
+<head>
+<title>Test Post Input Parsing Page</title>
+</head>
+<body>
+
+<h1>Content of Post Variables transfered</h1>
+
+</body>
+");
+
+/*input().println();
+input().println();
+*/
+
+/*http_query().println();*/
+h=http_query();
+/*println("h:",h);*/
+
+p1=h[0].int();
+p2=h[1].int();
+
+println("<h1>result(a+b)=",p1+p2,"</h1><br>");
+
+println("named var:['t1'] = ",h["t1"],"<br>");
+
+
+/*println(h[0]);*/
+
+println("</html>");
+
+return_value=555;
+

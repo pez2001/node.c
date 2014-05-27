@@ -184,7 +184,7 @@ void mem_free(void *ptr)
 	}
 	else
 	{
-		printf("double freeing:%d\n",ptr);
+		printf("double freeing:%x\n",ptr);
 		//int x = 1/0;//my breakpoint style :-)
 	}
 

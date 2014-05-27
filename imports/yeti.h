@@ -44,5 +44,6 @@
 
 node *yeti_Load(char *yeti,unsigned long len); 
 node *yeti_LoadFile(char *filename); 
+node *yeti_LoadString(char *content); 
 
 #endif

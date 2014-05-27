@@ -1,0 +1,32 @@
+if(v,do)={?(v,do,{},0)};
+
+a={println("before break;");3+12;};
+r=a();
+println("r:",r);
+
+test1="Hallo";
+test2=" Welt!\n";
+test3=test1+test2;
+test3=test3*3;
+
+println(test3);
+
+/*a={};
+a=a()+12;
+println("a:",a);
+*/
+
+i=0;
+a={?({i<2},{println("hi:",i);?({i==1},{println("special case=5")},{},0);i=i+1},{},1);};
+a();
+
+
+b=0;
+?({b<2},{i=0;b=b+1;println("b:",b);a();},{},1);
+
+
+
+
+println("i:",i);
+
+if(i==2,{println("i==",i)});

@@ -1,0 +1,54 @@
+/*a={println("before break;");4;break();println("after break");3+12;};*/
+/*r=a();
+println("r:",r);*/
+
+i="1";
+println("i as int:",int(i)+1);
+i2=33;
+println("i2 as str:"+i2.str());
+
+
+/*
+print("Enter something:");
+ret=input();
+println("ret:",ret);
+
+
+print("Enter something2:");
+println("ret:",input());
+
+print("Enter something3:");
+ret2.input();
+println("ret2:",ret2);
+
+
+print("Enter something4:");
+input(ret3);
+println("ret3:",ret3);
+
+print("Enter something5:");
+input().println();
+
+
+
+if(v,do)={?(v,do,{},0)};
+
+i=2;
+?({i<6},{i=i+1;println("checking:",i);if(i==4,{println("i: ",i);break(4);})},{},1);
+*/
+
+/*a={?({i<6},{i=i+1},{},1);};
+a();*/
+
+/*{{println(i=i+1)]()}();*/
+
+
+test1="Hallo";
+test2=" Welt!\n";
+test3=test1+test2;
+test3=test3*3;
+println(test3);
+println("Welt");
+
+return_value=555;
+

@@ -1,0 +1,21 @@
+#!c:/space_race/node.c/yetii.exe
+println("Connection: close");
+println("Content-Type: text/html");
+println("");
+println("<html>");
+
+
+
+input().println();
+
+test1="Hallo";
+test2=" Welt!\n<br>";
+test3=test1+test2;
+test3=test3*3;
+println(test3);
+
+
+println("</html>");
+
+return_value=555;
+

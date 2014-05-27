@@ -159,7 +159,7 @@ int yeti_is_in_key_space(char c)
     return(1);
   if(c>=97 && c<=122) /*a to z*/
     return(1);
-  if(c==38) /* & */
+  if(c==38 || c==95) /* & */
     return(1);
   return(0);
 }
@@ -252,7 +252,13 @@ node *yeti_Load(char *yeti,unsigned long len)
         offset++;
         continue;
       }
-      value_string = yeti_AddCharToString(value_string,yeti[offset]);
+      if((state & YETI_STATE_IN_STRING) && yeti[offset]=='\\')
+      {
+        offset++;
+        value_string = yeti_AddCharToString(value_string,yeti_ConvertEscapeChar(yeti[offset]));
+      }
+      else
+        value_string = yeti_AddCharToString(value_string,yeti[offset]);
       offset++;
       continue;
     }
@@ -326,21 +332,16 @@ node *yeti_Load(char *yeti,unsigned long len)
       state &= ~YETI_STATE_IN_OP;
       state &= ~YETI_STATE_IN_VALUE;
       node *top = list_Pop(obj_stack);
-
-      //if(yeti[offset] == '}')
-      //{
-        long num_stuff=node_GetItemsNum(top);
-        //node *top = list_Pop(obj_stack);//remove last statement + block 
-        top = list_Pop(obj_stack);//remove last statement + block 
-        if(!num_stuff)
-        {
-          long num_statements=node_GetItemsNum(top);
-          node *last = node_GetItem(top,num_statements-1);
-          node_RemoveItemByIndex(top,num_statements-1);
-          node_Free(last,True);
-        }
-        actual_obj = (node*)list_GetTop(obj_stack);
-      //}
+      long num_stuff=node_GetItemsNum(top);
+      top = list_Pop(obj_stack);//remove last statement + block 
+      if(!num_stuff)
+      {
+        long num_statements=node_GetItemsNum(top);
+        node *last = node_GetItem(top,num_statements-1);
+        node_RemoveItemByIndex(top,num_statements-1);
+        node_Free(last,True);
+      }
+      actual_obj = (node*)list_GetTop(obj_stack);
       offset++;
       continue;
     }
@@ -482,9 +483,19 @@ node *yeti_LoadFile(char *filename)
   char *yeti_data = (char*)malloc(yeti_len);
   int r = fread((void*)yeti_data,yeti_len,1,yeti);
   if(r)
-  	rn = yeti_Load(yeti_data,yeti_len);
+    rn = yeti_Load(yeti_data,yeti_len);
   free(yeti_data);
   fclose(yeti);
+  return(rn);
+}
+
+node *yeti_LoadString(char *content)
+{ 
+  node *rn = NULL;
+  if(content==NULL)
+    return(NULL);
+  long yeti_len = strlen(content);
+  rn = yeti_Load(content,yeti_len);
   return(rn);
 }
 

@@ -23,6 +23,150 @@
 #include "yetii.h"
 
 
+node *convert_json(node *json)
+{
+
+  return(NULL);
+}
+
+void append_http_query_array_item(node *state,node *array,char *value)
+{
+  long value_len = strlen(value);
+  long offset =0;
+  char *val=CreateEmptyString();
+  char *key=CreateEmptyString();
+  int in_key=1;
+  node *base_class = node_GetItemByKey(state,"yeti_object");
+
+  //printf("adding value :[%s]%d<br>\n",value,value_len);
+  while(offset<value_len)
+  {
+    char vc=value[offset];
+    if(vc=='=')
+    {
+      in_key=0;
+      offset++;
+      if(offset>=value_len)
+        break;
+      vc=value[offset];
+    }
+    if(in_key)
+      key=AddCharToString(key,vc);
+    else
+      val=AddCharToString(val,vc);
+    offset++;
+  }
+  //printf("parsed [%s]:[%s]<br>\n",key,val);
+  node *item = create_class_instance(base_class);
+  reset_obj_refcount(item);
+  node_AddItem(array,item);
+  node_SetParent(item,array);
+  inc_obj_refcount(item);
+  set_obj_string(item,"name",key);
+  set_obj_string(item,"value",val);
+  free(key);
+  free(val);
+}
+
+void append_http_query_array(node *state,node *value)
+{
+  char *query = getenv("QUERY_STRING");
+  //char *query="ds=34&t1=34";
+  if(query==NULL || !strlen(query))
+    return;
+  node *items = create_obj("items");
+  add_obj_kv(value,items);
+  
+  long query_len = strlen(query);
+  long offset =0;
+  char *val=CreateEmptyString();
+  
+  //printf("query:%s<br>\n",query);
+  while(offset<query_len)
+  {
+    char qc=query[offset];
+    if(qc=='&')
+    {
+      //printf("value seperator:[%s]<br>\n",val);
+      append_http_query_array_item(state,items,val);
+      free(val);
+      val = CreateEmptyString();
+    }
+    else
+      val=AddCharToString(val,qc);
+    offset++;
+  }
+  //printf("last value :[%s]<br>\n",val);
+  append_http_query_array_item(state,items,val);
+  free(val);
+}
+
+char *convert_to_string(long i)
+{
+  char *ret=NULL;
+  long len = snprintf(NULL,0,"%d",i);
+  if(len)
+  {
+    ret = (char*)malloc(len+1);
+    snprintf(ret,len+1,"%d",i);
+  }
+  else
+    ret=CreateEmptyString();
+  return(ret);
+} 
+
+char *StringCopy(char *src)
+{
+  char *a = (char*)malloc(strlen(src)+1);
+  memcpy(a, src, strlen(src)+1);
+  return(a);
+}
+
+char *StringCat(char *a,char *b)
+{
+  if(a == NULL && b != NULL)
+    return(StringCopy(b));
+  else
+    if(a != NULL && b == NULL)
+      return(StringCopy(a));
+  else
+    if(a == NULL && b == NULL)
+      return(NULL);
+  char *tmp = (char*)malloc(strlen(a) + strlen(b) + 1);
+  //memset(tmp, 0, strlen(a) + strlen(b) + 1);
+  memcpy(tmp, a, strlen(a));
+  memcpy(tmp + strlen(a), b, strlen(b)+1);
+  return(tmp);
+}
+
+char *StringMult(char *a,long count)
+{
+  if(a == NULL || !count)
+      return(NULL);
+  char *tmp = (char*)malloc((strlen(a)*count) + 1);
+  long i=0;
+  //printf("multi string:%s,%d\n",a,count);
+  for(i=0;i<count;i++)
+  {
+    memcpy(tmp+(i*strlen(a)), a, strlen(a));
+  }
+  memset(tmp+(strlen(a)*count) + 0, 0, 1);
+  return(tmp);
+}
+
+char *Substring(char *a,long start,long len)
+{
+  long e = start + len;
+  if(e> strlen(a))
+    e = strlen(a) - start;
+  else
+    e = len;
+  char *tmp = (char*)malloc(e + 1);
+  memset(tmp+e+1, 0, 1);
+  memcpy(tmp, a+start, e);
+  return(tmp);
+}
+
 char *AddCharToString(char *string,char letter)
 { 
   int len=strlen(string);
@@ -62,6 +206,14 @@ void add_obj_string(node *obj,char *key,char *string)
   add_obj_kv(obj,kv); 
 }
 
+void add_obj_int(node *obj,char *key,long i)
+{
+  node *kv = node_Create();
+  node_SetKey(kv,key);
+  node_SetSint32(kv,i);
+  add_obj_kv(obj,kv); 
+}
+
 void set_obj_string(node *obj,char *key,char *string)
 {
   node *kv = node_GetItemByKey(obj,key);
@@ -74,7 +226,10 @@ void set_obj_string(node *obj,char *key,char *string)
 void set_obj_int(node *obj,char *key,long i)
 {
   node *kv = node_GetItemByKey(obj,key);
-  node_SetSint32(kv,i);
+  if(kv==NULL)
+    add_obj_int(obj,key,i);
+  else
+    node_SetSint32(kv,i);
 }
 
 void set_obj_node(node *obj,char *key,node *n)
@@ -107,6 +262,7 @@ void inc_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
   node_SetSint32(refcount,node_GetSint32(refcount)+1);
+  //node_SetSint32(refcount,1);
 }
 
 void reset_obj_refcount(node *obj)
@@ -118,27 +274,20 @@ void reset_obj_refcount(node *obj)
 void dec_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
+  //node_SetSint32(refcount,0);
+
   if((node_GetSint32(refcount)-1)<0)
   {
     //printf("decrementing beneath 0 refs!\n");
     //int i=1/0;
   }
   node_SetSint32(refcount,node_GetSint32(refcount)-1);
-
 }
 
 long get_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
   return(node_GetSint32(refcount));
-}
-
-void add_obj_int(node *obj,char *key,long i)
-{
-  node *kv = node_Create();
-  node_SetKey(kv,key);
-  node_SetSint32(kv,i);
-  add_obj_kv(obj,kv); 
 }
 
 void add_obj_double(node *obj,char *key,double d)
@@ -155,12 +304,17 @@ node *get_value(node *obj)
   return(node_GetItemByKey(obj,"value"));
 }
 
+void obj_print(node *obj)
+{
+  node *v = get_value(obj);
+  node_Print(v,False,False);
+}
+
 void add_member(node *obj,node *member)
 {
   node *members = node_GetItemByKey(obj,"members");
   add_obj_kv(members,member);
 }
-
 
 node *get_member_non_recursive(node *obj,char *key)
 {
@@ -180,8 +334,6 @@ node *get_member_non_recursive(node *obj,char *key)
   }
   return(NULL);
 }
-
-
 
 node *get_member(node *obj,char *key)
 {
@@ -246,6 +398,7 @@ node *create_class_instance(node *class_obj)
     set_obj_node(child,"base_class_instance",base_class_instance);
   }*/
   //printf("created class instance:%x :%s\n",child,get_obj_name(child));
+  node_SetParent(child,NULL);
   return(child);
 }
 
@@ -282,7 +435,6 @@ node *create_base_obj_layout(char *obj_name)
   return(base);
 }
 
-
 void add_class_object_internal_function(node *class,node *base_class,char *method_name)//void *addr
 {
   node *method = create_base_obj_layout(method_name);
@@ -303,6 +455,10 @@ node *create_class_object(void)
   add_class_object_internal_function(base,base,"+");
   add_class_object_internal_function(base,base,"print");
   add_class_object_internal_function(base,base,"println");
+  add_class_object_internal_function(base,base,"input");
+  add_class_object_internal_function(base,base,"http_query");
+  add_class_object_internal_function(base,base,"str");
+  add_class_object_internal_function(base,base,"int");
   add_class_object_internal_function(base,base,"-");
   add_class_object_internal_function(base,base,"/");
   add_class_object_internal_function(base,base,"*");
@@ -315,6 +471,9 @@ node *create_class_object(void)
   add_class_object_internal_function(base,base,"!=");
   add_class_object_internal_function(base,base,"?");
   add_class_object_internal_function(base,base,"??");
+  add_class_object_internal_function(base,base,"break");
+  add_class_object_internal_function(base,base,"continue");
+  add_class_object_internal_function(base,base,"restart");
   //add_class_object_internal_function(base,base,"!");
   
   //add_class_object_internal_function(base,"get");
@@ -367,6 +526,12 @@ void add_garbage(node *state,node *obj)
     //printf("dupe in garbage\n");
     return;
   }  
+  if(node_GetParent(obj)!=NULL)
+  {
+    printf("tried add gc obj with a parent:%x\n",obj);
+    int x=1/0;
+  }
+
   node_AddItem(garbage,obj);
   //printf("adding to garbage:%x (%d)\n",obj,get_obj_refcount(obj));
 }
@@ -383,8 +548,13 @@ void free_garbage(node *state)
     //node_PrintTree(gc);
     if(get_obj_refcount(gc)<=0)
     {
+      if(node_GetParent(gc)!=NULL)
+      {
+        printf("tried to free obj with a parent:%x\n",gc);
+      }
       //printf("freeing:%x\n",gc);
-      node_FreeTree(gc);
+      else 
+        node_FreeTree(gc);
     }
     else
     {
@@ -459,15 +629,16 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       //node_PrintTree(sub);
       node_AddItem(real_parameters,sub);
       //printf("adding parameter sub:%x:(%d)\n",sub,get_obj_refcount(sub));
-      add_garbage(state,sub);
+      //add_garbage(state,sub);
     }
   }
   //tmp_dont_execute_block = False;
 
-  if(!strcmp(node_GetKey(exe_obj),"array"))
+  if(!strcmp(node_GetKey(exe_obj),"array")) //TODO MOVE to evaluate
   {
     node *base_class = node_GetItemByKey(state,"yeti_object");
     value = create_class_instance(base_class);
+    //node_SetParent(value,NULL)
     node *items = create_obj("items");
     add_obj_kv(value,items);
     add_garbage(state,value);
@@ -481,6 +652,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
         add_garbage(state,sub);
         node *sub_c = node_CopyTree(sub,True,True);
         node_AddItem(items,sub_c);
+        node_SetParent(sub_c,items);
         inc_obj_refcount(sub_c);
         free_execution_obj(token);
       }
@@ -524,6 +696,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
             
             node *real_parent = node_GetParent(sub);
             node_RemoveItem(real_parent,sub);
+            node_SetParent(sub,NULL);
             dec_obj_refcount(sub);
 
             //printf("adding exec sub:%x(rm:%x)\n",sub,node_GetParent(real_parent));
@@ -567,19 +740,30 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     if(!strcmp(name,"+"))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
       node *real_value2 = node_GetItemByKey(value2,"value");
-      node_SetSint32(real_value,node_GetSint32(real_value)+node_GetSint32(real_value2));
+      if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
+        node_SetSint32(real_value,node_GetSint32(real_value)+node_GetSint32(real_value2));
+      else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_STRING)
+      {
+        char *cat_string=StringCat(node_GetString(real_value),node_GetString(real_value2));
+        node_SetString(real_value,cat_string);
+        free(cat_string);
+      }
+      //printf("++\n");
+      //node_PrintTree(real_value);
     }
     else if(!strcmp(name,"-"))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -589,8 +773,9 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,"/"))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -600,30 +785,56 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,"*"))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
       node *real_value2 = node_GetItemByKey(value2,"value");
-      node_SetSint32(real_value,node_GetSint32(real_value)*node_GetSint32(real_value2));
+      if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
+        node_SetSint32(real_value,node_GetSint32(real_value)*node_GetSint32(real_value2));
+      else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_SINT32)
+      {
+        long mult=node_GetSint32(real_value2);
+        long i=0;
+        char *dst = NULL;
+        if(mult>0)
+        {
+          //for(i=0;i<mult;i++)
+          //{
+          dst = StringMult(node_GetString(real_value),mult);
+          //}
+          node_SetString(real_value,dst);
+          free(dst);
+        }
+      }
     }
     else if(!strcmp(name,"<"))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
       node *real_value2 = node_GetItemByKey(value2,"value");
+      //node_PrintTree(value);
+
+      //printf("%x << %x\n",value,value2);
+      //node_PrintTree(value2);
+
       node_SetSint32(real_value,node_GetSint32(real_value)<node_GetSint32(real_value2));
+      //printf("==\n");
+      //node_PrintTree(real_value);
     }
     else if(!strcmp(name,">"))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -633,8 +844,9 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,"=="))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -644,8 +856,9 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,"<="))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -655,8 +868,9 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,">="))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -666,8 +880,9 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,"!="))
     {
       value = node_CopyTree(parent,True,True);
+      node_SetParent(value,NULL);
       reset_obj_refcount(value);
-      add_garbage(state,parent);
+      //add_garbage(state,parent);
       add_garbage(state,value);
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
@@ -691,6 +906,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       //node_Print(real_parent,True,True);
       //node_PrintTree(real_parent);
       int r = node_RemoveItem(real_parent,parent);
+      node_SetParent(parent,NULL);
       //node_Print(parent,True,True);
       if(r==-1)
       {
@@ -701,6 +917,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       add_garbage(state,parent);
       //node_PrintTree(real_parameters);
       value = node_CopyTree(node_GetItem(real_parameters,0),True,True);
+      //printf("== %x\n",value);
       reset_obj_refcount(value);
       set_obj_string(value,"name",node_GetString(obj_name));
       node_AddItem(real_parent,value);
@@ -734,12 +951,15 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
             } 
           }
           else
+          {
+            //printf("[v:%x]\n",node_GetItemByKey(token,"value"));
             node_Print(node_GetItemByKey(token,"value"),False,False);
+          }
         }      
       }else
       {
         //printf("print has no parameters\n");
-        if(parent!=NULL)
+        if(parent!=NULL && parent != block)
           node_Print(node_GetItemByKey(parent,"value"),False,False);
       }
       if(!strcmp(name,"println"))
@@ -754,51 +974,122 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       //?(expression,true_func,false_func,loop_while_true); 
       //execute based on expression value (0,1,..) ,loops if needed
       //returns(expression)
-      node *expression_block = node_GetItem(real_parameters,0);
+      //node *expression_block = node_GetItem(real_parameters,0);
+      node *expression_block = node_GetItem(parameters,0);
       //node *expression_block = node_CopyTree(node_GetItem(real_parameters,0),True,True);
 
       //node *expression_value = node_GetItemByKey(expression,"value");
       //long ev = node_GetSint32(expression_value);
-      node *true_block = node_GetItem(real_parameters,1);
-      node *false_block = node_GetItem(real_parameters,2);
+      node *true_block = node_GetItem(parameters,1);
+      node *false_block = node_GetItem(parameters,2);
       node *loop = node_GetItem(real_parameters,3);
+
+      //node *true_block = node_GetItem(real_parameters,1);
+      //node *false_block = node_GetItem(real_parameters,2);
+      //node *loop = node_GetItem(real_parameters,3);
       node *loop_value = node_GetItemByKey(loop,"value");
       long lv = node_GetSint32(loop_value);
       //inc_obj_refcount(expression_block);
-      inc_obj_refcount(expression_block);
-      inc_obj_refcount(true_block);
-      inc_obj_refcount(false_block);
+      //inc_obj_refcount(expression_block);
+      //inc_obj_refcount(true_block);
+      //inc_obj_refcount(false_block);
       //inc_obj_refcount(loop);
+
+      node *expression_block_obj = node_GetItem(expression_block,0);
+      node *true_block_obj = node_GetItem(true_block,0);
+      node *false_block_obj = node_GetItem(false_block,0);
+      node *bmembers = node_GetItemByKey(block,"members");
+      node *old_expression_block_parent = node_GetParent(expression_block_obj);
+      node_SetParent(expression_block_obj,bmembers);
+      node *old_true_block_parent = node_GetParent(true_block_obj);
+      node_SetParent(true_block_obj,bmembers);
+      node *old_false_block_parent = node_GetParent(false_block_obj);
+      node_SetParent(false_block_obj,bmembers);
 
       if(lv)
       {
-        while(node_GetSint32(node_GetItemByKey(evaluate_block_instance(state,expression_block),"value")))
+        //while(node_GetSint32(node_GetItemByKey(evaluate_block_instance(state,expression_block),"value")))
+        node *exp_obj = execute_obj(state,expression_block,block,True);
+        while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
         {
-          node *eval=evaluate_block_instance(state,true_block);
-          add_garbage(state,eval);
+          node *eval=execute_obj(state,true_block,block,True);
+          //add_garbage(state,eval);
+
+     node *block_flag=node_GetItemByKey(state,"block_flag");
+      if(block_flag!=NULL)
+      {
+        char *bf = node_GetString(block_flag);
+        if(!strcmp(bf,"restart"))
+        {
+          set_obj_string(state,"block_flag","");
+        } 
+        else if(!strcmp(bf,"continue"))
+        {
+          set_obj_string(state,"block_flag","");
+        } 
+        else if(!strcmp(bf,"break"))
+        {
+          //printf("ex:breaking block\n");
+          node *block_break_count = node_GetItemByKey(state,"block_break_count");
+          long count = node_GetSint32(block_break_count);
+          //printf("ex:break count:%d\n",count);
+          if(!(count-1))
+          {
+            set_obj_int(state,"block_break_count",0);
+            set_obj_string(state,"block_flag","");
+            //printf("ex:last break\n");
+            break;
+          }
+          else
+          {
+            set_obj_int(state,"block_break_count",count-1);
+            //printf("ex:next break\n");
+            break;
+          }
+          //set_obj_string(state,"block_flag","");
+          //free_garbage(state);
+        } 
+        }
+
+
+          exp_obj = execute_obj(state,expression_block,block,True);
+
+          //node_PrintTree(exp_obj);
         }
       }
       else
       {
-        node *exp_val=evaluate_block_instance(state,expression_block);
-        //node_PrintTree(eval);
+        //node *exp_val=evaluate_block_instance(state,expression_block);
+        node *exp_val=execute_obj(state,expression_block,block,True);
         node *blk_val=NULL;
         if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
-          blk_val=evaluate_block_instance(state,true_block);
+        {
+          blk_val=execute_obj(state,true_block,block,True);
+          //blk_val=evaluate_block_instance(state,true_block);
+        }
         else
-          blk_val=evaluate_block_instance(state,false_block);
+        {
+          blk_val=execute_obj(state,false_block,block,True);
+          //blk_val=execute_obj(state,false_block,block,True);
+        }
+          //blk_val=evaluate_block_instance(state,false_block);
         //printf("adding exp:%x\n",exp_val);
-        add_garbage(state,exp_val);
+        //add_garbage(state,exp_val);
         //printf("adding blk:%x\n",blk_val);
-        add_garbage(state,blk_val);
+        //add_garbage(state,blk_val);
       }
-      dec_obj_refcount(expression_block);
-      dec_obj_refcount(true_block);
-      dec_obj_refcount(false_block);
+      //dec_obj_refcount(expression_block);
+      //dec_obj_refcount(true_block);
+      //dec_obj_refcount(false_block);
 
       //add_garbage(state,expression_block);
       //add_garbage(state,true_block);
       //add_garbage(state,false_block);
+
+      node_SetParent(expression_block_obj,old_expression_block_parent);
+      node_SetParent(true_block_obj,old_true_block_parent);
+      node_SetParent(false_block_obj,old_false_block_parent);
+
       node *base_class = node_GetItemByKey(state,"yeti_object");
       value = create_class_instance(base_class);
       reset_obj_refcount(value);
@@ -810,45 +1101,219 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
     else if(!strcmp(name,"??"))
     {
       node *init_block = node_GetItem(real_parameters,0);
-      node *expression_block = node_GetItem(real_parameters,1);
-      node *true_block = node_GetItem(real_parameters,2);
-      node *false_block = node_GetItem(real_parameters,3);
+      node *expression_block = node_GetItem(parameters,1);
+      node *true_block = node_GetItem(parameters,2);
+      node *false_block = node_GetItem(parameters,3);
       node *loop = node_GetItem(real_parameters,4);
       node *loop_value = node_GetItemByKey(loop,"value");
       long lv = node_GetSint32(loop_value);
       inc_obj_refcount(init_block);
-      inc_obj_refcount(expression_block);
-      inc_obj_refcount(true_block);
-      inc_obj_refcount(false_block);
       node *init_eval=evaluate_block_instance_in(state,init_block,block);
       add_garbage(state,init_eval);
       if(lv)
       {
-        while(node_GetSint32(node_GetItemByKey(evaluate_block_instance(state,expression_block),"value")))
+        //while(node_GetSint32(node_GetItemByKey(evaluate_block_instance(state,expression_block),"value")))
+        while(node_GetSint32(node_GetItemByKey(execute_obj(state,expression_block,block,True),"value")))
         {
-          node *eval=evaluate_block_instance(state,true_block);
+          //node *eval=evaluate_block_instance(state,true_block);
+          node *eval=execute_obj(state,true_block,block,True);
           add_garbage(state,eval);
         }
       }
       else
       {
-        node *exp_val=evaluate_block_instance(state,expression_block);
+        //node *exp_val=evaluate_block_instance(state,expression_block);
+        node *exp_val=execute_obj(state,expression_block,block,True);
         node *blk_val=NULL;
         if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
-          blk_val=evaluate_block_instance(state,true_block);
+        {
+          blk_val=execute_obj(state,true_block,block,True);
+          //blk_val=evaluate_block_instance(state,true_block);
+        }
         else
-          blk_val=evaluate_block_instance(state,false_block);
+        {
+          blk_val=execute_obj(state,false_block,block,True);
+          //blk_val=execute_obj(state,false_block,block,True);
+        }
         add_garbage(state,exp_val);
         add_garbage(state,blk_val);
       }
       dec_obj_refcount(init_block);
-      dec_obj_refcount(expression_block);
-      dec_obj_refcount(true_block);
-      dec_obj_refcount(false_block);
       node *base_class = node_GetItemByKey(state,"yeti_object");
       value = create_class_instance(base_class);
       reset_obj_refcount(value);
       add_garbage(state,value);
+    }
+    else if(!strcmp(name,"break"))
+    {
+      set_obj_string(state,"block_flag","break");
+      if(node_GetItemsNum(real_parameters)>0)
+      {
+        node *count = node_GetItem(real_parameters,0);
+        node *real_value = node_GetItemByKey(count,"value");
+        set_obj_int(state,"block_break_count",node_GetSint32(real_value));
+        //value = node_CopyTree(parent,True,True);
+        //add_obj_kv(state,);
+        //printf("called break with count:%d\n",node_GetSint32(real_value));
+
+      }
+      else
+      {
+        set_obj_int(state,"block_break_count",1);
+        //printf("called break\n");
+      }
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      value = create_class_instance(base_class);
+      //node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+    }
+    else if(!strcmp(name,"restart"))
+    {
+      set_obj_string(state,"block_flag","restart");
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      value = create_class_instance(base_class);
+      //node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+    }
+    else if(!strcmp(name,"continue"))
+    {
+      set_obj_string(state,"block_flag","continue");
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      value = create_class_instance(base_class);
+      //node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+    }
+    else if(!strcmp(name,"input"))
+    {
+      //x a.input()
+      //x a=input()
+      //x input(a)
+
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      char *line = CreateEmptyString();
+      char c='\n';
+      //while((c=getc(stdin))!='\n')
+      while((c=fgetc(stdin))!='\n' && c!=EOF && c!=0)
+      {
+        line = AddCharToString(line,c);
+      }
+
+      if(node_GetItemsNum(real_parameters))
+      {
+        //printf("setting par\n");
+        value = node_GetItem(real_parameters,0);
+        //node_PrintTree(value);
+      }
+      else if(parent!=NULL && parent != block)
+      { 
+        //printf("setting parent:%s\n",node_GetString(get_obj_name(parent)));
+        //node_Print(node_GetItemByKey(parent,"value"),False,False);
+        value = parent;
+      }
+      else
+      {
+        value = create_class_instance(base_class);
+        node_SetParent(value,NULL);
+        reset_obj_refcount(value);
+        add_garbage(state,value);
+      }
+      node *real_value = node_GetItemByKey(value,"value");
+      node_SetString(real_value,line);
+      free(line);
+    }
+    else if(!strcmp(name,"http_query"))
+    {
+      //returns http query vars as array
+
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      if(node_GetItemsNum(real_parameters))
+      {
+        value = node_GetItem(real_parameters,0);
+      }
+      else if(parent!=NULL && parent != block)
+      { 
+        value = parent;
+      }
+      else
+      {
+        value = create_class_instance(base_class);
+        node_SetParent(value,NULL);
+        reset_obj_refcount(value);
+        add_garbage(state,value);
+      }
+      node *real_value = node_GetItemByKey(value,"value");
+      append_http_query_array(state,value);
+      //printf("HTTPQUERY:\n");
+      //node_PrintTree(value);
+    }
+    else if(!strcmp(name,"int"))
+    {
+      //returns integer of string input
+
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      node *value2 = NULL;
+      if(node_GetItemsNum(real_parameters))
+      {
+        value2 = node_GetItem(real_parameters,0);
+      }
+      else if(parent!=NULL && parent != block)
+      { 
+        value2 = parent;
+      }
+      else
+      {
+        value2 = create_class_instance(base_class);
+        node_SetParent(value2,NULL);
+        reset_obj_refcount(value2);
+        add_garbage(state,value2);
+        set_obj_int(value2,"value",0);
+      }
+      node *real_value2 = node_GetItemByKey(value2,"value");
+      value = create_class_instance(base_class);
+      node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+      node *real_value = node_GetItemByKey(value,"value");
+      if(node_GetType(real_value2)==NODE_TYPE_SINT32)
+        node_SetSint32(real_value,node_GetSint32(real_value2));
+      else if(node_GetType(real_value2)==NODE_TYPE_STRING)
+        node_SetSint32(real_value,atoi(node_GetString(real_value2)));
+    }
+    else if(!strcmp(name,"str"))
+    {
+      //returns string of integer input
+
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      node *value2 = NULL;
+      if(node_GetItemsNum(real_parameters))
+      {
+        value2 = node_GetItem(real_parameters,0);
+      }
+      else if(parent!=NULL && parent != block)
+      { 
+        value2 = parent;
+      }
+      else
+      {
+        value2 = create_class_instance(base_class);
+        node_SetParent(value2,NULL);
+        reset_obj_refcount(value2);
+        add_garbage(state,value2);
+        set_obj_string(value2,"value","");
+      }
+      node *real_value2 = node_GetItemByKey(value2,"value");
+      value = create_class_instance(base_class);
+      node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+      node *real_value = node_GetItemByKey(value,"value");
+      if(node_GetType(real_value2)==NODE_TYPE_SINT32)
+        node_SetString(real_value,convert_to_string(node_GetSint32(real_value2)));
+      else if(node_GetType(real_value2)==NODE_TYPE_STRING)
+        node_SetString(real_value,node_GetString(real_value2));
     }
     else if(!strcmp(name,"test"))
     {
@@ -857,6 +1322,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       node *base_class = node_GetItemByKey(state,"yeti_object");
       value = create_class_instance(base_class);
       //set_obj_string(value,"type","object");
+      //node_SetParent(value,NULL);
 
       reset_obj_refcount(value);
       add_garbage(state,value);
@@ -940,7 +1406,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       {
         actual_obj = found_obj;
       }
-      free_execution_obj(key_obj);
+      free_execution_obj(key_exe_obj);
     }
     else if(!strcmp(node_GetKey(token),"yeti_array"))
     {
@@ -988,6 +1454,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         //actual_obj = execute_obj(state,func_exe_obj,block,False);/*TODO move to execute somehow*/
         free_execution_obj(func_exe_obj);
         //printf("adding blkinst:%x\n",block_class_instance);
+        node_SetParent(block_class_instance,NULL);
         add_garbage(state,block_class_instance);
         //node_Free(exe_parameters,True);
       }
@@ -995,6 +1462,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       {
         node_Free(exe_parameters,True);
         //printf("not exec add:%x\n",block_class_instance);
+        node_SetParent(block_class_instance,NULL);
         add_garbage(state,block_class_instance);
         actual_obj = block_class_instance;
       }
@@ -1004,6 +1472,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       node *child = create_class_instance(base_class);
       set_obj_string(child,"value",node_GetValue(token));
       add_garbage(state,child);
+      //node_SetParent(child,NULL);
+      //printf("created string:%x : parent:%x\n",child,node_GetParent(child));
       actual_obj = child;
     }
     else if(!strcmp(node_GetKey(token),"val"))
@@ -1033,6 +1503,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           {
             node *child = create_class_instance(base_class);
             set_obj_string(child,"name",node_GetValue(token));
+            //printf("creating:%s (%x)\n",node_GetString(token),child);
             //if(actual_obj != NULL)
             add_member(actual_obj,child);
             inc_obj_refcount(child);
@@ -1053,15 +1524,13 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           }
           else
           {
-            //printf("found:%s\n",node_GetValue(token));
+            //printf("found:%s,%x\n",node_GetValue(token),found_obj);
             actual_obj = found_obj;
             if(!strcmp(get_obj_type(actual_obj),"function"))
             {
               //printf("found a function during evaluation\n");
               //node_PrintTree(actual_obj);
-
               node *exe_parameters = create_obj("parameters");
-
               node *peek = node_ItemPeek(statement);
               if(peek!=NULL && !strcmp(node_GetKey(peek),"yeti_parameters"))
               {
@@ -1071,7 +1540,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 {
                   node *parameter_token = node_ItemIterate(sub_parameters);
                   //node *sub_obj = evaluate_statement(state,parameter_token,block,0);
-                  node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
+                  //node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0);
+                  node *sub_obj = evaluate_statement(state,parameter_token,block,0);
                   node_AddItem(exe_parameters,sub_obj);
                 }
                 /*
@@ -1084,7 +1554,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               }
               /*node *func_exe_obj = evaluate_statement(state,actual_obj,block,0);*/
               //node *func_exe_obj = create_execution_obj(actual_obj,exe_parameters,sub_exe_obj);
-              node *func_exe_obj = create_execution_obj(actual_obj,exe_parameters,NULL);
+              //actual_obj = found_obj;
+              node *func_exe_obj = create_execution_obj(found_obj,exe_parameters,NULL);
               actual_obj = execute_obj(state,func_exe_obj,block,False);//,False);/*TODO move to execute somehow*/
               //actual_obj = execute_obj(state,actual_obj,block,False);
               free_execution_obj(func_exe_obj);
@@ -1099,8 +1570,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 while(node_ItemIterationUnfinished(sub_parameters))
                 {
                   node *parameter_token = node_ItemIterate(sub_parameters);
-                  //node *sub_obj = evaluate_statement(state,parameter_token,block,0);
-                  node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
+                  node *sub_obj = evaluate_statement(state,parameter_token,block,0);
+                  //node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
+                  //node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0);
                   node_AddItem(exe_parameters,sub_obj);
                 }
                 /*
@@ -1112,14 +1584,15 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 index++;
                 //actual_obj = execute_obj(state,block_exe_obj,block,True);
                 //set_obj_string(actual_obj,"execute_block","True");
-              node *func_exe_obj = create_execution_obj(actual_obj,exe_parameters,NULL);
+              //node *func_exe_obj = create_execution_obj(actual_obj,exe_parameters,NULL);
+              //actual_obj = found_obj;
+              node *func_exe_obj = create_execution_obj(found_obj,exe_parameters,NULL);
               actual_obj = execute_obj(state,func_exe_obj,block,True);//,False);/*TODO move to execute somehow*/
               //actual_obj = execute_obj(state,actual_obj,block,False);
               free_execution_obj(func_exe_obj);
               }
               else
                 node_Free(exe_parameters,True);
-
             }
           }
         }
@@ -1127,6 +1600,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       else if(node_GetType(token) == NODE_TYPE_SINT32)
       {
         node *child = create_class_instance(base_class);
+        //node_SetParent(child,NULL);
         set_obj_int(child,"value",node_GetSint32(token));
         actual_obj = child;//get_member(child,"get");
         add_garbage(state,child);
@@ -1160,33 +1634,96 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   return(exe_obj);
 }
 
-void evaluate_block(node *state,node *block)
+node *evaluate_block(node *state,node *block)
 {
-    node *base_class = node_GetItemByKey(state,"yeti_object");
-    node *block_class_instance = create_block_obj(base_class,block);
-    node *il_block = node_GetItemByKey(block_class_instance,"yeti_block");
+  node *ret = NULL;
+  node *base_class = node_GetItemByKey(state,"yeti_object");
+  node *block_class_instance = create_block_obj(base_class,block);
+  node *il_block = node_GetItemByKey(block_class_instance,"yeti_block");
+  if(!node_GetItemsNum(il_block))
+  {
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      ret = create_class_instance(base_class);
+      //node_SetParent(ret,NULL);
+      reset_obj_refcount(ret);
+      //printf("adding block instance empty ret:%x\n",ret);
+      add_garbage(state,ret);
+  }
+  else
+  {
     node_ItemIterationReset(il_block);
     while(node_ItemIterationUnfinished(il_block))
     {
-        node *yeti_statement = node_ItemIterate(il_block);
-        //printf("evaluating statement\n");
-        node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
-        //printf("executing statement\n");
-        
-        //node_PrintTree(obj);
-        execute_obj(state,obj,block_class_instance,False);//,False);
-        //node_FreeTree(obj);
-        //printf("finished execution object\n");
-        //printf("freeing execution object\n");
+      node *yeti_statement = node_ItemIterate(il_block);
+      //printf("evaluating statement\n");
+      node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
+      //printf("executing statement\n");
+      //node_PrintTree(obj);
+      ret=execute_obj(state,obj,block_class_instance,False);//,False);
+      if(!node_ItemIterationUnfinished(il_block))
+      {
+        ret=node_CopyTree(ret,True,True);
         free_execution_obj(obj);
         free_garbage(state);
+        node_FreeTree(block_class_instance);
+        return(ret);
+      }
+      //node_PrintTree(ret);
+      //node_FreeTree(obj);
+      //printf("finished execution object\n");
+      //printf("freeing execution object\n");
+      free_execution_obj(obj);
+      node *block_flag=node_GetItemByKey(state,"block_flag");
+      if(block_flag!=NULL)
+      {
+        char *bf = node_GetString(block_flag);
+        if(!strcmp(bf,"restart"))
+        { 
+          node_ItemIterationReset(il_block);
+          set_obj_string(state,"block_flag","");
+        } 
+        else if(!strcmp(bf,"continue"))
+        {
+          set_obj_string(state,"block_flag","");
+          long itindex = node_GetItemIterationIndex(il_block);
+          if(itindex+1<node_GetItemsNum(il_block))
+            node_SetItemIterationIndex(il_block,itindex+1);
+        } 
+        else if(!strcmp(bf,"break"))
+        {
+          //printf("breaking block\n");
+          node *block_break_count = node_GetItemByKey(state,"block_break_count");
+          long count = node_GetSint32(block_break_count);
+          //printf("break count:%d\n",count);
+          if(!(count-1))
+          {
+            set_obj_int(state,"block_break_count",0);
+            set_obj_string(state,"block_flag","");
+            //printf("last break\n");
+            node_FreeTree(block_class_instance);
+            return;
+          }
+          else
+          {
+            set_obj_int(state,"block_break_count",count-1);
+            //printf("next break\n");
+            node_FreeTree(block_class_instance);
+            return;
+          }
+          //set_obj_string(state,"block_flag","");
+          //free_garbage(state);
+        } 
+      }
+      free_garbage(state);
     }
-    //printf("block class instance:\n");
-    //node_PrintTree(block_class_instance);
-    //free_obj(state,block_class_instance);
-    //printf("freeing block_class_instance\n");
-    //free_garbage(state);
-    node_FreeTree(block_class_instance);
+  }
+  //printf("block class instance:\n");
+  //node_PrintTree(block_class_instance);
+  //free_obj(state,block_class_instance);
+  //printf("freeing block_class_instance\n");
+  //free_garbage(state);
+  node_FreeTree(block_class_instance);
+  return(ret);
 }
 
 node *evaluate_block_instance(node *state,node *block_class_instance)
@@ -1197,6 +1734,7 @@ node *evaluate_block_instance(node *state,node *block_class_instance)
   {
       node *base_class = node_GetItemByKey(state,"yeti_object");
       ret = create_class_instance(base_class);
+      //node_SetParent(ret,NULL);
       reset_obj_refcount(ret);
       //printf("adding block instance empty ret:%x\n",ret);
       add_garbage(state,ret);
@@ -1210,18 +1748,57 @@ node *evaluate_block_instance(node *state,node *block_class_instance)
       node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
       //node *exe_obj = execute_obj(state,obj,block_class_instance,False);
       ret = execute_obj(state,obj,block_class_instance,False);//,False);
-      //free_garbage(state);
+      //free_garbage(state);//FAST GARBAGE GC
       //node_FreeTree(obj);
       free_execution_obj(obj);
+      node *block_flag=node_GetItemByKey(state,"block_flag");
+      if(block_flag!=NULL)
+      {
+        char *bf = node_GetString(block_flag);
+        if(!strcmp(bf,"restart"))
+        {
+          node_ItemIterationReset(il_block);
+          set_obj_string(state,"block_flag","");
+        } 
+        else if(!strcmp(bf,"continue"))
+        {
+          set_obj_string(state,"block_flag","");
+          long itindex = node_GetItemIterationIndex(il_block);
+          if(itindex+1<node_GetItemsNum(il_block))
+            node_SetItemIterationIndex(il_block,itindex+1);
+        } 
+        else if(!strcmp(bf,"break"))
+        {
+          //printf("breaking block\n");
+          node *block_break_count = node_GetItemByKey(state,"block_break_count");
+          long count = node_GetSint32(block_break_count);
+          //printf("break count:%d\n",count);
+          if(!(count-1))
+          {
+            set_obj_int(state,"block_break_count",0);
+            set_obj_string(state,"block_flag","");
+            //printf("last break\n");
+            return(ret);
+          }
+          else
+          {
+            set_obj_int(state,"block_break_count",count-1);
+            //printf("next break\n");
+            return(ret);
+          }
+          //set_obj_string(state,"block_flag","");
+          //free_garbage(state);
+        } 
+      }
     }
   }
-if(ret==NULL)
-{
-  printf("eval return NULL\n");
-  //int x = 1/0;
-}
+  if(ret==NULL)
+  {
+    printf("eval return NULL\n");
+    //int x = 1/0;
+  }
   //free_garbage(state);
-return(ret);
+  return(ret);
 }
 
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block)
@@ -1232,6 +1809,7 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
   {
       node *base_class = node_GetItemByKey(state,"yeti_object");
       ret = create_class_instance(base_class);
+      //node_SetParent(ret,NULL);
       reset_obj_refcount(ret);
       //printf("adding block instance empty ret:%x\n",ret);
       add_garbage(state,ret);
@@ -1248,15 +1826,54 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
       //free_garbage(state);
       //node_FreeTree(obj);
       free_execution_obj(obj);
+      node *block_flag=node_GetItemByKey(state,"block_flag");
+      if(block_flag!=NULL)
+      {
+        char *bf = node_GetString(block_flag);
+        if(!strcmp(bf,"restart"))
+        {
+          node_ItemIterationReset(il_block);
+          set_obj_string(state,"block_flag","");
+        } 
+        else if(!strcmp(bf,"continue"))
+        {
+          set_obj_string(state,"block_flag","");
+          long itindex = node_GetItemIterationIndex(il_block);
+          if(itindex+1<node_GetItemsNum(il_block))
+            node_SetItemIterationIndex(il_block,itindex+1);
+        } 
+        else if(!strcmp(bf,"break"))
+        {
+          //printf("breaking block\n");
+          node *block_break_count = node_GetItemByKey(state,"block_break_count");
+          long count = node_GetSint32(block_break_count);
+          //printf("break count:%d\n",count);
+          if(!(count-1))
+          {
+            set_obj_int(state,"block_break_count",0);
+            set_obj_string(state,"block_flag","");
+            //printf("last break\n");
+            return(ret);
+          }
+          else
+          {
+            set_obj_int(state,"block_break_count",count-1);
+            //printf("next break\n");
+            return(ret);
+          }
+          //set_obj_string(state,"block_flag","");
+          //free_garbage(state);
+        } 
+      }
     }
   }
-if(ret==NULL)
-{
-  printf("eval return NULL\n");
-  //int x = 1/0;
-}
+  if(ret==NULL)
+  {
+    printf("eval return NULL\n");
+    //int x = 1/0;
+  }
   //free_garbage(state);
-return(ret);
+  return(ret);
 }
 
 
@@ -1271,15 +1888,27 @@ int main(int argc, char** argv)
   #endif
 
   node *base_class = create_class_object();
-
+  node *yeti_stream = NULL;
   //printf("yeti interpreter 0.1\n");
   if(argc<2)
   {
-    printf("error: no input file given as parameter\n");
-    return(1);
+    //printf("error: no input file given as parameter\n");
+    //return(1);
+    char *line = CreateEmptyString();
+    char c=EOF;
+    while((c=getc(stdin))!=EOF)
+    {
+      line = AddCharToString(line,c);
+    }
+    yeti_stream = yeti_LoadString(line);
+    free(line);
   }
-  node *yeti_stream = yeti_LoadFile(argv[1]);
+  else
+    yeti_stream = yeti_LoadFile(argv[1]);
+  //node *yeti_stream = yeti_LoadFile(argv[1]);
   //node_PrintTree(yeti_stream);
+  //node_FreeTree(yeti_stream);
+  //node_FreeTree(base_class);
   
   node *yeti_block = node_GetItemByKey(yeti_stream,"yeti_block");
   node_RemoveItem(yeti_stream,yeti_block);
@@ -1289,9 +1918,11 @@ int main(int argc, char** argv)
   
   if(yeti_stream!=NULL)
   {
-    evaluate_block(yeti_state,yeti_block);
+    node *ret=evaluate_block(yeti_state,yeti_block);
+    obj_print(ret);
+    printf("\n");
+    node_FreeTree(ret);
   }
-  
   //node *c = create_class_instance(base_class);
   //node_FreeTree(state->top_scope);
   //printf("bc:%x,c:%x\n",base_class,c);
@@ -1305,6 +1936,7 @@ int main(int argc, char** argv)
   //node_Free(yeti_state,False);
   //node_PrintTree(yeti_state);
   node_FreeTree(yeti_state);
+  
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif

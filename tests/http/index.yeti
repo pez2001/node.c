@@ -1,0 +1,36 @@
+#!c:/space_race/node.c/yetii.exe
+println("Connection: close");
+println("Content-Type: text/html");
+println("");
+println("<html>");
+
+/*test1="Hallo";
+test2=" Welt!\n<br>";
+test3=test1+test2;
+test3=test3*3;
+println(test3);
+*/
+
+println("
+
+<head>
+<title>Test Post Page</title>
+</head>
+<body>
+
+<h1>Enter Some Numbers</h1>
+
+<form action=\"input.yeti\">
+  <p>a:<br><input name=\"t1\" type=\"text\" size=\"30\" maxlength=\"30\"></p>
+  <p>b:<br><input name=\"t2\" type=\"text\" size=\"30\" maxlength=\"40\"></p>
+  <input type=\"submit\" value=\" Try \">
+</form>
+
+</body>
+");
+
+
+println("</html>");
+
+return_value=555;
+
