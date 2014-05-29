@@ -1,4 +1,10 @@
-a=2;
-r=a;
+while(e,do)={do();?(e,do,{},1)};
+for(range,do)={s=range[0];e=range[1];?({s<e},{do(s);s=s+1;},{},1);};
+
+
+i=2;
+while({i>0},{i=i-1;println("idown:",i)});
+
 i=0;
-a=1;
+for([0,10],t(ef)={i=i+1;println("countdown:",i," e:",ef,"[s:",s,"_e:",e,"]");});
+
