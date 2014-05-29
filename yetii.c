@@ -1705,30 +1705,36 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               if(peek!=NULL && !strcmp(node_GetKey(peek),"yeti_parameters"))
               {
                 node *sub_parameters = node_ItemIterate(statement);
-                node_ItemIterationReset(sub_parameters);
-                while(node_ItemIterationUnfinished(sub_parameters))
+                node *peek = node_ItemPeek(statement);
+                if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp(node_GetValue(peek),"="))
                 {
-                  node *parameter_token = node_ItemIterate(sub_parameters);
-                  node *sub_obj = evaluate_statement(state,parameter_token,block,0);
-                  //node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
-                  //node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0);
-                  node_AddItem(exe_parameters,sub_obj);
+                  //printf("redefinition of function\n");
+                  //node *parameters_definition = node_ItemIterate(statement);
+                  node *pars = node_CopyTree(sub_parameters,True,True);
+                  node *old_pars = node_GetItemByKey(actual_obj,"yeti_parameters");
+                  if(old_pars!=NULL)
+                  {
+                    node_RemoveItem(actual_obj,old_pars);
+                    node_FreeTree(old_pars);
+                  }
+                  node_AddItem(actual_obj,pars);
+                  node_Free(exe_parameters,True);
+                  index++;
                 }
-                /*
-                if(index+1<node_GetItemsNum(statement))
+                else
                 {
-                  node *sub_obj = evaluate_statement(state,statement,block,index+1);
-                  sub_exe_obj = sub_obj;
-                }*/
-                index++;
-                //actual_obj = execute_obj(state,block_exe_obj,block,True);
-                //set_obj_string(actual_obj,"execute_block","True");
-              //node *func_exe_obj = create_execution_obj(actual_obj,exe_parameters,NULL);
-              //actual_obj = found_obj;
-              node *func_exe_obj = create_execution_obj(found_obj,exe_parameters,NULL);
-              actual_obj = execute_obj(state,func_exe_obj,block,True);//,False);/*TODO move to execute somehow*/
-              //actual_obj = execute_obj(state,actual_obj,block,False);
-              free_execution_obj(func_exe_obj);
+                  node_ItemIterationReset(sub_parameters);
+                  while(node_ItemIterationUnfinished(sub_parameters))
+                  {
+                    node *parameter_token = node_ItemIterate(sub_parameters);
+                    node *sub_obj = evaluate_statement(state,parameter_token,block,0);
+                    node_AddItem(exe_parameters,sub_obj);
+                  }
+                  index++;
+                  node *func_exe_obj = create_execution_obj(found_obj,exe_parameters,NULL);
+                  actual_obj = execute_obj(state,func_exe_obj,block,True);//,False);/*TODO move to execute somehow*/
+                  free_execution_obj(func_exe_obj);
+                }
               }
               else
                 node_Free(exe_parameters,True);
@@ -2034,13 +2040,11 @@ int main(int argc, char** argv)
   mem_Init();
   #endif
 
+  int ret = 0;
   node *base_class = create_class_object();
   node *yeti_stream = NULL;
-  //printf("yeti interpreter 0.1\n");
   if(argc<2)
   {
-    //printf("error: no input file given as parameter\n");
-    //return(1);
     char *line = CreateEmptyString();
     char c=EOF;
     while((c=getc(stdin))!=EOF)
@@ -2051,40 +2055,36 @@ int main(int argc, char** argv)
     free(line);
   }
   else
+  {
+    if(!strcmp(argv[1],"-v"))
+    {
+      printf("yeti interpreter %d.%d (build %d)\n",MAJOR_VERSION,MINOR_VERSION,BUILD+1);
+      node_FreeTree(base_class);
+      return(0);
+    }
     yeti_stream = yeti_LoadFile(argv[1]);
-  //node *yeti_stream = yeti_LoadFile(argv[1]);
-  //node_PrintTree(yeti_stream);
-  //node_FreeTree(yeti_stream);
-  //node_FreeTree(base_class);
+  }
+    
   
   node *yeti_block = node_GetItemByKey(yeti_stream,"yeti_block");
   node_RemoveItem(yeti_stream,yeti_block);
   node_FreeTree(yeti_stream);
   node *yeti_state = create_yeti_state(yeti_block,base_class);
-
-  
   if(yeti_stream!=NULL)
   {
-    node *ret=evaluate_block(yeti_state,yeti_block);
-    obj_print(ret);
-    printf("\n");
-    node_FreeTree(ret);
+    node *ret_obj=evaluate_block(yeti_state,yeti_block);
+    node *real_value = node_GetItemByKey(ret_obj,"value");
+    if(node_GetType(real_value)==NODE_TYPE_SINT32)
+      ret = node_GetSint32(real_value);
+    else if(node_GetType(real_value)==NODE_TYPE_STRING)
+      ret = atoi(node_GetString(real_value));
+    node_FreeTree(ret_obj);
   }
-  //node *c = create_class_instance(base_class);
-  //node_FreeTree(state->top_scope);
-  //printf("bc:%x,c:%x\n",base_class,c);
-  //node_FreeTree(c);
-  //node_FreeTree(base_class);
-  
   node *garbage = node_GetItemByKey(yeti_state,"garbage");
   node_ClearItems(garbage);
-  //node_Free(garbage,False);
-
-  //node_Free(yeti_state,False);
-  //node_PrintTree(yeti_state);
   node_FreeTree(yeti_state);
-  
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
+  return(ret);
 }

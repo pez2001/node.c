@@ -1,10 +1,18 @@
-while(e,do)={do();?(e,do,{},1)};
+while(e,do)={?(e,do,{},1)};
 for(range,do)={s=range[0];e=range[1];?({s<e},{do(s);s=s+1;},{},1);};
-
+if(e,do)={?(e,do,{},0)};
 
 i=2;
 while({i>0},{i=i-1;println("idown:",i)});
 
 i=0;
-for([0,10],t(ef)={i=i+1;println("countdown:",i," e:",ef,"[s:",s,"_e:",e,"]");});
+for([0,10],t(ef)={i=i+1;println("countdown:",i," e:",ef,"[s:",s,"_e:",e,"]")});
+/*for([0,10],t(ef)={i=i+1;if({i<8},{println("countdown:",i," e:",ef,"[s:",s,"_e:",e,"]");})});*/
+i=0;
+for([0,10],t2(ef)={i=i+1;if({i<8},{println("countdown:",i," e:",ef,"[s:",s,"_e:",e,"]");})});
 
+println("calling t");
+t(666);
+t(lop,lip)={println("lop:",lop,"lip:",lip)};
+t("Hallo","Welt");
+return=2;
