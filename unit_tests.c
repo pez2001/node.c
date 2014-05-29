@@ -29,34 +29,34 @@ int debug_level = 0;
 
 void ptr_tests(void)
 {
-	printf("testing ptr list functions\n");
-	list *p = list_Create(0, 0);
-	
-	list_Insert(p,0,(void*)2);
-	list_Insert(p,0,(void*)1);
-	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ", (int)list_Get(p,i));
-	list_Pop(p);
-	list_Pop(p);
-	printf("\n");
-		
-	list_Push(p, (void*)1);
-	list_Push(p, (void*)2);
-	list_Push(p, (void*)3);
-	list_Push(p, (void*)4);
-	printf("push(1,2,3,4):\n");
-	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ", (int)list_Get(p,i));
-	printf("\n");
-	int x =(int)list_Pop(p);
+  printf("testing ptr list functions\n");
+  list *p = list_Create(0, 0);
+  
+  list_Insert(p,0,(void*)2);
+  list_Insert(p,0,(void*)1);
+  for(unsigned int i = 0; i < list_GetLen(p); i++)
+    printf("%d ", (int)list_Get(p,i));
+  list_Pop(p);
+  list_Pop(p);
+  printf("\n");
+    
+  list_Push(p, (void*)1);
+  list_Push(p, (void*)2);
+  list_Push(p, (void*)3);
+  list_Push(p, (void*)4);
+  printf("push(1,2,3,4):\n");
+  for(unsigned int i = 0; i < list_GetLen(p); i++)
+    printf("%d ", (int)list_Get(p,i));
+  printf("\n");
+  int x =(int)list_Pop(p);
 
-	printf("pop(): %d\n", x);
-	list_Push(p,  (void*)5);
-	printf("push(5):\n");
-	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ", list_Get(p,i));
-	printf("\n");
-	int r = (int)list_Remove(p, 2);
+  printf("pop(): %d\n", x);
+  list_Push(p,  (void*)5);
+  printf("push(5):\n");
+  for(unsigned int i = 0; i < list_GetLen(p); i++)
+    printf("%d ", list_Get(p,i));
+  printf("\n");
+  int r = (int)list_Remove(p, 2);
 
 	printf("remove(2): %d\n", r);
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
@@ -67,7 +67,7 @@ void ptr_tests(void)
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
 		printf("%d ",(int)list_Get(p,i));
 	printf("\ninserting\n");
-	list_Insert(p, 0, (void*)99);
+  list_Insert(p, 0, (void*)99);
 	printf("insert 0,99:\n");
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
 		printf("%d ",(int)list_Get(p,i));
@@ -98,14 +98,46 @@ void ptr_tests(void)
 		list_Pop(p);
 	}
 
-	list_Close(p);
-	printf("ptr tests thru\n");
+  list_Close(p);
+  printf("ptr tests thru\n");
 }
 
-void ptr_iteration_tests(void)
+void ptr_tests2(void)
 {
+  printf("testing ptr list functions 2\n");
+  int r=0;
+  list *p = list_Create(0, 0);
+  list_Push(p, (void*)1);
+  list_Push(p, (void*)2);
+  list_Push(p, (void*)3);
+  list_Push(p, (void*)4);
+  printf("push(1,2,3,4):\n");
+  for(unsigned int i = 0; i < list_GetLen(p); i++)
+    printf("%d ", (int)list_Get(p,i));
+  printf("\n");
+
+  r = (int)list_Remove(p, 0);
+  r = (int)list_Remove(p, 1);
+/*  r = (int)list_Remove(p, 2);
+  r = (int)list_Remove(p, 1);
+  list_Insert(p, 0, (void*)99);
+  r = (int)list_Remove(p, 0);
+list_Insert(p, 1, (void*)99);
+  r = (int)list_Remove(p, 1);
+list_Insert(p, 1, (void*)99);
+  r = (int)list_Remove(p, 0);
+list_Insert(p, 1, (void*)100);*/
+/*list_MoveDown(p,1);  */
+//list_MoveUp(p,0);
 
 
+  for(unsigned int i = 0; i < list_GetLen(p); i++)
+    printf("%d ", list_Get(p,i));
+  printf("\n");
+
+
+  list_Close(p);
+  printf("ptr tests 2 thru\n");
 }
 
 
@@ -594,13 +626,13 @@ void yeti_tests2(void)
 
 int main(int argc, char *argv[])
 {
-	//ptr_tests();
-    //node_tests();
-    //mem_tests();
-    //json_tests();
-    //fbx_tests();
-    yeti_tests();
-    yeti_tests2();
-    //hashing_tests();
-    //json_speed_tests();
+	ptr_tests2();
+  //node_tests();
+  //mem_tests();
+  //json_tests();
+  //fbx_tests();
+  //yeti_tests();
+  //yeti_tests2();
+  //hashing_tests();
+  //json_speed_tests();
 }

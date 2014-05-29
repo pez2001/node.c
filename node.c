@@ -998,6 +998,11 @@ int node_RemoveItem(node *n,node *s)
 
 node *node_RemoveItemByIndex(node *n,long index)
 {
+  /*if(index<0)
+  {
+    printf("called removeitembyindex with <0\n");
+    int x=1/0;
+  }*/
   return(list_Remove(n->items,index));
 }
 
@@ -1023,6 +1028,11 @@ int node_HasItem(node *n,node *s)
 
 void *node_GetItem(node *n,long index)
 {
+  /*if(index<0)
+  {
+    printf("called getitem with <0\n");
+    int x=1/0;
+  }*/
   return(list_Get(n->items,index));
 }
 

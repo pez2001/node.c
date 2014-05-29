@@ -22,7 +22,7 @@ a();
 
 
 b=0;
-?({b<2},{i=0;b=b+1;println("b:",b);a();},{},1);
+?({b<2},{i=0;b=b+1;println("b:",b);a();println("press enter to continue");input().println();},{},1);
 
 
 
@@ -30,3 +30,5 @@ b=0;
 println("i:",i);
 
 if(i==2,{println("i==",i)});
+println("press enter to continue");
+input().println();

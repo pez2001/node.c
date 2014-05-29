@@ -24,12 +24,12 @@ input().println();
 h=http_query();
 /*println("h:",h);*/
 
+?(len(h),{
 p1=h[0].int();
 p2=h[1].int();
-
 println("<h1>result(a+b)=",p1+p2,"</h1><br>");
-
 println("named var:['t1'] = ",h["t1"],"<br>");
+},{},0);
 
 
 /*println(h[0]);*/
