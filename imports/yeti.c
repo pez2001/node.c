@@ -310,7 +310,7 @@ node *yeti_Load(char *yeti,unsigned long len)
       node *top = list_Pop(obj_stack);
       long num_stuff=node_GetItemsNum(top);
       actual_obj = (node*)list_GetTop(obj_stack);
-      if(num_stuff)
+      if(num_stuff)//skips empty statements
       {
         new_obj = yeti_CreateNode("yeti_statement","null",0);
         node_SetType(new_obj,NODE_TYPE_NODE);
@@ -319,7 +319,7 @@ node *yeti_Load(char *yeti,unsigned long len)
         list_Push(obj_stack,new_obj);      
       }
       else
-      {
+      { //reuse 
         list_Push(obj_stack,top);
       }
       offset++;
@@ -412,7 +412,7 @@ node *yeti_Load(char *yeti,unsigned long len)
       continue;
     }
 
-    if(yeti[offset] == '\r' || yeti[offset] == '\n')
+    if(yeti[offset] == '\r' || yeti[offset] == '\n' || yeti[offset]== 0)
     {
       yeti_add_value_string(&value_string,state,actual_obj);
       state &= ~YETI_STATE_IN_OP;
@@ -445,7 +445,7 @@ node *yeti_Load(char *yeti,unsigned long len)
   } 
  free(value_string);
 
- 
+ //remove empty statements possible at the end
  while(list_GetLen(obj_stack))
  {
  node *top = list_Pop(obj_stack);
@@ -480,10 +480,11 @@ node *yeti_LoadFile(char *filename)
   fseek(yeti, 0, SEEK_END);
   long yeti_len = ftell(yeti);
   fseek(yeti,0,SEEK_SET);
-  char *yeti_data = (char*)malloc(yeti_len);
+  char *yeti_data = (char*)malloc(yeti_len+1);
+  memset(yeti_data+yeti_len,0,1);
   int r = fread((void*)yeti_data,yeti_len,1,yeti);
   if(r)
-    rn = yeti_Load(yeti_data,yeti_len);
+    rn = yeti_Load(yeti_data,yeti_len+1);
   free(yeti_data);
   fclose(yeti);
   return(rn);
@@ -494,7 +495,7 @@ node *yeti_LoadString(char *content)
   node *rn = NULL;
   if(content==NULL)
     return(NULL);
-  long yeti_len = strlen(content);
+  long yeti_len = strlen(content)+1;
   rn = yeti_Load(content,yeti_len);
   return(rn);
 }

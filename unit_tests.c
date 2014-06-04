@@ -118,30 +118,12 @@ void ptr_tests2(void)
 
   r = (int)list_Remove(p, 0);
   r = (int)list_Remove(p, 1);
-/*  r = (int)list_Remove(p, 2);
-  r = (int)list_Remove(p, 1);
-  list_Insert(p, 0, (void*)99);
-  r = (int)list_Remove(p, 0);
-list_Insert(p, 1, (void*)99);
-  r = (int)list_Remove(p, 1);
-list_Insert(p, 1, (void*)99);
-  r = (int)list_Remove(p, 0);
-list_Insert(p, 1, (void*)100);*/
-/*list_MoveDown(p,1);  */
-//list_MoveUp(p,0);
-
-
   for(unsigned int i = 0; i < list_GetLen(p); i++)
     printf("%d ", list_Get(p,i));
   printf("\n");
-
-
   list_Close(p);
   printf("ptr tests 2 thru\n");
 }
-
-
-
 
 void node_tests(void)
 {
@@ -187,7 +169,6 @@ void node_tests(void)
 
   printf("node tests thru\n");
 }
-
 
 void json_speed_tests(void)
 {
@@ -425,7 +406,6 @@ void mem_tests(void)
   #endif
 }
 
-
 void hashing_tests(void)
 {
   #ifdef USE_FNV_HASHES
@@ -615,24 +595,32 @@ void yeti_tests2(void)
     node_PrintTree(root);
     node_FreeTree(root);
   }
+
+  printf("loading test_last_statement.yeti\n");
+  root = yeti_LoadFile("tests/test_last2.yeti");
+  if(root!=NULL)
+  {
+    printf("test_nesting.yeti node tree:\n");
+    node_PrintTree(root);
+    node_FreeTree(root);
+  }
+
+
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
   printf("yeti tests 2 thru\n");
 }
 
-
-
-
 int main(int argc, char *argv[])
 {
-	ptr_tests2();
+	//ptr_tests2();
   //node_tests();
   //mem_tests();
   //json_tests();
   //fbx_tests();
   //yeti_tests();
-  //yeti_tests2();
+  yeti_tests2();
   //hashing_tests();
   //json_speed_tests();
 }

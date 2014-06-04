@@ -326,12 +326,14 @@ void node_ParseNumber(node *n,char *number_string)
   if(node_NumberIsFloat(number_string))
   {
     double d = atof(number_string);
+    //printf("parsed float:%f\n",d);
     node_SetDouble(n,d);
   }
   else
   {
     long long ll = atoll(number_string);
     long l = atol(number_string);
+    //printf("parsed long:%d\n",l);
     if(l!=ll)
       node_SetSint64(n,ll);
     else

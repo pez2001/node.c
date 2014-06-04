@@ -146,8 +146,8 @@ void json_SetNode(node *n,char *value_string,int is_value_string)
         else
         {
           double d = atof(value_string);
-          node_SetDouble(n,d);
-          //node_ParseNumber(n,value_string);
+          //node_SetDouble(n,d);/*used for easier fbx parsing - refactor this in*/
+          node_ParseNumber(n,value_string);
         }
 }
 

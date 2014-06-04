@@ -5,8 +5,29 @@ println("json content: {",a,"}");*/
 a=open("tests/test_yeti.json");
 content=a.readall();
 a.close();
-/*println("file content:",content);*/
+println("file content:",content);
 r=from_json(content);
 println("r.firstName:",r.firstName);
 println("r.lastName:",r.lastName);
-println("combo:"+r.firstName+" "+r.lastName);
+println("r.age:",r.age);
+println("combo:"+r.firstName+" "+r.lastName+" is aged "+r.age);
+println("enter his age:");
+/*age=input();
+?(age.int()==r.age,{println("correctly entered, thank you!")},{println("you entered ",age," which is incorrect!")},0);*/
+/*?({age.int()!=r.age},{println("you entered ",age," which is incorrect!");println("try again:");age=input();},{println("correctly entered, thank you!")},1);*/
+
+t="r.age=r.age+1;";
+ev=eval(t);
+ret=ev();
+println("ret:",ret);
+println("new age:",r.age);
+i=input();
+/*ret=eval(i);
+println("ret:",ret());*/
+ret=eval(i)();
+println("ret:",ret);
+/*imp=open("tests/test_simple16.yeti");
+impc=imp.readall();
+impev=eval(impc);
+impev();
+*/

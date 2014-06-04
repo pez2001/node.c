@@ -33,10 +33,17 @@ node *convert_json(node *state,node *output,char *json)
   while(node_ItemIterationUnfinished(json_tree))
   {
     node *sub = node_ItemIterate(json_tree);
-
+    //printf("%s:%d\n",node_GetKey(sub),node_GetType(sub));
     node *child = create_class_instance(base_class);
     set_obj_string(child,"name",node_GetKey(sub));
-    set_obj_string(child,"value",node_GetValue(sub));
+    if(node_GetType(sub)==NODE_TYPE_STRING)
+      set_obj_string(child,"value",node_GetValue(sub));
+    else if(node_GetType(sub)==NODE_TYPE_UINT32)
+      set_obj_int(child,"value",(long)node_GetUint32(sub));
+    else if(node_GetType(sub)==NODE_TYPE_INT)
+      set_obj_int(child,"value",node_GetInt(sub));
+    else if(node_GetType(sub)==NODE_TYPE_SINT32)
+      set_obj_int(child,"value",node_GetSint32(sub));
     add_member(output,child);
   }
   node_FreeTree(json_tree);
@@ -519,6 +526,8 @@ node *create_class_object(void)
   add_class_object_internal_function(base,base,"break");
   add_class_object_internal_function(base,base,"continue");
   add_class_object_internal_function(base,base,"restart");
+  add_class_object_internal_function(base,base,"import");
+  add_class_object_internal_function(base,base,"eval");
   add_class_object_internal_function(base,base,"open");
   add_class_object_internal_function(base,base,"close");
   add_class_object_internal_function(base,base,"from_json");
@@ -846,6 +855,14 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
         node_SetString(real_value,cat_string);
         free(cat_string);
       }
+      else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_SINT32)
+      {
+        char *num=convert_to_string(node_GetSint32(real_value2));
+        char *cat_string=StringCat(node_GetString(real_value),num);
+        node_SetString(real_value,cat_string);
+        free(cat_string);
+        free(num);
+      }
       //printf("++\n");
       //node_PrintTree(real_value);
     }
@@ -1153,6 +1170,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
           }
           exp_obj = execute_obj(state,expression_block,block,True);
         }
+        node *blk_val=execute_obj(state,false_block,block,True);
       }
       else
       {
@@ -1704,6 +1722,83 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       convert_json(state,value,node_GetString(real_value2));
       //node_SetString(real_value,ret);
     }
+    else if(!strcmp(name,"import"))
+    {
+      //
+      prepare_execution_parameters(state,parameters,block,real_parameters);
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      node *value2 = NULL;
+      if(node_GetItemsNum(real_parameters))
+      {
+        value2 = node_GetItem(real_parameters,0);
+      }
+      else if(parent!=NULL && parent != block)
+      { 
+        value2 = parent;
+      }
+      else
+      {
+        value2 = create_class_instance(base_class);
+        node_SetParent(value2,NULL);
+        reset_obj_refcount(value2);
+        add_garbage(state,value2);
+        set_obj_string(value2,"value","");
+      }
+
+
+      value = create_class_instance(base_class);
+      //node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+      node *real_value = node_GetItemByKey(value,"value");
+      node *real_value2 = node_GetItemByKey(value2,"value");
+
+      //if(parent!=NULL && parent != block)
+      //{ 
+      //}
+      //printf("converting json:%s\n",node_GetString(real_value2));
+      convert_json(state,value,node_GetString(real_value2));
+      //node_SetString(real_value,ret);
+    }
+    else if(!strcmp(name,"eval"))
+    {
+      //
+      prepare_execution_parameters(state,parameters,block,real_parameters);
+      node *base_class = node_GetItemByKey(state,"yeti_object");
+      node *value2 = NULL;
+      if(node_GetItemsNum(real_parameters))
+      {
+        //printf("eval parameter\n");
+        value2 = node_GetItem(real_parameters,0);
+      }
+      else if(parent!=NULL && parent != block)
+      { 
+        value2 = parent;
+        //printf("eval parent\n");
+      }
+      else
+      {
+        value2 = create_class_instance(base_class);
+        node_SetParent(value2,NULL);
+        reset_obj_refcount(value2);
+        add_garbage(state,value2);
+        set_obj_string(value2,"value","");
+      }
+
+
+      node *real_value2 = node_GetItemByKey(value2,"value");
+      //printf("evaluating:%s\n",node_GetString(real_value2));
+      node *yeti_stream = yeti_LoadString(node_GetString(real_value2));
+      //node_PrintTree(yeti_stream);
+      node *yeti_block = node_GetItemByKey(yeti_stream,"yeti_block");
+      node_RemoveItem(yeti_stream,yeti_block);
+      node_FreeTree(yeti_stream);
+      value = create_block_obj(base_class,yeti_block);
+      node_SetParent(value,NULL);
+      reset_obj_refcount(value);
+      add_garbage(state,value);
+      node_FreeTree(yeti_block);
+    }
   }
   else if(!strcmp(node_GetKey(exe_obj),"yeti_object"))
   {
@@ -1885,27 +1980,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         {
           node *found_obj = get_member(actual_obj,node_GetValue(token));
           if(found_obj==NULL)
-          {
-            /*
-            //if(node_GetItemByKey(block,"anonymous_block_parent")!=NULL)
-            if(node_GetItemByKey(actual_obj,"anonymous_block_parent")!=NULL)
-            {
-              printf("have to check anonymous block parent too:%x\n",block);
-              //node *abp=node_GetItemByKey(block,"anonymous_block_parent");
-              node *abp=node_GetItemByKey(actual_obj,"anonymous_block_parent");
-              found_obj = get_member(node_GetValue(abp),node_GetValue(token));
-              if(found_obj)
-                printf("found:%s,%x\n",node_GetValue(token),found_obj);
-              else
-                if(node_GetItemByKey(node_GetValue(abp),"anonymous_block_parent")!=NULL)
-                {
-                  printf("super has also an additional search space\n");
-                }
-            }
-            */
             found_obj = search_block_path_for_member(actual_obj,node_GetValue(token));
-          }
-
           if(found_obj==NULL)
           {
             node *child = create_class_instance(base_class);
@@ -2129,6 +2204,7 @@ node *evaluate_block(node *state,node *block)
       //printf("executing statement\n");
       //node_PrintTree(obj);
       ret=execute_obj(state,obj,block_class_instance,False);//,False);
+      //ret=execute_obj(state,obj,block_class_instance,True);//,False);
       if(!node_ItemIterationUnfinished(il_block))
       {
         ret=node_CopyTree(ret,True,True);
@@ -2224,6 +2300,7 @@ node *evaluate_block_instance(node *state,node *block_class_instance)
       node *obj = evaluate_statement(state,yeti_statement,block_class_instance,0);
       //node *exe_obj = execute_obj(state,obj,block_class_instance,False);
       ret = execute_obj(state,obj,block_class_instance,False);//,False);
+      //ret = execute_obj(state,obj,block_class_instance,True);//,False);
       //free_garbage(state);//FAST GARBAGE GC
       //node_FreeTree(obj);
       free_execution_obj(obj);

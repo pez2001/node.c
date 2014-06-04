@@ -97,9 +97,7 @@ print("
   arrays + sparse mgmt
   floats
   int to string conversion
-  str2int
   (1+2*(1-2))*4
-  block interruption / reset (break;continue;)
   better/faster garbage collection
 
 ");
