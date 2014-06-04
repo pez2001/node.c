@@ -48,5 +48,6 @@
 
 node *json_Load(char *json,unsigned long len); 
 node *json_LoadFile(char *filename); 
+node *json_LoadString(char *content);
 
 #endif

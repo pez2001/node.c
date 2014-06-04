@@ -1,0 +1,5 @@
+t(ef)={i=i+1;println("countdown:",i," ef:",ef)};
+t(666);
+t(lop,lip)={println("lop:",lop,"lip:",lip)};
+t("Hallo","Welt");
+return=2;

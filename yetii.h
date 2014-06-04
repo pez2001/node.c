@@ -84,6 +84,8 @@ node *create_yeti_state(node *yeti_block,node *base_class);
 
 node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block);//,BOOL dont_execute_block);
 
+node *search_block_path_for_member(node *block,char *key);
+
 node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index);
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);

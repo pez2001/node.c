@@ -1,0 +1,75 @@
+/*if(e,do)={?(e,do,{},0)};
+chaos(e,do)={?(e,do,{},1)};
+
+euclid(a,b)=
+{
+if(a>b,{a=a-b});
+if(a<b,{b=b-a});
+if(a==b,{b=b-a});
+chaos({b>0},{
+b=b-1;
+if(a<b,{a=b-a});
+});
+chaos({b<2},{
+b=b+1;
+if(a>b,{a=a+b});
+});
+
+ret=a;
+};
+
+g=euclid(10,20);
+*/
+
+
+
+/*
+b=3;
+o=2;
+while({b!=0},{if(o==2,{b=b-1})});
+
+super(b)={c=12+b;println("c:",c)};
+top(a)={b=12+a;?({b==15},{super(b)},{},0)};
+
+d=3;
+while({d!=0},{top(d);d=d-1});
+
+*/
+
+
+while(e,do)={?(e,do,{},1)};
+if(e,do)={?(e,do,{},0)};
+
+euclid(a,b)=
+{
+
+
+	println("a:",a," b:",b);
+	if(a==0,{println("a:0=",a);ret=b;});	
+	if(a!=0,
+	{
+		println("a:",a," b:",b," (l2)");
+		while({b!=0},
+		/*?({b!=0},*/
+		{	
+			println("b:",b);
+			if(a>b,{a=a-b});
+			if(a<b,{b=b-a});
+			if(a==b,{b=b-a});
+		});/*,{},1);*/
+	});
+	ret=a;
+};
+
+g=euclid(44,12);
+/*println("ggt:",euclid(44,12));*/
+
+
+
+/*
+super(a)={println("a in super:",a)};
+top(a,b)={super(a);super(b);};
+i=3;
+?({i>0},{top(33,55+i);i=i-1;},{},1);
+*/
+

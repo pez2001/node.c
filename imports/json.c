@@ -64,42 +64,42 @@ char *json_TrimString(char *string)
 
 char json_ConvertEscapeChar(char escape_char)
 {
-    char r = 0;
-         switch(escape_char)
-         {
-            case 't':
-               r = 9;
-               break;
-            case 'a':
-               r = 7;
-               break;
-            case 'b':
-               r = 8;
-               break;
-            case 'n':
-               r = 10;
-               break;
-            case 'v':
-               r = 11;
-               break;
-            case 'r':
-               r = 13;
-               break;
-            case '"':
-               r = 34;
-               break;
-            case '\'':
-               r = 39;
-               break;
-            case '?':
-               r = 63;
-               break;
-            case '\\':
-               r = 92;
-               break;
-            default:
-               r = 0;
-         }
+  char r = 0;
+  switch(escape_char)
+  {
+    case 't':
+      r = 9;
+      break;
+    case 'a':
+      r = 7;
+      break;
+    case 'b':
+      r = 8;
+      break;
+    case 'n':
+      r = 10;
+      break;
+    case 'v':
+      r = 11;
+      break;
+    case 'r':
+      r = 13;
+      break;
+    case '"':
+      r = 34;
+      break;
+    case '\'':
+      r = 39;
+      break;
+    case '?':
+      r = 63;
+      break;
+    case '\\':
+      r = 92;
+      break;
+    default:
+      r = 0;
+  }
   return(r);
 }
 
@@ -150,13 +150,6 @@ void json_SetNode(node *n,char *value_string,int is_value_string)
           //node_ParseNumber(n,value_string);
         }
 }
-
-
-
-
-
-
-
 
 node *json_Load(char *json,unsigned long len)
 {
@@ -384,9 +377,6 @@ node *json_Load(char *json,unsigned long len)
  return(root_obj);
 }
 
-
-
-
 node *json_LoadFile(char *filename)
 { 
   node *rn = NULL;
@@ -402,6 +392,16 @@ node *json_LoadFile(char *filename)
   	rn = json_Load(json_data,json_len);
   free(json_data);
   fclose(json);
+  return(rn);
+}
+
+node *json_LoadString(char *content)
+{ 
+  node *rn = NULL;
+  if(content==NULL)
+    return(NULL);
+  long json_len = strlen(content);
+  rn = json_Load(content,json_len);
   return(rn);
 }
 
