@@ -1,4 +1,4 @@
 /*ret=eval("println(\"works\")")();*/
 /*println("ret:",ret);*/
 
-r=eval("t=1")();
+println("eval ret:",eval("println(\"works\");t=12")());

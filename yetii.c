@@ -2006,13 +2006,17 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           }
           else
           {
-            node *print_node = node_GetParent(found_obj);
-            node *ppp=NULL;
-            if(print_node!=NULL)
-              ppp=node_GetParent(print_node);
+            //node *print_node = node_GetParent(found_obj);
+            //node *ppp=NULL;
+            //if(print_node!=NULL)
+            //  ppp=node_GetParent(print_node);
             //printf("found:%s,%x in %x\n",node_GetValue(token),found_obj,ppp);
             //node_PrintTree(get_value(found_obj));
-            //actual_obj = found_obj;
+
+            //repeat until no parameter blocks left
+            while(!strcmp(get_obj_type(found_obj),"function") || (node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"yeti_parameters")) )
+            {
+
             if(!strcmp(get_obj_type(found_obj),"function"))
             {
               //printf("found a function during evaluation\n");
@@ -2026,33 +2030,13 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 while(node_ItemIterationUnfinished(sub_parameters))
                 {
                   node *parameter_token = node_ItemIterate(sub_parameters);
-                  //node *sub_obj = evaluate_statement(state,parameter_token,block,0);
-                  //node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0);
                   node *sub_obj = evaluate_statement(state,parameter_token,block,0);
-                  //node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
                   node_AddItem(exe_parameters,sub_obj);
                 }
-                /*
-                if(index+1<node_GetItemsNum(statement))
-                {
-                  node *sub_obj = evaluate_statement(state,statement,block,index+1);
-                  sub_exe_obj = sub_obj;
-                }*/
                 index++;
               }
-              /*node *func_exe_obj = evaluate_statement(state,actual_obj,block,0);*/
-              //node *func_exe_obj = create_execution_obj(actual_obj,exe_parameters,sub_exe_obj);
-              //actual_obj = found_obj;
-
-
-              //node *bmembers = node_GetItemByKey(block,"members");
-              //node *old_func_parent = node_GetParent(found_obj);
-              //node_SetParent(found_obj,bmembers);
               node *func_exe_obj = create_execution_obj(found_obj,exe_parameters,NULL);
               actual_obj = execute_obj(state,func_exe_obj,block,False);//,False);/*TODO move to execute somehow*/
-              //node_SetParent(found_obj,old_func_parent);
-
-              //actual_obj = execute_obj(state,actual_obj,block,False);
               free_execution_obj(func_exe_obj);
             }
             else// if(!strcmp(get_obj_type(actual_obj),"yeti_il_block"))
@@ -2067,7 +2051,6 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp(node_GetValue(peek),"="))
                 {
                   //printf("redefinition of function\n");
-                  //node *parameters_definition = node_ItemIterate(statement);
                   node *pars = node_CopyTree(sub_parameters,True,True);
                   node *old_pars = node_GetItemByKey(found_obj,"yeti_parameters");
                   if(old_pars!=NULL)
@@ -2086,16 +2069,10 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                   {
                     node *parameter_token = node_ItemIterate(sub_parameters);
                     node *sub_obj = evaluate_statement(state,parameter_token,block,0);
-                    //node *sub_obj = evaluate_statement(state,parameter_token,actual_obj,0);
                     node_AddItem(exe_parameters,sub_obj);
                   }
                   node *func_exe_obj = create_execution_obj(found_obj,exe_parameters,NULL);
-                  //node *bmembers = node_GetItemByKey(block,"members");
-                  //node *old_func_parent = node_GetParent(found_obj);
-                  //node_SetParent(found_obj,bmembers);
                   actual_obj = execute_obj(state,func_exe_obj,block,True);//,False);/*TODO move to execute somehow*/
-                  //actual_obj = execute_obj(state,func_exe_obj,actual_obj,True);//,False);/*TODO move to execute somehow*/
-                  //node_SetParent(found_obj,old_func_parent);
                   free_execution_obj(func_exe_obj);
                 }
                 index++;
@@ -2106,6 +2083,11 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 node_Free(exe_parameters,True);
               }
             }
+            
+            found_obj=actual_obj;
+            }            
+
+
             /*else
             {
 
