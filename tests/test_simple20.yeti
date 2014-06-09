@@ -1,0 +1,12 @@
+
+age=10;
+t="println(\"changing age:\",age);age=age+1;";
+ev=eval(t)();
+println("age:",age);
+
+func(a)={a=a+1;};
+funcr()={func};
+r=funcr();
+age=r(age);
+age=func(age);
+println("age2:",age);

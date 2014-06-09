@@ -24,6 +24,10 @@
 #ifndef YETII_H
 #define YETII_H
 
+#ifdef USE_MEMORY_DEBUGGING
+#include "memory.h"
+#endif
+
 
 #include "list.h"
 #include "node.h"
@@ -36,6 +40,8 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
+#include "unistd.h"
+/*#include "sys/utsname.h"*/
 
 /*
 typedef struct _yeti_state 
@@ -50,6 +56,14 @@ typedef struct _yeti_state
 /*internal use functions*/
 char *AddCharToString(char *string,char letter);
 char *CreateEmptyString(void);
+char *StringCat(char *a,char *b);
+char *StringCatFree(char *a,char *b);
+char *StringMult(char *a,long count);
+char *StringCopy(char *src);
+char *StringAdd(char *a,char *b);
+
+
+char *convert_to_string(long i);
 
 /*basic object handling*/
 node *create_obj(char *name);
@@ -91,6 +105,8 @@ node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);
 
+node *call_function(node *state,char *name,node *parameters);//,node *block);
 
-
+char *convert_to_json(node *state,node *obj);
+node *convert_from_json(node *state,node *output,char *json);
 #endif

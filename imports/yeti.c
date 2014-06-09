@@ -479,6 +479,8 @@ node *yeti_LoadFile(char *filename)
     return(NULL);
   fseek(yeti, 0, SEEK_END);
   long yeti_len = ftell(yeti);
+  if(!yeti_len)
+    return(NULL);
   fseek(yeti,0,SEEK_SET);
   char *yeti_data = (char*)malloc(yeti_len+1);
   memset(yeti_data+yeti_len,0,1);
@@ -493,7 +495,7 @@ node *yeti_LoadFile(char *filename)
 node *yeti_LoadString(char *content)
 { 
   node *rn = NULL;
-  if(content==NULL)
+  if(content==NULL || !strlen(content))
     return(NULL);
   long yeti_len = strlen(content)+1;
   rn = yeti_Load(content,yeti_len);

@@ -14,8 +14,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 1
-BUILD = 1647
-DEBUG_BUILD = 1984
+BUILD = 1814
+DEBUG_BUILD = 2151
 
 #-DUSE_MEMORY_DEBUGGING
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
@@ -24,11 +24,11 @@ CC=gcc
 AR=ar
 LD=ld
 
-NODE_FILES = list.c node.c memory.c imports/json.c imports/fbx.c imports/yeti.c
+NODE_FILES = list.c node.c memory.c imports/json.c imports/fbx.c imports/yeti.c imports/nyx.c
 NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h imports/fbx.h imports/yeti.h
-NODE_OBJ = node.o list.o memory.o imports/json.o imports/fbx.o imports/yeti.o
-NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do imports/fbx.do imports/yeti.do
+NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h imports/fbx.h imports/yeti.h imports/nyx.h
+NODE_OBJ = node.o list.o memory.o imports/json.o imports/fbx.o imports/yeti.o imports/nyx.o
+NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do imports/fbx.do imports/yeti.do imports/nyx.do
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
@@ -49,6 +49,13 @@ YETII_DEBUG_OBJ = yetii.do
 YETII_INCLUDE_FILES = yetii.h
 
 
+NYXI_FILES = nyxi.c
+NYXI_OBJ = nyxi.o
+NYXI_BINS = nyxi$(PLATFORM_EXT)
+NYXI_DEBUG_OBJ = nyxi.do
+NYXI_INCLUDE_FILES = nyxi.h
+
+
 
 
 TOOLS_BUILD_INC_FILES = tools/build_inc/build_inc.c
@@ -63,15 +70,15 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc node_print_debug unit_tests_debug yetii_debug
+debug: build_inc node_print_debug unit_tests_debug yetii_debug nyxi_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 
-clean_all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests yetii debug 
+clean_all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests yetii nyxi debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 
-all: node_static node_dynamic build_inc node_print unit_tests yetii debug 
+all: node_static node_dynamic build_inc node_print unit_tests yetii nyxi debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 
@@ -90,11 +97,23 @@ yetii_debug: node_static_debug $(YETII_DEBUG_OBJ)
 	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_debug 
 
 yetii_debug_no_memm: node_static_debug $(YETII_DEBUG_OBJ) 
-	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_debug 
+	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_no_mem_debug 
 
 yetii_o: $(NODE_OBJ) $(YETII_OBJ)
 	$(CC) $(NODE_OBJ) $(YETII_OBJ)  -lm -o yetii 
 
+nyxi: node_static $(NYXI_OBJ) 
+	$(CC) $(NYXI_OBJ) node.a -lm -o nyxi 
+	strip ./nyxi$(PLATFORM_EXT)
+
+nyxi_debug: node_static_debug $(NYXI_DEBUG_OBJ) 
+	$(CC) $(NYXI_DEBUG_OBJ) node.da -lm -o nyxi_debug 
+
+nyxi_debug_no_memm: node_static_debug $(NYXI_DEBUG_OBJ) 
+	$(CC) $(NYXI_DEBUG_OBJ) node.da -lm -o nyxi_no_mem_debug 
+
+nyxi_o: $(NODE_OBJ) $(NYXI_OBJ)
+	$(CC) $(NODE_OBJ) $(NYXI_OBJ)  -lm -o nyxi 
 
 unit_tests_o: $(NODE_OBJ) $(UT_OBJ)
 	$(CC) $(NODE_OBJ) $(UT_OBJ)  -lm -o unit_tests 

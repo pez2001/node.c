@@ -1,0 +1,7 @@
+external_call()=
+{
+a=10;
+b=a+20;
+print("a:",a);
+println("b:",b);
+};
