@@ -4,6 +4,7 @@
 *.a
 *.dll
 *.exe
+tools/build_inc/*.o
 exports/*.o
 exports/*.do
 exports/*.da
