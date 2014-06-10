@@ -209,7 +209,7 @@ dist:	srcdist binariesdist
 git:	
 	#echo $(shell echo $(MAKECMDGOALS) | sed 's!^.* $@ !!')
 	git add .
-	git commit -m "$M"
+	git commit -m "$msg"
 	git push 
 	
 indent:	
