@@ -207,8 +207,9 @@ binariesdist: clean_binaries clean all clean
 dist:	srcdist binariesdist 
 	make clean clean_binaries
 git:	
+	#echo $(shell echo $(MAKECMDGOALS) | sed 's!^.* $@ !!')
 	git add .
-	git commit -m "{$2}"
+	git commit -m "$M"
 	git push 
 	
 indent:	
