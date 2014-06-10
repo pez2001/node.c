@@ -12,10 +12,13 @@ PLATFORM_NAME = Win32
 PLATFORM_EXT = 
 endif
 
+#.PHONY: print_version
+
+
 MAJOR_VERSION = 0
-MINOR_VERSION = 1
-BUILD = 1814
-DEBUG_BUILD = 2151
+MINOR_VERSION = 2
+BUILD = 1842
+DEBUG_BUILD = 2179
 
 #-DUSE_MEMORY_DEBUGGING
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
@@ -63,6 +66,13 @@ TOOLS_BUILD_INC_BINS = build_inc$(PLATFORM_EXT)
 TOOLS_BUILD_INC_INCLUDE_FILES = tools/build_inc/build_inc.h
 TOOLS_BUILD_INC_OBJ = tools/build_inc/build_inc.o
 
+
+print_version:
+#	@echo "$(MAJOR_VERSION)"
+#	@echo "$(MINOR_VERSION)"
+	@echo -n "$(BUILD)"
+#	@echo "$(BUILD) $(DEBUG_BUILD)"
+#	@echo "$(DEBUG_BUILD)"
 
 test: all
 	./unit_tests$(PLATFORM_EXT)

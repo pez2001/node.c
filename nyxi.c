@@ -692,12 +692,34 @@ void add_class_object_internal_function(node *class,node *base_class,char *metho
   add_member(class,method);
 }
 
-void add_class_object_function(node *class,node *base_class,char *method_name,void *)//void *addr
+
+void *handler_test(node *state,node *execution_obj,node *block)
+{
+  node *parameters = node_GetItemByKey(execution_obj,"parameters");
+  node *real_parameters = create_obj("parameters");
+  node *exe_obj = node_GetItem(execution_obj,0);
+  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
+  node *parent = node_GetParent(node_GetParent(exe_obj));
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *value = create_class_instance(base_class);
+  prepare_execution_parameters(state,parameters,block,real_parameters);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *value2 = node_GetItem(real_parameters,0);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value2 = node_GetItemByKey(value2,"value");
+  printf("handler test called:%d\n",node_GetSint32(real_value2));
+  node_SetSint32(real_value,100+node_GetSint32(real_value2));
+  return(value);
+}
+//state,execution_obj,block
+void add_class_object_function(node *class,node *base_class,char *method_name,node*(*handler)(node*,node*,node*))//void *addr
 {
   node *method = create_base_obj_layout(method_name);
   set_obj_string(method,"type","function");
   //set_obj_node(base,"base_class_instance",class);
   set_obj_node(method,"base_class_type",base_class);
+  set_obj_node(method,"handler",handler);
   inc_obj_refcount(method);
   add_member(class,method);
 }
@@ -781,6 +803,7 @@ node *create_class_object(void)
   
   //add_class_object_internal_function(base,"get");
   add_class_object_internal_function(base,base,"test");
+  add_class_object_function(base,base,"handler_test",handler_test);
   //add_member(base,create_file_class_object());
   //add_member(base,create_sys_class_object());
 
@@ -1054,6 +1077,14 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
   }
   else if(!strcmp(get_obj_type(exe_obj),"function"))
   {
+    node *handler = node_GetItemByKey(exe_obj,"handler");
+    if(handler!=NULL)
+    {
+      node *(*real_handler)(node*,node*,node*) = node_GetValue(handler);
+      value = real_handler(state,execution_obj,block);
+
+    }
+
     char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
     node *parent = node_GetParent(node_GetParent(exe_obj));
     if(!strcmp(name,"+"))
@@ -2919,7 +2950,7 @@ int main(int argc, char** argv)
   {
     nyx_stream = nyx_LoadFile(filename);
   }
-  else if(filename != NULL && strlen(filename)==1 && strcmp(filename,"-")) //string input
+  else if(filename != NULL && strcmp(filename,"-"))//) //string input //!(strlen(filename)==1 &&
   {
     nyx_stream = nyx_LoadString(filename);
   }
@@ -3021,5 +3052,5 @@ int main(int argc, char** argv)
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
-  return(ret);
+  return(ret%256);
 }

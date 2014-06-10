@@ -4,3 +4,12 @@
 *.a
 *.dll
 *.exe
+exports/*.o
+exports/*.do
+exports/*.da
+exports/*.a
+imports/*.o
+imports/*.do
+imports/*.da
+imports/*.a
+

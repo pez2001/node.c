@@ -1,0 +1,439 @@
+/* 
+ * node.c - c based data tree with various imports & exports
+ * (c) 2013 by Tim Theede aka Pez2001 <pez2001@voyagerproject.de> / vp
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
+ *
+ * THIS SOFTWARE IS SUPPLIED AS IT IS WITHOUT ANY WARRANTY!
+ *
+ */
+#include "fbx.h"
+
+char *fbx_AddCharToString(char *string,char letter)
+{ 
+  int len=strlen(string);
+  string = (char*)realloc(string,len+2);
+  string[len+1] = 0;
+  string[len] = letter;
+  return(string);
+}
+
+char *fbx_CreateEmptyString()
+{
+    char *string = (char*)malloc(1);
+    string[0] = 0;
+    return(string);
+}
+
+char *fbx_TrimString(char *string)
+{
+  long len = strlen(string);
+  if(!len)
+    return(string);
+  long s=0;
+  long e=len-1;
+  while(s<len && isspace(string[s]))s++;
+  while(e>0 && isspace(string[e]))e--;
+  e=e+1;
+  long nlen = e-s;
+  if(nlen<=0)
+  {
+    free(string);
+    return(fbx_CreateEmptyString());
+  }
+  if(nlen==len)
+    return(string);
+  char *r = (char*)malloc(nlen+1);
+  memcpy(r,string+s,nlen);
+  r[nlen] = 0;
+  free(string);
+  return(r);
+}
+
+char fbx_ConvertEscapeChar(char escape_char)
+{
+    char r = 0;
+         switch(escape_char)
+         {
+            case 't':
+               r = 9;
+               break;
+            case 'a':
+               r = 7;
+               break;
+            case 'b':
+               r = 8;
+               break;
+            case 'n':
+               r = 10;
+               break;
+            case 'v':
+               r = 11;
+               break;
+            case 'r':
+               r = 13;
+               break;
+            case '"':
+               r = 34;
+               break;
+            case '\'':
+               r = 39;
+               break;
+            case '?':
+               r = 63;
+               break;
+            case '\\':
+               r = 92;
+               break;
+            default:
+               r = 0;
+         }
+  return(r);
+}
+
+node * fbx_CreateNode(char *key_string,char *value_string,int is_value_string)
+{
+  node *kv = node_Create();
+  if(key_string!=NULL)
+    node_SetKey(kv,key_string);
+  if(is_value_string)
+  {
+    node_SetString(kv,value_string);
+  }
+  else
+    if(!strcmp(value_string,"null"))
+      node_SetNull(kv);
+    else
+      if(!strcmp(value_string,"true"))
+        node_SetBool(kv,True);
+      else
+        if(!strcmp(value_string,"false"))
+          node_SetBool(kv,False);
+        else
+        {
+          node_ParseNumber(kv,value_string);
+        }
+  return(kv);
+}
+
+
+
+
+
+
+node *fbx_Load(char *fbx,unsigned long len)
+{
+  int state=0;   
+  //int prev_state=0;
+  list *obj_stack=list_Create(0,0);
+  //node *root_obj=NULL;
+  //node *actual_obj=NULL;
+  //node *parent_obj=NULL;
+  //node *array_obj=NULL;
+  unsigned long offset=0;
+  char *key_string = fbx_CreateEmptyString();
+  char *value_string = fbx_CreateEmptyString();
+  int is_value_string=0;
+  //int is_obj=0;
+  state |= FBX_STATE_IN_KEY;
+  node *root_obj = node_Create();
+  //actual_obj = root_obj;
+  node_SetArray(root_obj,0);
+  node_SetKey(root_obj,"root");
+  list_Push(obj_stack,root_obj);
+
+  while(offset<len)
+  {
+    node *actual_obj = (node*)list_GetTop(obj_stack);
+
+    if((state & FBX_STATE_IN_COMMENT))
+    {
+      if(fbx[offset]=='\r' || fbx[offset]=='\n')
+      {
+      	state &= ~FBX_STATE_IN_COMMENT;
+      }	
+      offset++;
+      continue;
+    }
+    if((state & FBX_STATE_IN_STRING))
+    {
+      char add_char = fbx[offset];
+      offset++;
+      if(add_char == '"')
+      {
+         if(state & FBX_STATE_IN_STRING)
+           state &= ~FBX_STATE_IN_STRING;
+         is_value_string = 1;
+         continue;
+      }
+      else
+      if(add_char=='\\')
+      {
+         add_char = fbx_ConvertEscapeChar(fbx[offset]);
+         offset++;
+         if(add_char==0)
+          continue;
+      }
+     value_string = fbx_AddCharToString(value_string,add_char);
+     continue;
+    }
+
+
+
+    switch(fbx[offset])
+    {
+       case 0:
+             free(key_string);
+             free(value_string);
+             return(root_obj);
+       case ';':
+             state |= FBX_STATE_IN_COMMENT;
+       case '\n':
+       case '\r':
+             state |= FBX_STATE_IN_KEY;     
+             if((state & FBX_STATE_IN_VALUE))
+             {
+               state &= ~FBX_STATE_IN_VALUE;
+               key_string = fbx_TrimString(key_string);
+               if(!is_value_string)
+                  value_string = fbx_TrimString(value_string);
+               node *kv = fbx_CreateNode(key_string,value_string,is_value_string);
+               node_AddItem(actual_obj,kv);
+               node_SetParent(kv,actual_obj);
+               if(strlen(key_string))
+               {
+                 free(key_string);
+                 key_string=fbx_CreateEmptyString();
+               }
+               if(strlen(value_string))
+               {
+                 free(value_string);
+                 value_string=fbx_CreateEmptyString();
+               }
+              }
+            offset++;
+            continue;
+
+       case '\t':
+            offset++;
+            continue;
+       case ' ':
+            break;
+       case '{':
+            printf("found opening bracket\n");
+            /*if((state & FBX_STATE_IN_PROPS))
+            {
+              state &= ~FBX_STATE_IN_PROPS;
+              node *new_obj = node_Create();
+              node_SetArray(new_obj,0);
+              node_array_Add(actual_obj,new_obj);
+              if((state & FBX_STATE_IN_VALUE))
+              {
+                state &= ~FBX_STATE_IN_VALUE;
+                value_string = fbx_TrimString(value_string);
+                node_SetKey(new_obj,value_string);
+                printf("added new props obj:%s\n",value_string);
+                if(strlen(value_string))
+                {
+                  free(value_string);
+                  value_string=fbx_CreateEmptyString();
+                }
+                node_SetParent(new_obj,actual_obj);
+              }
+              state |= FBX_STATE_IN_KEY;     
+              list_Push(obj_stack,new_obj);
+            }
+            else
+            {*/
+              state &= ~FBX_STATE_IN_PROPS;
+              node *new_obj = node_Create();
+              node_SetArray(new_obj,0);
+              //if((state & FBX_STATE_IN_VALUE))
+              //{
+                key_string = fbx_TrimString(key_string);
+                printf("added new obj:%s\n",key_string);
+                node_SetKey(new_obj,key_string);
+                if(strlen(key_string))
+                {
+                  free(key_string);
+                  key_string=fbx_CreateEmptyString();
+                }
+                node_SetParent(new_obj,actual_obj);
+                node_AddItem(actual_obj,new_obj);
+                printf("added new obj V:[%s] to:[%s]\n",node_GetKey(new_obj),node_GetKey(actual_obj));
+              //}
+              //if((state & FBX_STATE_IN_KEY))
+              //{
+              //  node_SetParent(new_obj,actual_obj);
+              //  node_AddItem(actual_obj,new_obj);
+              //  printf("added new obj K:[%s] to:[%s]\n",node_GetKey(new_obj),node_GetKey(actual_obj));
+             // }
+              state |= FBX_STATE_IN_KEY;     
+              //actual_obj = 
+              list_Push(obj_stack,new_obj);
+            //}
+            state &= ~FBX_STATE_IN_VALUE;
+            offset++;
+            continue;
+       case '}':
+            printf("found closing bracket\n");//:%s\n",node_GetKey(parent_obj));
+            if((state & FBX_STATE_IN_VALUE))
+            {
+               state &= ~FBX_STATE_IN_VALUE;
+               key_string = fbx_TrimString(key_string);
+               if(!is_value_string)
+                 value_string = fbx_TrimString(value_string);
+               node *kv = fbx_CreateNode(key_string,value_string,is_value_string);
+               node_AddItem(actual_obj,kv);
+               node_SetParent(kv,actual_obj);
+               if(strlen(value_string))
+               {
+                 free(value_string);
+                 value_string=fbx_CreateEmptyString();
+               }
+            }
+            if(strlen(key_string))
+            {
+              free(key_string);
+              key_string=fbx_CreateEmptyString();
+            }
+            state |= FBX_STATE_IN_KEY;     
+            state &= ~FBX_STATE_IN_PROPS;
+            is_value_string=0;
+        	printf("a:[%s]\n",node_GetKey(actual_obj));
+            list_Pop(obj_stack);
+        	printf("p:[%s]\n",node_GetKey((node*)list_GetTop(obj_stack)));
+            offset++;
+            continue;
+       case ',': 
+            //printf("prev value:%s\n",value_string);
+
+            /*if(!(state & FBX_STATE_IN_PROPS))
+            {
+               array_obj = node_Create();
+               key_string = fbx_TrimString(key_string);
+               node_SetKey(array_obj,key_string);
+               node_SetArray(array_obj,0);
+               node_AddItem(actual_obj,array_obj);
+               node_SetParent(array_obj,actual_obj);
+            }*/
+            if(!(state & FBX_STATE_IN_PROPS))
+            {
+              key_string = fbx_TrimString(key_string);
+              if(!is_value_string)
+                value_string = fbx_TrimString(value_string);
+              node *kv = fbx_CreateNode(key_string,value_string,is_value_string);
+              node_AddItem(actual_obj,kv);
+              node_SetParent(kv,actual_obj);
+              if(strlen(value_string))
+              {
+                free(value_string);
+                value_string=fbx_CreateEmptyString();
+              }
+              if(strlen(key_string))
+              {
+                free(key_string);
+                key_string=fbx_CreateEmptyString();
+              }
+            }
+            else
+            {
+            if(strlen(value_string))
+            {
+              if(!is_value_string)
+                value_string = fbx_TrimString(value_string);
+              node *kv = fbx_CreateNode(NULL,value_string,is_value_string);
+              node_array_Add(actual_obj,kv);
+              node_SetParent(kv,actual_obj);
+              free(value_string);
+              value_string=fbx_CreateEmptyString();
+            }
+            }
+            is_value_string=0;
+            //state |= FBX_STATE_IN_PROPS;
+            offset++;
+            continue;
+
+       case ':':
+            state |= FBX_STATE_IN_VALUE;     
+            state |= FBX_STATE_IN_PROPS;
+
+            state &= ~FBX_STATE_IN_KEY;
+            is_value_string = 0;
+            value_string = fbx_TrimString(value_string);
+            if(strlen(value_string))
+            {
+              free(value_string);
+              value_string = fbx_CreateEmptyString();
+            }
+
+            
+            offset++;
+            continue;
+       case '"':
+            if(!(state&FBX_STATE_IN_STRING))
+            {
+              state |= FBX_STATE_IN_STRING;
+              value_string = fbx_TrimString(value_string);
+              if((state&FBX_STATE_IN_VALUE) && strlen(value_string))
+              { 
+                free(value_string);
+                value_string = fbx_CreateEmptyString();
+              }
+            }
+            else
+            {
+              state &= ~FBX_STATE_IN_STRING;
+            }
+            offset++;
+            continue;
+    }
+    if((state&FBX_STATE_IN_VALUE)&& !is_value_string)
+    {
+      value_string = fbx_AddCharToString(value_string,fbx[offset]);
+    } 
+    if((state&FBX_STATE_IN_KEY))
+    {
+      key_string = fbx_AddCharToString(key_string,fbx[offset]);
+    } 
+    offset++;
+  } 
+
+ free(key_string);
+ free(value_string);
+ return(root_obj);
+}
+
+
+
+
+node *fbx_LoadFile(char *filename)
+{ 
+  node *rn = NULL;
+  FILE *fbx = fopen(filename,"rb");
+  if(fbx==NULL)
+    return(NULL);
+  fseek(fbx, 0, SEEK_END);
+  long fbx_len = ftell(fbx);
+  fseek(fbx,0,SEEK_SET);
+  char *fbx_data = (char*)malloc(fbx_len);
+  int r = fread((void*)fbx_data,fbx_len,1,fbx);
+  if(r)
+  	rn = fbx_Load(fbx_data,fbx_len);
+  free(fbx_data);
+  fclose(fbx);
+  return(rn);
+}
+
