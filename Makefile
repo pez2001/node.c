@@ -17,8 +17,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 2
-BUILD = 1843
-DEBUG_BUILD = 2180
+BUILD = 1864
+DEBUG_BUILD = 2201
 
 #-DUSE_MEMORY_DEBUGGING
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
@@ -52,11 +52,11 @@ YETII_DEBUG_OBJ = yetii.do
 YETII_INCLUDE_FILES = yetii.h
 
 
-NYXI_FILES = nyxi.c
-NYXI_OBJ = nyxi.o
+NYXI_FILES = nyxi.c nyx_handler.c
+NYXI_OBJ = nyxi.o nyx_handler.o
 NYXI_BINS = nyxi$(PLATFORM_EXT)
-NYXI_DEBUG_OBJ = nyxi.do
-NYXI_INCLUDE_FILES = nyxi.h
+NYXI_DEBUG_OBJ = nyxi.do nyx_handler.do
+NYXI_INCLUDE_FILES = nyxi.h nyx_handler.h
 
 
 

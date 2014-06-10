@@ -2,6 +2,9 @@ a=open("tests/test_yeti.json","rb+");
 content=a.readall();
 a.close();
 println("file content:",content);
+
+
+
 r=from_json(content);
 println("r.firstName:",r.firstName);
 println("r.lastName:",r.lastName);
@@ -9,7 +12,6 @@ println("r.age:",r.age);
 println("combo:"+r.firstName+" "+r.lastName+" is aged "+r.age);
 t="println(\"changing age:\",r.age);r.age=r.age+1;";
 ev=eval(t)();
-/*ev();*/
 println("r.age:",r.age);
 println("r:",r.address.streetAddress);
 o=to_json(r);
@@ -22,12 +24,15 @@ out.close();
 
 ar=["hi","to","all"];
 println("0: ",ar[0]," 3: ",ar[3]," k:",ar["k"]);
-println("sys working directory:",sys().working_directory()["path"]);
-/*println("sys dump:",sys().dump());*/
 println("name:",sys().name());
 
-/*println("ls:",sys().execute("ls -a"));
-sys().change_working_directory("..");
+println("sys working directory:",sys().working_directory()["path"]);
+
+
+
+println("ls:",sys().execute("ls -a"));
+/*sys().change_working_directory("..");
 println("space_race:",sys().execute("space_race"));*/
+/*println("sys dump:",sys().dump());*/
 
 return_value=1;

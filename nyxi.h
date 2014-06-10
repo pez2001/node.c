@@ -34,6 +34,7 @@
 #include "imports/fbx.h"
 #include "imports/nyx.h"
 
+#include "nyx_handler.h"
 
 #include "math.h"
 #include "stdio.h"
@@ -44,23 +45,6 @@
 #include "signal.h"
 //#include "termios.h"
 
-
-const char *nyxi_helpmsg = "Usage: nyxi [OPTION]... [INPUT FILE]\n\
-Execute nyx script Files.\n\
-\n\
-  -i    interactive mode\n\
-  -a    print script ast\n\
-  -s    interpret INPUT FILE as script string\n\
-  -h    display this help and exit\n\
-  -v    output version information and exit\n\
-  -p    print the return value\n\
-\n\
-  Use - as input file or leave empty to use STDIN\n\
-  CTRL-D to exit\n\
-\n\
-  Return value of script will be used as the exit code.\n\
-\n\
-      Report bugs to <pez2001@voyagerproject.de>.\n";
 
 
 /*#include "sys/utsname.h"*/
@@ -119,6 +103,7 @@ node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj
 //node *create_nyx_state(node *nyx_block,node *base_class);
 node *create_nyx_state(node *base_class);
 
+void prepare_execution_parameters(node *state,node *parameters,node *block,node *output);
 node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block);//,BOOL dont_execute_block);
 
 node *search_block_path_for_member(node *block,char *key);
@@ -127,6 +112,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);
+node *evaluate_block_in(node *state,node *block,node *master_block);
 
 node *call_function(node *state,char *name,node *parameters);//,node *block);
 

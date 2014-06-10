@@ -22,6 +22,25 @@
 
 #include "nyxi.h"
 
+const char *nyxi_helpmsg = "Usage: nyxi [OPTION]... [INPUT FILE]\n\
+Execute nyx script Files.\n\
+\n\
+  -i    interactive mode\n\
+  -a    print script ast\n\
+  -s    interpret INPUT FILE as script string\n\
+  -h    display this help and exit\n\
+  -v    output version information and exit\n\
+  -p    print the return value\n\
+\n\
+  Use - as input file or leave empty to use STDIN\n\
+  CTRL-D to exit\n\
+\n\
+  Return value of script will be used as the exit code.\n\
+\n\
+      Report bugs to <pez2001@voyagerproject.de>.\n";
+
+
+
 /*TODO
 
 sparse arrays
@@ -692,7 +711,7 @@ void add_class_object_internal_function(node *class,node *base_class,char *metho
   add_member(class,method);
 }
 
-
+/*
 void *handler_test(node *state,node *execution_obj,node *block)
 {
   node *parameters = node_GetItemByKey(execution_obj,"parameters");
@@ -712,6 +731,7 @@ void *handler_test(node *state,node *execution_obj,node *block)
   node_SetSint32(real_value,100+node_GetSint32(real_value2));
   return(value);
 }
+*/
 //state,execution_obj,block
 void add_class_object_function(node *class,node *base_class,char *method_name,node*(*handler)(node*,node*,node*))//void *addr
 {
@@ -727,15 +747,27 @@ void add_class_object_function(node *class,node *base_class,char *method_name,no
 node *create_file_class_object(void)
 {
   node *base = create_base_obj_layout("file");
-  add_class_object_internal_function(base,base,"read");
-  add_class_object_internal_function(base,base,"readall");
-  add_class_object_internal_function(base,base,"write");
-  add_class_object_internal_function(base,base,"writeall");
-  add_class_object_internal_function(base,base,"open");
-  add_class_object_internal_function(base,base,"close");
-  add_class_object_internal_function(base,base,"seek");
-  add_class_object_internal_function(base,base,"set_mode");
-  add_class_object_internal_function(base,base,"flush");
+  //add_class_object_internal_function(base,base,"read");
+  //add_class_object_internal_function(base,base,"readall");
+  //add_class_object_internal_function(base,base,"write");
+  //add_class_object_internal_function(base,base,"writeall");
+  //add_class_object_internal_function(base,base,"open");
+  //add_class_object_internal_function(base,base,"close");
+  //add_class_object_internal_function(base,base,"seek");
+  //add_class_object_internal_function(base,base,"set_mode");
+  //add_class_object_internal_function(base,base,"flush");
+
+  //add_class_object_function(base,base,"read",nyxh_read);
+  add_class_object_function(base,base,"readall",nyxh_readall);
+  //add_class_object_function(base,base,"write",nyxh_write);
+  add_class_object_function(base,base,"writeall",nyxh_writeall);
+  add_class_object_function(base,base,"open",nyxh_open);
+  add_class_object_function(base,base,"close",nyxh_close);
+  //add_class_object_function(base,base,"seek",nyxh_seek);
+  //add_class_object_function(base,base,"set_mode",nyxh_set_mode);
+  //add_class_object_function(base,base,"flush",nyxh_flush);
+  //add_class_object_function(base,base,"ioctl",nyxh_ioctl);
+
   return(base);
 }
 
@@ -743,7 +775,7 @@ node *create_file_class_object(void)
 node *create_sys_class_object(void)
 {
   node *base = create_base_obj_layout("sys");
-  add_class_object_internal_function(base,base,"name");
+  /*add_class_object_internal_function(base,base,"name");
   add_class_object_internal_function(base,base,"working_directory"); //contains name/path and files as sub items
   add_class_object_internal_function(base,base,"change_working_directory");
   add_class_object_internal_function(base,base,"dump");
@@ -758,6 +790,23 @@ node *create_sys_class_object(void)
   add_class_object_internal_function(base,base,"interpreter_filename");
   add_class_object_internal_function(base,base,"interpreter_version");//returns array with major/minor/build
   add_class_object_internal_function(base,base,"obj_kv");//returns an kv pair in an object as valued new base class instance
+  */
+  
+  add_class_object_function(base,base,"name",nyxh_name);
+  add_class_object_function(base,base,"working_directory",nyxh_working_directory); //contains name/path and files as sub items
+  add_class_object_function(base,base,"change_working_directory",nyxh_change_working_directory);
+  add_class_object_function(base,base,"dump",nyxh_dump);
+  //add_class_object_function(base,base,"load",nyxh_load);
+  //add_class_object_function(base,base,"reset",nyxh_reset);
+  //add_class_object_function(base,base,"exit",nyxh_exit);
+  add_class_object_function(base,base,"execute",nyxh_execute);
+  //add_class_object_function(base,base,"remove",nyxh_remove);//remove file/directory
+  //add_class_object_function(base,base,"gc_collect",nyxh_gc_collect);
+  //add_class_object_function(base,base,"error",nyxh_error);//print to stderr
+  //add_class_object_function(base,base,"script_filename",nyxh_script_filename);//if applicable
+  //add_class_object_function(base,base,"interpreter_filename",nyxh_interpreter_filename);
+  //add_class_object_function(base,base,"interpreter_version",nyxh_interpreter_version);//returns array with major/minor/build
+  //add_class_object_function(base,base,"obj_kv",nyxh_obj_kv);//returns an kv pair in an object as valued new base class instance
 
   return(base);
 }
@@ -767,43 +816,78 @@ node *create_sys_class_object(void)
 node *create_class_object(void)
 {
   node *base = create_base_obj_layout("object");
-  add_class_object_internal_function(base,base,"=");
-  add_class_object_internal_function(base,base,":");
-  add_class_object_internal_function(base,base,"+");
-  add_class_object_internal_function(base,base,"print");
-  add_class_object_internal_function(base,base,"println");
-  add_class_object_internal_function(base,base,"input");
-  add_class_object_internal_function(base,base,"http_query");
-  add_class_object_internal_function(base,base,"str");
-  add_class_object_internal_function(base,base,"int");
-  add_class_object_internal_function(base,base,"len");
-  add_class_object_internal_function(base,base,"-");
-  add_class_object_internal_function(base,base,"/");
-  add_class_object_internal_function(base,base,"*");
+  add_class_object_function(base,base,"=",nyxh_assign);
+  add_class_object_function(base,base,":",nyxh_set_value_only);
+  add_class_object_function(base,base,"+",nyxh_add);
+  add_class_object_function(base,base,"print",nyxh_print);
+  add_class_object_function(base,base,"println",nyxh_print);
+  add_class_object_function(base,base,"input",nyxh_input);
+  add_class_object_function(base,base,"http_query",nyxh_http_query);
+  add_class_object_function(base,base,"str",nyxh_str);
+  add_class_object_function(base,base,"int",nyxh_int);
+  add_class_object_function(base,base,"len",nyxh_len);
+  add_class_object_function(base,base,"-",nyxh_sub);
+  add_class_object_function(base,base,"/",nyxh_div);
+  add_class_object_function(base,base,"*",nyxh_mul);
+  add_class_object_function(base,base,"<",nyxh_lt);
+  add_class_object_function(base,base,">",nyxh_gt);
+  add_class_object_function(base,base,"==",nyxh_eq);
+  add_class_object_function(base,base,"<=",nyxh_lt_eq);
+  add_class_object_function(base,base,">=",nyxh_gt_eq);
+  add_class_object_function(base,base,"!=",nyxh_neq);
+  add_class_object_function(base,base,"?",nyxh_cmp);
+  add_class_object_function(base,base,"??",nyxh_init_cmp);
+  add_class_object_function(base,base,"break",nyxh_break);
+  add_class_object_function(base,base,"continue",nyxh_continue);
+  add_class_object_function(base,base,"restart",nyxh_restart);
+  add_class_object_function(base,base,"import",nyxh_import);
+  add_class_object_function(base,base,"eval",nyxh_eval);
+  add_class_object_function(base,base,"open",nyxh_open);
+  add_class_object_function(base,base,"close",nyxh_close);
+  add_class_object_function(base,base,"from_json",nyxh_from_json);
+  add_class_object_function(base,base,"to_json",nyxh_to_json);
+  add_class_object_function(base,base,"sys",nyxh_sys);
+  add_class_object_function(base,base,"test",nyxh_test);
+  add_class_object_function(base,base,"handler_test",nyxh_handler_test);
+  //add_class_object_function(base,base,"!",nyxh_not);
 
-  add_class_object_internal_function(base,base,"<");
-  add_class_object_internal_function(base,base,">");
-  add_class_object_internal_function(base,base,"==");
-  add_class_object_internal_function(base,base,"<=");
-  add_class_object_internal_function(base,base,">=");
-  add_class_object_internal_function(base,base,"!=");
-  add_class_object_internal_function(base,base,"!");
-  add_class_object_internal_function(base,base,"?");
-  add_class_object_internal_function(base,base,"??");
-  add_class_object_internal_function(base,base,"break");
-  add_class_object_internal_function(base,base,"continue");
-  add_class_object_internal_function(base,base,"restart");
-  add_class_object_internal_function(base,base,"import");
-  add_class_object_internal_function(base,base,"eval");
-  add_class_object_internal_function(base,base,"open");
-  add_class_object_internal_function(base,base,"close");
-  add_class_object_internal_function(base,base,"from_json");
-  add_class_object_internal_function(base,base,"to_json");
-  add_class_object_internal_function(base,base,"sys");
   
+
+  //add_class_object_internal_function(base,base,"=");
+  //add_class_object_internal_function(base,base,":");
+  //add_class_object_internal_function(base,base,"+");
+  //add_class_object_internal_function(base,base,"print");
+  //add_class_object_internal_function(base,base,"println");
+  //add_class_object_internal_function(base,base,"input");
+  //add_class_object_internal_function(base,base,"http_query");
+  //add_class_object_internal_function(base,base,"str");
+  //add_class_object_internal_function(base,base,"int");
+  //add_class_object_internal_function(base,base,"len");
+  //add_class_object_internal_function(base,base,"-");
+  //add_class_object_internal_function(base,base,"/");
+  //add_class_object_internal_function(base,base,"*");
+  //add_class_object_internal_function(base,base,"<");
+  //add_class_object_internal_function(base,base,">");
+  //add_class_object_internal_function(base,base,"==");
+  //add_class_object_internal_function(base,base,"<=");
+  //add_class_object_internal_function(base,base,">=");
+  //add_class_object_internal_function(base,base,"!=");
+  //add_class_object_internal_function(base,base,"!");
+  //add_class_object_internal_function(base,base,"?");
+  //add_class_object_internal_function(base,base,"??");
+  //add_class_object_internal_function(base,base,"break");
+  //add_class_object_internal_function(base,base,"continue");
+  //add_class_object_internal_function(base,base,"restart");
+  //add_class_object_internal_function(base,base,"import");
+  //add_class_object_internal_function(base,base,"eval");
+  //add_class_object_internal_function(base,base,"open");
+  //add_class_object_internal_function(base,base,"close");
+  //add_class_object_internal_function(base,base,"from_json");
+  //add_class_object_internal_function(base,base,"to_json");
+  //add_class_object_internal_function(base,base,"sys");
   //add_class_object_internal_function(base,"get");
-  add_class_object_internal_function(base,base,"test");
-  add_class_object_function(base,base,"handler_test",handler_test);
+  //add_class_object_internal_function(base,base,"test");
+  //add_class_object_function(base,base,"handler_test",handler_test);
   //add_member(base,create_file_class_object());
   //add_member(base,create_sys_class_object());
 
@@ -1084,7 +1168,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       value = real_handler(state,execution_obj,block);
 
     }
-
+    /*
     char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
     node *parent = node_GetParent(node_GetParent(exe_obj));
     if(!strcmp(name,"+"))
@@ -1260,7 +1344,6 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       add_garbage(state,value);
       //node_PrintTree(value);
       //fflush(stdout);
-      /*int x=1/0;*/
       node *value2 = node_GetItem(real_parameters,0);
       node *real_value = node_GetItemByKey(value,"value");
       node *real_value2 = node_GetItemByKey(value2,"value");
@@ -1376,13 +1459,6 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       node *old_expression_block_parent = node_GetParent(expression_block_obj);
       node *old_true_block_parent = node_GetParent(true_block_obj);
       node *old_false_block_parent = node_GetParent(false_block_obj);
-      /*if(!strcmp(get_obj_type(expression_block_obj),"nyx_il_block"))
-        node_SetParent(expression_block_obj,bmembers);
-      if(!strcmp(get_obj_type(true_block_obj),"nyx_il_block"))
-        node_SetParent(true_block_obj,bmembers);
-      if(!strcmp(get_obj_type(false_block_obj),"nyx_il_block"))
-        node_SetParent(false_block_obj,bmembers);
-      */
       if(lv)
       {
         node *exp_obj = execute_obj(state,expression_block,block,True);
@@ -1433,20 +1509,6 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
         else
           blk_val=execute_obj(state,false_block,block,True);
       }
-      /*
-      if(!strcmp(get_obj_type(expression_block_obj),"nyx_il_block"))
-        node_SetParent(expression_block_obj,old_expression_block_parent);
-      if(!strcmp(get_obj_type(true_block_obj),"nyx_il_block"))
-        node_SetParent(true_block_obj,old_true_block_parent);
-      if(!strcmp(get_obj_type(false_block_obj),"nyx_il_block"))
-        node_SetParent(false_block_obj,old_false_block_parent);
-      if(old_expression_block_parent==NULL)
-        add_garbage(state,expression_block_obj);
-      if(old_true_block_parent==NULL)
-        add_garbage(state,true_block_obj);
-      if(old_false_block_parent==NULL)
-        add_garbage(state,false_block_obj);
-      */
 
       node *base_class = node_GetItemByKey(state,"nyx_object");
       value = create_class_instance(base_class);
@@ -1556,7 +1618,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       reset_obj_refcount(value);
       add_garbage(state,value);
     }
-    /*else if(!strcmp(name,"??"))
+    //else if(!strcmp(name,"??"))
     {
       node *init_block = node_GetItem(real_parameters,0);
       node *expression_block = node_GetItem(parameters,1);
@@ -1600,7 +1662,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       value = create_class_instance(base_class);
       reset_obj_refcount(value);
       add_garbage(state,value);
-    }*/
+    }
     else if(!strcmp(name,"break"))
     {
       prepare_execution_parameters(state,parameters,block,real_parameters);
@@ -1856,23 +1918,6 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       //returns string of integer input
       prepare_execution_parameters(state,parameters,block,real_parameters);
       node *base_class = node_GetItemByKey(state,"nyx_object");
-      /*node *value2 = NULL;
-      if(node_GetItemsNum(real_parameters))
-      {
-        value2 = node_GetItem(real_parameters,0);
-      }
-      else if(parent!=NULL && parent != block)
-      { 
-        value2 = parent;
-      }
-      else
-      {
-        value2 = create_class_instance(base_class);
-        node_SetParent(value2,NULL);
-        reset_obj_refcount(value2);
-        add_garbage(state,value2);
-        set_obj_string(value2,"value","");
-      }*/
       long ret = -1;
       if(parent!=NULL && parent != block)
       { 
@@ -2215,23 +2260,6 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       //uname(&uname_data);
       //node_SetString(real_value,uname_data.sysname);
       node_SetString(real_value,"not supported");
-
-      /*node *items = create_obj("items");
-      add_obj_kv(value,items);
-
-      node *path = create_class_instance(base_class);
-      reset_obj_refcount(path);
-      inc_obj_refcount(path);
-      //add_garbage(state,path);
-      set_obj_string(path,"name","path");
-      char *cwd =(char*)malloc(512);
-      cwd = getcwd(cwd,512);
-      //perror("cwd:");
-      //printf("actual working dir:[%s]\n",cwd);
-      set_obj_string(path,"value",cwd);
-      node_AddItem(items,path);
-      free(cwd);
-      */
       //node_SetString(real_value,ret);
     }
     else if(!strcmp(name,"sys"))
@@ -2282,7 +2310,7 @@ node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block
       reset_obj_refcount(value);
       add_garbage(state,value);
       node_FreeTree(nyx_block);
-    }
+    }*/
   }
   else if(!strcmp(node_GetKey(exe_obj),"nyx_object"))
   {
@@ -2671,6 +2699,78 @@ node *evaluate_block(node *state,node *block)
   return(ret);
 }
 
+node *evaluate_block_in(node *state,node *block,node *master_block)
+{
+  node *ret = NULL;
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *block_class_instance = create_block_obj(base_class,block);
+  node *blocks = node_GetItemByKey(state,"blocks");
+  add_obj_kv(blocks,block_class_instance);
+  node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");
+  if(!node_GetItemsNum(il_block))
+  {
+      node *base_class = node_GetItemByKey(state,"nyx_object");
+      ret = create_class_instance(base_class);
+      reset_obj_refcount(ret);
+      add_garbage(state,ret);
+  }
+  else
+  {
+    node_ItemIterationReset(il_block);
+    while(node_ItemIterationUnfinished(il_block))
+    {
+      node *nyx_statement = node_ItemIterate(il_block);
+      node *obj = evaluate_statement(state,nyx_statement,master_block,0);
+      ret=execute_obj(state,obj,master_block,False);//,False);
+      if(!node_ItemIterationUnfinished(il_block))
+      {
+        ret=node_CopyTree(ret,True,True);
+        free_execution_obj(obj);
+        free_garbage(state);
+        return(ret);
+      }
+      free_execution_obj(obj);
+      node *block_flag=node_GetItemByKey(state,"block_flag");
+      if(block_flag!=NULL)
+      {
+        char *bf = node_GetString(block_flag);
+        if(!strcmp(bf,"restart"))
+        { 
+          node_ItemIterationReset(il_block);
+          set_obj_string(state,"block_flag","");
+        } 
+        else if(!strcmp(bf,"continue"))
+        {
+          set_obj_string(state,"block_flag","");
+          long itindex = node_GetItemIterationIndex(il_block);
+          if(itindex+1<node_GetItemsNum(il_block))
+            node_SetItemIterationIndex(il_block,itindex+1);
+        } 
+        else if(!strcmp(bf,"break"))
+        {
+          node *block_break_count = node_GetItemByKey(state,"block_break_count");
+          long count = node_GetSint32(block_break_count);
+          if(!(count-1))
+          {
+            set_obj_int(state,"block_break_count",0);
+            set_obj_string(state,"block_flag","");
+            node_FreeTree(block_class_instance);
+            return;
+          }
+          else
+          {
+            set_obj_int(state,"block_break_count",count-1);
+            node_FreeTree(block_class_instance);
+            return;
+          }
+        } 
+      }
+      free_garbage(state);
+    }
+  }
+  return(ret);
+}
+
 node *evaluate_block_instance(node *state,node *block_class_instance)
 {
   node *ret = NULL;
@@ -2890,6 +2990,7 @@ int main(int argc, char** argv)
   int use_input_as_script_string=0;
 
   int ret = 0;
+  //printf("checking pars\n");
   
   //while ((c = getopt (argc, argv, "if:ohv")) != -1)
   while ((c = getopt (argc, argv, "iashvp")) != -1)
@@ -2941,31 +3042,40 @@ int main(int argc, char** argv)
           fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
         return(1);
       default:
+        //printf("aborting.\n");
         abort();
     }
   }
   char *filename = argv[optind];
   node *nyx_stream = NULL;
+  //printf("filename:[%s]\n",filename);
   if(filename != NULL && strlen(filename)>0 && !use_input_as_script_string && strcmp(filename,"-")) //use filename to load a script file
   {
+    //printf("reading file\n");
     nyx_stream = nyx_LoadFile(filename);
   }
-  else if(filename != NULL && strcmp(filename,"-"))//) //string input //!(strlen(filename)==1 &&
+  else if(filename != NULL && strcmp(filename,"-") && use_input_as_script_string)//) //string input //!(strlen(filename)==1 &&
   {
+    //printf("reading string\n");
     nyx_stream = nyx_LoadString(filename);
   }
-  else if(interactive_mode) //interactive 
+  /*else if(interactive_mode) //interactive 
   { 
-  }
+    printf("interactive\n");
+  }*/
   else //read from stdin
   {
     setup_terminal();
     node *state = init_nyx();
+    node *blocks=node_GetItemByKey(state,"blocks");
     char *line = CreateEmptyString();
     char *buf =(char*)malloc(100);
     char *tmp_get=NULL;
+    node *ret_obj=NULL;
+    //printf("reading standard input\n");
     while((tmp_get=fgets(buf,100,stdin))!=NULL && !done &&tmp_get!=EOF)
     {
+      //printf("interpreting:[%s]\n",buf);
       nyx_stream = nyx_LoadString(buf);
       if(nyx_stream!=NULL)
       {
@@ -2973,10 +3083,20 @@ int main(int argc, char** argv)
         node *nyx_block = node_GetItemByKey(nyx_stream,"nyx_block");
         if(nyx_block!=NULL)
         {
-          add_obj_kv(state,nyx_block);
+          //node *master_block = node_GetItemByKey(,"nyx_block");
+          node *master_block = node_GetItem(blocks,0);
           node_RemoveItem(nyx_stream,nyx_block);
           node_FreeTree(nyx_stream);
-          node *ret_obj = evaluate_block(state,nyx_block);  
+          if(master_block!=NULL)
+          {
+            ret_obj = evaluate_block_in(state,nyx_block,master_block);  
+          }
+          else
+          {
+            //add_obj_kv(state,nyx_block);
+            ret_obj = evaluate_block(state,nyx_block);  
+          }
+
           free_garbage(state);
           node *real_value = node_GetItemByKey(ret_obj,"value");
           if(print_return_value)
@@ -2999,6 +3119,7 @@ int main(int argc, char** argv)
     close_nyx(state);
     return(0);
   }
+  //printf("before interpret stream\n");
   if(print_ast)
   {
     if(nyx_stream!=NULL)
@@ -3010,6 +3131,7 @@ int main(int argc, char** argv)
   }
   else // interpret stream
   { 
+    //printf("interpret stream\n");
     node *state = init_nyx();
     if(nyx_stream!=NULL)
     {
@@ -3045,10 +3167,6 @@ int main(int argc, char** argv)
     }
     close_nyx(state);
   }
-
-    
-  
-
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
