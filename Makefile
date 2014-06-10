@@ -17,8 +17,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 2
-BUILD = 1842
-DEBUG_BUILD = 2179
+BUILD = 1843
+DEBUG_BUILD = 2180
 
 #-DUSE_MEMORY_DEBUGGING
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
@@ -207,9 +207,9 @@ binariesdist: clean_binaries clean all clean
 dist:	srcdist binariesdist 
 	make clean clean_binaries
 git:	
-	git add *
-	git commit
-	git push github master
+	git add .
+	git commit -m "{$2}"
+	git push 
 	
 indent:	
 	indent -bap -bli0 -i4 -l79 -ncs -npcs -npsl -fca -lc79 -fc1 -ts4 *.c *.h
