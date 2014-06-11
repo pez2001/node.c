@@ -383,6 +383,35 @@ void *nyxh_print(node *state,node *execution_obj,node *block)
   return(value);
 }
 
+//else handler
+void *nyxh_else(node *state,node *execution_obj,node *block)
+{
+  node *parameters = node_GetItemByKey(execution_obj,"parameters");
+  node *real_parameters = create_obj("parameters");
+  node *exe_obj = node_GetItem(execution_obj,0);
+  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
+  node *parent = node_GetParent(node_GetParent(exe_obj));
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+
+  long parent_value = 0;
+  if(parent!=NULL)
+    parent_value = node_GetSint32(node_GetItemByKey(parent,"value"));
+
+  node *exe_block = node_GetItem(parameters,0);
+  //node *exe_block_obj = node_GetItem(exe_block,0);
+  //node *bmembers = node_GetItemByKey(block,"members");
+  if(!parent_value)
+  {
+    node *blk_val=execute_obj(state,exe_block,block,True);
+  }
+  set_obj_int(value,"value",parent_value);
+  return(value);
+}
+
 //? handler
 void *nyxh_cmp(node *state,node *execution_obj,node *block)
 {
@@ -395,6 +424,11 @@ void *nyxh_cmp(node *state,node *execution_obj,node *block)
   //?(expression,true_func,false_func,loop_while_true); 
   //execute based on expression value (0,1,..) ,loops if needed
   //returns(expression)
+
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+
   node *expression_block = node_GetItem(parameters,0);
   node *true_block = node_GetItem(parameters,1);
   node *false_block = node_GetItem(parameters,2);
@@ -450,6 +484,7 @@ void *nyxh_cmp(node *state,node *execution_obj,node *block)
   {
     node *exp_val=execute_obj(state,expression_block,block,True);
     node *blk_val=NULL;
+    set_obj_int(value,"value",node_GetSint32(node_GetItemByKey(exp_val,"value")));
     if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
     {
       blk_val=execute_obj(state,true_block,block,True);
@@ -457,9 +492,6 @@ void *nyxh_cmp(node *state,node *execution_obj,node *block)
     else
       blk_val=execute_obj(state,false_block,block,True);
   }
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
   return(value);
 }
 
@@ -840,7 +872,7 @@ void *nyxh_open(node *state,node *execution_obj,node *block)
 
 void *nyxh_close(node *state,node *execution_obj,node *block)
 {
-  //returns string of integer input
+  //close a file
   node *parameters = node_GetItemByKey(execution_obj,"parameters");
   node *real_parameters = create_obj("parameters");
   node *exe_obj = node_GetItem(execution_obj,0);
@@ -852,12 +884,24 @@ void *nyxh_close(node *state,node *execution_obj,node *block)
   long ret = -1;
   if(parent!=NULL && parent != block)
   { 
+    /*node *top=parent;
+    printf("close p:%s\n",get_obj_name(top));
+    if(node_GetParent(top)!=NULL)
+    {
+      top=node_GetParent(node_GetParent(top));
+      printf("close n:%s\n",get_obj_name(top));
+    }*/
     node *fvalue = parent;
     node *handle = node_GetItemByKey(fvalue,"file_handle");
     if(handle!=NULL)
     {
+      //printf("closing file\n");
       FILE *fhandle = node_GetValue(handle);
       ret = fclose(fhandle);
+    }
+    if(strcmp(get_obj_name(parent),"file"))
+    {
+      return(parent);
     }
   }
   node *value = create_class_instance(base_class);
@@ -898,6 +942,7 @@ void *nyxh_readall(node *state,node *execution_obj,node *block)
       memset(ret+len + 0, 0, 1);
       fread(ret,len,1,fhandle);
       node_SetString(real_value,ret);
+      set_obj_node(value,"file_handle",fhandle);
       free(ret);
     }
   }

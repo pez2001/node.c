@@ -1,2 +1,21 @@
-a=handler_test(1);
-println("a:",a);
+/*a= -1;
+b= -(1+1);
+c=-1;
+d= 1.4;
+e= - 1 -1;
+*/
+
+?(2==1,{println("true")},{println("false")},0).else({println("executed else")});
+
+if(exp,do)={?(exp,do,{},0)};
+
+if(1==2,{println("true if")}).else({println("else if")});
+
+b=open("tests/test_yeti.json","rb").close();
+
+a=open("tests/test_yeti.json","rb").readall().close();
+println(a);
+
+
+/*a=handler_test(1);*/
+/*println("a:",a,"b:",b,"c:",c,"d:",d);*/

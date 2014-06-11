@@ -88,6 +88,8 @@ void *nyxh_sub(node *state,node *execution_obj,node *block);
 void *nyxh_add(node *state,node *execution_obj,node *block);
 void *nyxh_handler_test(node *state,node *execution_obj,node *block);
 
+void *nyxh_else(node *state,node *execution_obj,node *block);
+
 
 
 #endif

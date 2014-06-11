@@ -701,7 +701,7 @@ node *create_base_obj_layout(char *obj_name)
 }
 
 
-void add_class_object_internal_function(node *class,node *base_class,char *method_name)//void *addr
+void add_class_object_internal_function(node *class,node *base_class,char *method_name)
 {
   node *method = create_base_obj_layout(method_name);
   set_obj_string(method,"type","function");
@@ -837,6 +837,7 @@ node *create_class_object(void)
   add_class_object_function(base,base,"!=",nyxh_neq);
   add_class_object_function(base,base,"?",nyxh_cmp);
   add_class_object_function(base,base,"??",nyxh_init_cmp);
+  add_class_object_function(base,base,"else",nyxh_else);
   add_class_object_function(base,base,"break",nyxh_break);
   add_class_object_function(base,base,"continue",nyxh_continue);
   add_class_object_function(base,base,"restart",nyxh_restart);
