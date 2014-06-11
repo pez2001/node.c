@@ -1,4 +1,4 @@
-﻿*.o
+*.o
 *.do
 *.da
 *.a
@@ -13,4 +13,3 @@ imports/*.o
 imports/*.do
 imports/*.da
 imports/*.a
-
