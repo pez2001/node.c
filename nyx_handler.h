@@ -48,47 +48,55 @@
 //bunch of default functions
 
 
-void *nyxh_eval(node *state,node *execution_obj,node *block);
-void *nyxh_sys(node *state,node *execution_obj,node *block);
-void *nyxh_name(node *state,node *execution_obj,node *block);
-void *nyxh_working_directory(node *state,node *execution_obj,node *block);
-void *nyxh_change_working_directory(node *state,node *execution_obj,node *block);
-void *nyxh_execute(node *state,node *execution_obj,node *block);
-void *nyxh_dump(node *state,node *execution_obj,node *block);
-void *nyxh_import(node *state,node *execution_obj,node *block);
-void *nyxh_to_json(node *state,node *execution_obj,node *block);
-void *nyxh_from_json(node *state,node *execution_obj,node *block);
-void *nyxh_writeall(node *state,node *execution_obj,node *block);
-void *nyxh_readall(node *state,node *execution_obj,node *block);
-void *nyxh_close(node *state,node *execution_obj,node *block);
-void *nyxh_open(node *state,node *execution_obj,node *block);
-void *nyxh_test(node *state,node *execution_obj,node *block);
-void *nyxh_str(node *state,node *execution_obj,node *block);
-void *nyxh_int(node *state,node *execution_obj,node *block);
-void *nyxh_http_query(node *state,node *execution_obj,node *block);
-void *nyxh_input(node *state,node *execution_obj,node *block);
-void *nyxh_len(node *state,node *execution_obj,node *block);
-void *nyxh_continue(node *state,node *execution_obj,node *block);
-void *nyxh_restart(node *state,node *execution_obj,node *block);
-void *nyxh_break(node *state,node *execution_obj,node *block);
-void *nyxh_init_cmp(node *state,node *execution_obj,node *block);
-void *nyxh_cmp(node *state,node *execution_obj,node *block);
-void *nyxh_print(node *state,node *execution_obj,node *block);
-void *nyxh_assign(node *state,node *execution_obj,node *block);
-void *nyxh_set_value_only(node *state,node *execution_obj,node *block);
-void *nyxh_neq(node *state,node *execution_obj,node *block);
-void *nyxh_gt_eq(node *state,node *execution_obj,node *block);
-void *nyxh_lt_eq(node *state,node *execution_obj,node *block);
-void *nyxh_eq(node *state,node *execution_obj,node *block);
-void *nyxh_gt(node *state,node *execution_obj,node *block);
-void *nyxh_lt(node *state,node *execution_obj,node *block);
-void *nyxh_mul(node *state,node *execution_obj,node *block);
-void *nyxh_div(node *state,node *execution_obj,node *block);
-void *nyxh_sub(node *state,node *execution_obj,node *block);
-void *nyxh_add(node *state,node *execution_obj,node *block);
-void *nyxh_handler_test(node *state,node *execution_obj,node *block);
+void *nyxh_eval(node *state,node *obj,node *block,node *parameters);
+void *nyxh_sys(node *state,node *obj,node *block,node *parameters);
+void *nyxh_name(node *state,node *obj,node *block,node *parameters);
+void *nyxh_working_directory(node *state,node *obj,node *block,node *parameters);
+void *nyxh_change_working_directory(node *state,node *obj,node *block,node *parameters);
+void *nyxh_execute(node *state,node *obj,node *block,node *parameters);
+void *nyxh_dump(node *state,node *obj,node *block,node *parameters);
+void *nyxh_import(node *state,node *obj,node *block,node *parameters);
+void *nyxh_to_json(node *state,node *obj,node *block,node *parameters);
+void *nyxh_from_json(node *state,node *obj,node *block,node *parameters);
+void *nyxh_writeall(node *state,node *obj,node *block,node *parameters);
+void *nyxh_readall(node *state,node *obj,node *block,node *parameters);
+void *nyxh_close(node *state,node *obj,node *block,node *parameters);
+void *nyxh_open(node *state,node *obj,node *block,node *parameters);
+void *nyxh_test(node *state,node *obj,node *block,node *parameters);
+void *nyxh_str(node *state,node *obj,node *block,node *parameters);
+void *nyxh_int(node *state,node *obj,node *block,node *parameters);
+void *nyxh_http_query(node *state,node *obj,node *block,node *parameters);
+void *nyxh_input(node *state,node *obj,node *block,node *parameters);
+void *nyxh_len(node *state,node *obj,node *block,node *parameters);
+void *nyxh_continue(node *state,node *obj,node *block,node *parameters);
+void *nyxh_restart(node *state,node *obj,node *block,node *parameters);
+void *nyxh_break(node *state,node *obj,node *block,node *parameters);
+void *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters);
+void *nyxh_cmp(node *state,node *obj,node *block,node *parameters);
+void *nyxh_print(node *state,node *obj,node *block,node *parameters);
+void *nyxh_println(node *state,node *obj,node *block,node *parameters);
+void *nyxh_assign(node *state,node *obj,node *block,node *parameters);
+void *nyxh_set_value_only(node *state,node *obj,node *block,node *parameters);
+void *nyxh_neq(node *state,node *obj,node *block,node *parameters);
+void *nyxh_gt_eq(node *state,node *obj,node *block,node *parameters);
+void *nyxh_lt_eq(node *state,node *obj,node *block,node *parameters);
+void *nyxh_eq(node *state,node *obj,node *block,node *parameters);
+void *nyxh_gt(node *state,node *obj,node *block,node *parameters);
+void *nyxh_lt(node *state,node *obj,node *block,node *parameters);
+void *nyxh_mul(node *state,node *obj,node *block,node *parameters);
+void *nyxh_div(node *state,node *obj,node *block,node *parameters);
+void *nyxh_sub(node *state,node *obj,node *block,node *parameters);
+void *nyxh_add(node *state,node *obj,node *block,node *parameters);
+void *nyxh_handler_test(node *state,node *obj,node *block,node *parameters);
 
-void *nyxh_else(node *state,node *execution_obj,node *block);
+void *nyxh_else(node *state,node *obj,node *block,node *parameters);
+void *nyxh_args(node *state,node *obj,node *block,node *parameters);
+
+
+
+void *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters);
+void *nyxh_pre_add(node *state,node *obj,node *block,node *parameters);
+
 
 
 

@@ -215,7 +215,6 @@ node *nyx_Load(char *nyx,unsigned long len)
 
   if(len>2 && nyx[offset]=='#' && nyx[offset+1]=='!')
   {
-    //printf("shebang found\n");
     while(offset<len)
     {
       if(nyx[offset]==10)
@@ -293,11 +292,23 @@ node *nyx_Load(char *nyx,unsigned long len)
       offset++;
       continue;
     }
+
+    /*
     if(nyx[offset]==' ' || nyx[offset]=='\t')
     {
       nyx_add_value_string(&value_string,state,actual_obj);
       state &= ~NYX_STATE_IN_OP;
       state &= ~NYX_STATE_IN_VALUE;
+      offset++;
+      continue;
+    }
+    */
+
+    if(nyx[offset]==' ' || nyx[offset]=='\t')
+    {
+      //nyx_add_value_string(&value_string,state,actual_obj);
+      //state &= ~NYX_STATE_IN_OP;
+      //state &= ~NYX_STATE_IN_VALUE;
       offset++;
       continue;
     }

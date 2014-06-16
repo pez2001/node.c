@@ -22,42 +22,14 @@
 
 #include "nyx_handler.h"
 
-void *nyxh_handler_test(node *state,node *execution_obj,node *block)
+
+void *nyxh_pre_add(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
-  node *real_value = node_GetItemByKey(value,"value");
-  node *real_value2 = node_GetItemByKey(value2,"value");
-  printf("handler test called:%d\n",node_GetSint32(real_value2));
-  node_SetSint32(real_value,100+node_GetSint32(real_value2));
-  return(value);
-}
-
-void *nyxh_add(node *state,node *execution_obj,node *block)
-{
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
@@ -79,63 +51,120 @@ void *nyxh_add(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_sub(node *state,node *execution_obj,node *block)
+void *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *real_value = node_GetItemByKey(value,"value");
+  node_SetSint32(real_value,-node_GetSint32(real_value));
+  return(value);
+}
+
+void *nyxh_handler_test(node *state,node *obj,node *block,node *parameters)
+{
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *value2 = node_GetItem(parameters,0);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value2 = node_GetItemByKey(value2,"value");
+  printf("handler test called:%d\n",node_GetSint32(real_value2));
+  node_SetSint32(real_value,100+node_GetSint32(real_value2));
+  return(value);
+}
+
+void *nyxh_args(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_CopyTree(obj,True,True);
+  node_SetParent(value,NULL);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *value2 = node_GetItem(parameters,0);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value2 = node_GetItemByKey(value2,"value");
+  if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,node_GetSint32(real_value)+node_GetSint32(real_value2));
+  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_STRING)
+  {
+    char *cat_string=StringCat(node_GetString(real_value),node_GetString(real_value2));
+    node_SetString(real_value,cat_string);
+    free(cat_string);
+  }
+  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_SINT32)
+  {
+    char *num=convert_to_string(node_GetSint32(real_value2));
+    char *cat_string=StringCat(node_GetString(real_value),num);
+    node_SetString(real_value,cat_string);
+    free(cat_string);
+    free(num);
+  }
+  return(value);
+}
+
+void *nyxh_add(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_CopyTree(obj,True,True);
+  node_SetParent(value,NULL);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *value2 = node_GetItem(parameters,0);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value2 = node_GetItemByKey(value2,"value");
+  if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,node_GetSint32(real_value)+node_GetSint32(real_value2));
+  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_STRING)
+  {
+    char *cat_string=StringCat(node_GetString(real_value),node_GetString(real_value2));
+    node_SetString(real_value,cat_string);
+    free(cat_string);
+  }
+  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_SINT32)
+  {
+    char *num=convert_to_string(node_GetSint32(real_value2));
+    char *cat_string=StringCat(node_GetString(real_value),num);
+    node_SetString(real_value,cat_string);
+    free(cat_string);
+    free(num);
+  }
+  return(value);
+}
+
+void *nyxh_sub(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_CopyTree(obj,True,True);
+  node_SetParent(value,NULL);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)-node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_div(node *state,node *execution_obj,node *block)
+void *nyxh_div(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)/node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_mul(node *state,node *execution_obj,node *block)
+void *nyxh_mul(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
@@ -155,126 +184,78 @@ void *nyxh_mul(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_lt(node *state,node *execution_obj,node *block)
+void *nyxh_lt(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)<node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_gt(node *state,node *execution_obj,node *block)
+void *nyxh_gt(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)>node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_eq(node *state,node *execution_obj,node *block)
+void *nyxh_eq(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)==node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_lt_eq(node *state,node *execution_obj,node *block)
+void *nyxh_lt_eq(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)<=node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_gt_eq(node *state,node *execution_obj,node *block)
+void *nyxh_gt_eq(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)>=node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_neq(node *state,node *execution_obj,node *block)
+void *nyxh_neq(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_CopyTree(parent,True,True);
+  node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,node_GetSint32(real_value)!=node_GetSint32(real_value2));
@@ -282,78 +263,63 @@ void *nyxh_neq(node *state,node *execution_obj,node *block)
 }
 
 // : handler
-void *nyxh_set_value_only(node *state,node *execution_obj,node *block)
+void *nyxh_set_value_only(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value = node_GetItemByKey(parent,"value");
-  node *value2_parent = node_GetItem(real_parameters,0);
-  node *value2 = node_GetItemByKey(value2_parent,"value");
+  node *value = node_GetItemByKey(obj,"value");
+  node *value2 = node_GetItem(parameters,0);
+  node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetType(value,node_GetType(value2));
   node_SetValue(value,node_GetValue(value2),True,True);
-  value = parent;
-  return(value);
+  return(obj);
 }
 
 // = handler
-void *nyxh_assign(node *state,node *execution_obj,node *block)
+void *nyxh_assign(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *obj_name = node_GetItemByKey(parent,"name");
-  node *real_parent = node_GetParent(parent);
-  int r = node_RemoveItem(real_parent,parent);
-  node_SetParent(parent,NULL);
+  node *obj_name = node_GetItemByKey(obj,"name");
+  node *parent = node_GetParent(obj);
+  int r = node_RemoveItem(parent,obj);
+  node_SetParent(obj,NULL);
   if(r==-1)
   {
     printf("error item not removed\n");
   }
-  dec_obj_refcount(parent);
-  add_garbage(state,parent);
-  node *value = node_CopyTree(node_GetItem(real_parameters,0),True,True);
+  dec_obj_refcount(obj);
+  add_garbage(state,obj);
+  node *value = node_CopyTree(node_GetItem(parameters,0),True,True);
   reset_obj_refcount(value);
   set_obj_string(value,"name",node_GetString(obj_name));
-  node_AddItem(real_parent,value);
+  node_AddItem(parent,value);
+  printf("assigned:%x old:%x (%s)\n",value,parent,get_obj_name(value));
+  fflush(stdout);
   inc_obj_refcount(value);
-  node_SetParent(value,real_parent);
-  node *obj_parameters = node_GetItemByKey(parent,"nyx_parameters");
+  node_SetParent(value,parent);
+  node *obj_parameters = node_GetItemByKey(obj,"nyx_parameters");
   if(obj_parameters!=NULL)
   {
     node *pars = node_CopyTree(obj_parameters,True,True);
     add_obj_kv(value,pars);
   }
+  node *anon = node_GetItemByKey(value,"anonymous_block_parent");
+  if(anon!=NULL)
+  {
+    node_RemoveItem(value,anon);
+    node_FreeTree(anon);
+  }
   return(value);
 }
 
 //println,print handler
-void *nyxh_print(node *state,node *execution_obj,node *block)
+void *nyxh_print(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    node_ItemIterationReset(real_parameters);
-    while(node_ItemIterationUnfinished(real_parameters))
+    node_ItemIterationReset(parameters);
+    while(node_ItemIterationUnfinished(parameters))
     {
-      node *token = node_ItemIterate(real_parameters);
+      node *token = node_ItemIterate(parameters);
       node *items = node_GetItemByKey(token,"items");
       if(items!=NULL)
       {
@@ -372,54 +338,42 @@ void *nyxh_print(node *state,node *execution_obj,node *block)
   }
   else
   {
-    if(parent!=NULL && parent != block)
-      node_Print(node_GetItemByKey(parent,"value"),False,False);
+      node_Print(node_GetItemByKey(obj,"value"),False,False);
   }
-  if(!strcmp(name,"println"))
-    printf("\n");
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
   return(value);
 }
 
-//else handler
-void *nyxh_else(node *state,node *execution_obj,node *block)
+void *nyxh_println(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *ret = nyxh_print(state,obj,block,parameters);
+  printf("\n");
+  return(ret);
+}
 
+//else handler
+void *nyxh_else(node *state,node *obj,node *block,node *parameters)
+{
+  node *base_class = node_GetItemByKey(state,"nyx_object");
   node *value = create_class_instance(base_class);
+  long parent_value = 0;
   reset_obj_refcount(value);
   add_garbage(state,value);
-
-  long parent_value = 0;
-  if(parent!=NULL)
-    parent_value = node_GetSint32(node_GetItemByKey(parent,"value"));
-
+  parent_value = node_GetSint32(node_GetItemByKey(obj,"value"));
   node *exe_block = node_GetItem(parameters,0);
-  //node *exe_block_obj = node_GetItem(exe_block,0);
-  //node *bmembers = node_GetItemByKey(block,"members");
   if(!parent_value)
   {
-    node *blk_val=execute_obj(state,exe_block,block,True);
+    node *blk_val=execute_obj(state,exe_block,block,NULL,True);
   }
   set_obj_int(value,"value",parent_value);
   return(value);
 }
 
 //? handler
-void *nyxh_cmp(node *state,node *execution_obj,node *block)
+void *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
   //?(expression,true_func,false_func,loop_while_true); 
   //execute based on expression value (0,1,..) ,loops if needed
@@ -433,20 +387,15 @@ void *nyxh_cmp(node *state,node *execution_obj,node *block)
   node *true_block = node_GetItem(parameters,1);
   node *false_block = node_GetItem(parameters,2);
   node *loop_exe = node_GetItem(parameters,3);
-  node *loop = execute_obj(state,loop_exe,block,False);//,tmp_dont_execute_block);
+  node *loop = execute_obj(state,loop_exe,block,NULL,True);
   node *loop_value = node_GetItemByKey(loop,"value");
   long lv = node_GetSint32(loop_value);
-
-  node *expression_block_obj = node_GetItem(expression_block,0);
-  node *true_block_obj = node_GetItem(true_block,0);
-  node *false_block_obj = node_GetItem(false_block,0);
-  node *bmembers = node_GetItemByKey(block,"members");
   if(lv)
   {
-    node *exp_obj = execute_obj(state,expression_block,block,True);
+    node *exp_obj = execute_obj(state,expression_block,block,NULL,True);
     while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
     {
-      node *eval=execute_obj(state,true_block,block,True);
+      node *eval=execute_obj(state,true_block,block,NULL,True);
       node *block_flag=node_GetItemByKey(state,"block_flag");
       if(block_flag!=NULL) //MOVE TO sep func
       {
@@ -476,56 +425,44 @@ void *nyxh_cmp(node *state,node *execution_obj,node *block)
           }
         } 
       }
-      exp_obj = execute_obj(state,expression_block,block,True);
+      exp_obj = execute_obj(state,expression_block,block,NULL,True);
     }
-    node *blk_val=execute_obj(state,false_block,block,True);
+    node *blk_val=execute_obj(state,false_block,block,NULL,True);
   }
   else
   {
-    node *exp_val=execute_obj(state,expression_block,block,True);
+    node *exp_val=execute_obj(state,expression_block,block,NULL,True);
     node *blk_val=NULL;
     set_obj_int(value,"value",node_GetSint32(node_GetItemByKey(exp_val,"value")));
     if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
     {
-      blk_val=execute_obj(state,true_block,block,True);
+      blk_val=execute_obj(state,true_block,block,NULL,True);
     }
     else
-      blk_val=execute_obj(state,false_block,block,True);
+      blk_val=execute_obj(state,false_block,block,NULL,True);
   }
   return(value);
 }
 
 // ?? handler
-void *nyxh_init_cmp(node *state,node *execution_obj,node *block)
+void *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
   node *init_block = node_GetItem(parameters,0);
   node *expression_block = node_GetItem(parameters,1);
   node *true_block = node_GetItem(parameters,2);
   node *false_block = node_GetItem(parameters,3);
   node *loop_exe = node_GetItem(parameters,4);
-  node *loop = execute_obj(state,loop_exe,block,False);//,tmp_dont_execute_block);
-
-  node *init_block_obj = node_GetItem(init_block,0);
-  node *expression_block_obj = node_GetItem(expression_block,0);
-  node *true_block_obj = node_GetItem(true_block,0);
-  node *false_block_obj = node_GetItem(false_block,0);
-  node *bmembers = node_GetItemByKey(block,"members");
-  node *init_eval = execute_obj(state,init_block,block,True);
+  node *loop = execute_obj(state,loop_exe,block,NULL,False);//,tmp_dont_execute_block);
+  node *init_eval = execute_obj(state,init_block,block,NULL,True);
   node *loop_value = node_GetItemByKey(loop,"value");
   long lv = node_GetSint32(loop_value);
   if(lv)
   {
-    node *exp_obj = execute_obj(state,expression_block,block,True);
+    node *exp_obj = execute_obj(state,expression_block,block,NULL,True);
     while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
     {
-      node *eval=execute_obj(state,true_block,block,True);
+      node *eval=execute_obj(state,true_block,block,NULL,True);
       node *block_flag=node_GetItemByKey(state,"block_flag");
       if(block_flag!=NULL)
       {
@@ -555,17 +492,17 @@ void *nyxh_init_cmp(node *state,node *execution_obj,node *block)
           }
         } 
       }
-      exp_obj = execute_obj(state,expression_block,block,True);
+      exp_obj = execute_obj(state,expression_block,block,NULL,True);
     }
   }
   else
   {
-    node *exp_val=execute_obj(state,expression_block,block,True);
+    node *exp_val=execute_obj(state,expression_block,block,NULL,True);
     node *blk_val=NULL;
     if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
-      blk_val=execute_obj(state,true_block,block,True);
+      blk_val=execute_obj(state,true_block,block,NULL,True);
     else
-      blk_val=execute_obj(state,false_block,block,True);
+      blk_val=execute_obj(state,false_block,block,NULL,True);
   }
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
@@ -573,20 +510,13 @@ void *nyxh_init_cmp(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_break(node *state,node *execution_obj,node *block)
+void *nyxh_break(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   set_obj_string(state,"block_flag","break");
-  if(node_GetItemsNum(real_parameters)>0)
+  if(node_GetItemsNum(parameters)>0)
   {
-    node *count = node_GetItem(real_parameters,0);
+    node *count = node_GetItem(parameters,0);
     node *real_value = node_GetItemByKey(count,"value");
     set_obj_int(state,"block_break_count",node_GetSint32(real_value));
   }
@@ -600,15 +530,9 @@ void *nyxh_break(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_restart(node *state,node *execution_obj,node *block)
+void *nyxh_restart(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
   set_obj_string(state,"block_flag","restart");
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
@@ -616,15 +540,9 @@ void *nyxh_restart(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_continue(node *state,node *execution_obj,node *block)
+void *nyxh_continue(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
   set_obj_string(state,"block_flag","continue");
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
@@ -632,22 +550,15 @@ void *nyxh_continue(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_len(node *state,node *execution_obj,node *block)
+void *nyxh_len(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = NULL;
   long len = 0;
-  if(node_GetItemsNum(real_parameters))
-    value = node_GetItem(real_parameters,0);
-  else if(parent!=NULL && parent != block)
-    value = parent;
+  if(node_GetItemsNum(parameters))
+    value = node_GetItem(parameters,0);
+  else if(obj != block)
+    value = obj;
   else
   {
     value = create_class_instance(base_class);
@@ -663,19 +574,12 @@ void *nyxh_len(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_input(node *state,node *execution_obj,node *block)
+void *nyxh_input(node *state,node *obj,node *block,node *parameters)
 {
   // a.input()
   // a=input()
   // input(a)
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = NULL;
   char *line = CreateEmptyString();
   char c='\n';
@@ -683,13 +587,13 @@ void *nyxh_input(node *state,node *execution_obj,node *block)
   {
     line = AddCharToString(line,c);
   }
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value = node_GetItem(real_parameters,0);
+    value = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value = parent;
+    value = obj;
   }
   else
   {
@@ -704,25 +608,18 @@ void *nyxh_input(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_http_query(node *state,node *execution_obj,node *block)
+void *nyxh_http_query(node *state,node *obj,node *block,node *parameters)
 {
   //returns http query vars as array
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-  
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value = node_GetItem(real_parameters,0);
+    value = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value = parent;
+    value = obj;
   }
   else
   {
@@ -736,25 +633,18 @@ void *nyxh_http_query(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_int(node *state,node *execution_obj,node *block)
+void *nyxh_int(node *state,node *obj,node *block,node *parameters)
 {
   //returns integer of string input
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value2 = parent;
+    value2 = obj;
   }
   else
   {
@@ -776,25 +666,18 @@ void *nyxh_int(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_str(node *state,node *execution_obj,node *block)
+void *nyxh_str(node *state,node *obj,node *block,node *parameters)
 {
   //returns string of integer input
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value2 = parent;
+    value2 = obj;
   }
   else
   {
@@ -816,47 +699,32 @@ void *nyxh_str(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_test(node *state,node *execution_obj,node *block)
+void *nyxh_test(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(real_parameters,0);
+  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
   node *real_value2 = node_GetItemByKey(value2,"value");
   node_SetSint32(real_value,20+node_GetSint32(real_value2));
   return(value);
 }
 
-void *nyxh_open(node *state,node *execution_obj,node *block)
+void *nyxh_open(node *state,node *obj,node *block,node *parameters)
 {
   //returns io stream object
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *filename = NULL;
   node *mode = NULL;
   node *value = create_file_class_object();
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    filename = node_GetItem(real_parameters,0);
-    mode = node_GetItem(real_parameters,1);
+    filename = node_GetItem(parameters,0);
+    mode = node_GetItem(parameters,1);
     node *real_filename = node_GetItemByKey(filename,"value");
     node *real_mode = node_GetItemByKey(mode,"value");
     if(node_GetType(real_filename)==NODE_TYPE_STRING)
@@ -870,38 +738,23 @@ void *nyxh_open(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_close(node *state,node *execution_obj,node *block)
+void *nyxh_close(node *state,node *obj,node *block,node *parameters)
 {
   //close a file
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   long ret = -1;
-  if(parent!=NULL && parent != block)
+  if(obj != block)
   { 
-    /*node *top=parent;
-    printf("close p:%s\n",get_obj_name(top));
-    if(node_GetParent(top)!=NULL)
-    {
-      top=node_GetParent(node_GetParent(top));
-      printf("close n:%s\n",get_obj_name(top));
-    }*/
-    node *fvalue = parent;
+    node *fvalue = obj;
     node *handle = node_GetItemByKey(fvalue,"file_handle");
     if(handle!=NULL)
     {
-      //printf("closing file\n");
       FILE *fhandle = node_GetValue(handle);
       ret = fclose(fhandle);
     }
-    if(strcmp(get_obj_name(parent),"file"))
+    if(strcmp(get_obj_name(obj),"file"))
     {
-      return(parent);
+      return(obj);
     }
   }
   node *value = create_class_instance(base_class);
@@ -912,25 +765,18 @@ void *nyxh_close(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_readall(node *state,node *execution_obj,node *block)
+void *nyxh_readall(node *state,node *obj,node *block,node *parameters)
 {
   //returns string with all file content
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   char *ret = NULL;
-  if(parent!=NULL && parent != block)
+  if(obj != block)
   { 
-    node *fvalue = parent;
+    node *fvalue = obj;
     node *handle = node_GetItemByKey(fvalue,"file_handle");
     if(handle!=NULL)
     {
@@ -949,26 +795,19 @@ void *nyxh_readall(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_writeall(node *state,node *execution_obj,node *block)
+void *nyxh_writeall(node *state,node *obj,node *block,node *parameters)
 {
   //writes string to file 
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  if(parent!=NULL && parent != block && value2 != NULL)
+  if(obj != block && value2 != NULL)
   { 
     node *real_value = node_GetItemByKey(value2,"value");
-    node *fvalue = parent;
+    node *fvalue = obj;
     node *handle = node_GetItemByKey(fvalue,"file_handle");
     if(handle!=NULL)
     {
@@ -984,25 +823,18 @@ void *nyxh_writeall(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_from_json(node *state,node *execution_obj,node *block)
+void *nyxh_from_json(node *state,node *obj,node *block,node *parameters)
 {
   //converts json string to objects
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value2 = parent;
+    value2 = obj;
   }
   else
   {
@@ -1020,25 +852,18 @@ void *nyxh_from_json(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_to_json(node *state,node *execution_obj,node *block)
+void *nyxh_to_json(node *state,node *obj,node *block,node *parameters)
 {
   //converts objects to json string
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value2 = parent;
+    value2 = obj;
   }
   else
   {
@@ -1058,24 +883,17 @@ void *nyxh_to_json(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_import(node *state,node *execution_obj,node *block)
+void *nyxh_import(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value2 = parent;
+    value2 = obj;
   }
   else
   {
@@ -1093,62 +911,43 @@ void *nyxh_import(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_dump(node *state,node *execution_obj,node *block)
+void *nyxh_dump(node *state,node *obj,node *block,node *parameters)
 {
-  //converts state to to json string
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
+  //dumps the whole interpreter state as json
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
-  node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  node *value = NULL;
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
-  { 
-    value2 = parent;
+  else if(obj != block)
+  {
+    value = obj;
   }
   else
-  {
-    value2 = create_class_instance(base_class);
-    reset_obj_refcount(value2);
-    add_garbage(state,value2);
-    set_obj_string(value2,"value","");
+  { 
+    value = create_class_instance(base_class);
+    reset_obj_refcount(value);
+    add_garbage(state,value);
   }
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
-  node *real_value2 = node_GetItemByKey(value2,"value");
   char *json = state_to_json(state);
   node_SetString(real_value,json);
   free(json);
   return(value);
 }
 
-void *nyxh_execute(node *state,node *execution_obj,node *block)
+void *nyxh_execute(node *state,node *obj,node *block,node *parameters)
 {
-  //converts json string to objects
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
+  //execute an external program and returns the output
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    node *command = node_GetItem(real_parameters,0);
+    node *command = node_GetItem(parameters,0);
     node *real_command = node_GetItemByKey(command,"value");
     if(node_GetType(real_command)==NODE_TYPE_STRING)
     {
@@ -1177,22 +976,15 @@ void *nyxh_execute(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_change_working_directory(node *state,node *execution_obj,node *block)
+void *nyxh_change_working_directory(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    node *dir = node_GetItem(real_parameters,0);
+    node *dir = node_GetItem(parameters,0);
     node *real_dir = node_GetItemByKey(dir,"value");
     char *c=node_GetString(real_dir);
     chdir(c);
@@ -1200,15 +992,9 @@ void *nyxh_change_working_directory(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_working_directory(node *state,node *execution_obj,node *block)
+void *nyxh_working_directory(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
@@ -1227,15 +1013,9 @@ void *nyxh_working_directory(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_name(node *state,node *execution_obj,node *block)
+void *nyxh_name(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
@@ -1247,39 +1027,25 @@ void *nyxh_name(node *state,node *execution_obj,node *block)
   return(value);
 }
 
-void *nyxh_sys(node *state,node *execution_obj,node *block)
+void *nyxh_sys(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
   node *value = create_sys_class_object();
   reset_obj_refcount(value);
   add_garbage(state,value);
   return(value);
 }
 
-void *nyxh_eval(node *state,node *execution_obj,node *block)
+void *nyxh_eval(node *state,node *obj,node *block,node *parameters)
 {
-  node *parameters = node_GetItemByKey(execution_obj,"parameters");
-  node *real_parameters = create_obj("parameters");
-  node *exe_obj = node_GetItem(execution_obj,0);
-  char *name = node_GetString(node_GetItemByKey(exe_obj,"name"));
-  node *parent = node_GetParent(node_GetParent(exe_obj));
   node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  prepare_execution_parameters(state,parameters,block,real_parameters);
   node *value2 = NULL;
-  if(node_GetItemsNum(real_parameters))
+  if(node_GetItemsNum(parameters))
   {
-    value2 = node_GetItem(real_parameters,0);
+    value2 = node_GetItem(parameters,0);
   }
-  else if(parent!=NULL && parent != block)
+  else if(obj != block)
   { 
-    value2 = parent;
+    value2 = obj;
   }
   else
   {

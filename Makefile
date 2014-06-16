@@ -17,8 +17,8 @@ endif
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 2
-BUILD = 1874
-DEBUG_BUILD = 2211
+BUILD = 1978
+DEBUG_BUILD = 2315
 
 #-DUSE_MEMORY_DEBUGGING
 CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
@@ -84,13 +84,17 @@ debug: build_inc node_print_debug unit_tests_debug yetii_debug nyxi_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 
+
 clean_all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests yetii nyxi debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
+	@playsound.exe /c/Users/pez2001/Downloads/187404__mazk1985__robot-ready.wav
+
 
 all: node_static node_dynamic build_inc node_print unit_tests yetii nyxi debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
+	@playsound.exe /c/Users/pez2001/Downloads/187404__mazk1985__robot-ready.wav
 
 unit_tests: node_static $(UT_OBJ) 
 	$(CC) $(UT_OBJ) node.a -lm -o unit_tests 
@@ -129,7 +133,7 @@ unit_tests_o: $(NODE_OBJ) $(UT_OBJ)
 	$(CC) $(NODE_OBJ) $(UT_OBJ)  -lm -o unit_tests 
 
 build_inc: $(TOOLS_BUILD_INC_OBJ) 
-	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc
+	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
 
 build_inc_o: $(TOOLS_BUILD_INC_OBJ)
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
@@ -155,14 +159,16 @@ node_dynamic: $(NODE_OBJ)
 	strip node.dll	
 
 %.o: %.c 
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CC) $(CFLAGS) -c -o $@ $< || playsound /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
+
 
 %.do: %.c 
-	$(CC) $(DEBUG_CFLAGS) -c -o $@ $<
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< || playsound /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
 
 
 	
 clean:
+	@playsound /c/Users/pez2001/Downloads/217656__reitanna__knuckles-cracking.wav	
 	rm -f *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
 
 clean_binaries:

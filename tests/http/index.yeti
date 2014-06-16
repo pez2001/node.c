@@ -18,7 +18,7 @@ println("
 </head>
 <body>
 
-<h1>Enter Some Numbers</h1>
+<h1>Enter Some Numbers (Hallo)</h1>
 
 <form action=\"input.yeti\">
   <p>a:<br><input name=\"t1\" type=\"text\" size=\"30\" maxlength=\"30\"></p>

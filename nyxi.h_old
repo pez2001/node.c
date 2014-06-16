@@ -104,7 +104,7 @@ node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj
 node *create_nyx_state(node *base_class);
 
 void prepare_execution_parameters(node *state,node *parameters,node *block,node *output);
-node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block);
+node *execute_obj(node *state,node *execution_obj,node *block,BOOL execute_block);//,BOOL dont_execute_block);
 
 node *search_block_path_for_member(node *block,char *key);
 

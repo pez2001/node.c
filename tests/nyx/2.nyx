@@ -1,10 +1,46 @@
-/*a= -1;
-b= -(1+1);
-c=-1;
-d= 1.4;
-e= - 1 -1;
+/*b=1;*/
+/*func=1;*/
+/*println("func:",func);*/
+/*func(a)={b=a+1;};
+a=func(1);
+println("a:",a," b:",b);
 */
 
+/*
+b=2;
+c=1+func(b);
+println("a:",a," b:",b," c:",c);
+*/
+/*
+c=0;
+b={c=arguments[0]+1;};
+e=b(3);
+println("c:",c," e:"+e);
+*/
+
+/*b=(4+2)*3;*/
+/*b=test(1)+1;*/
+
+
+/*println(test(2)," hallo"," ",1," welt"," ",{"ende"}());*/
+
+b=2;
+println("b:",b);
+
+/*b= (1+2);*/
+/*b= -(1+1);
+g= - 1 -1;
+e= -1;
+c=-1;
+d= 1.4;
+f= -(+1+-1);
+g= 1 + -1;
+h= 1+-1;
+*/
+
+/*println("a:",a);*/
+
+/*
 ?(2==1,{println("true")},{println("false")},0).else({println("executed else")});
 
 if(exp,do)={?(exp,do,{},0)};
@@ -15,7 +51,7 @@ b=open("tests/test_yeti.json","rb").close();
 
 a=open("tests/test_yeti.json","rb").readall().close();
 println(a);
-
+*/
 
 /*a=handler_test(1);*/
 /*println("a:",a,"b:",b,"c:",c,"d:",d);*/

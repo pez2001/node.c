@@ -10,6 +10,8 @@ println("r.firstName:",r.firstName);
 println("r.lastName:",r.lastName);
 println("r.age:",r.age);
 println("combo:"+r.firstName+" "+r.lastName+" is aged "+r.age);
+
+
 t="println(\"changing age:\",r.age);r.age=r.age+1;";
 ev=eval(t)();
 println("r.age:",r.age);
@@ -24,6 +26,10 @@ out.close();
 
 ar=["hi","to","all"];
 println("0: ",ar[0]," 3: ",ar[3]," k:",ar["k"]);
+
+ar2=["hi","to",k="all"];
+println("0: ",ar2[0]," 3: ",ar2[3]," k:",ar2["k"]);
+
 println("name:",sys().name());
 
 println("sys working directory:",sys().working_directory()["path"]);
@@ -31,8 +37,10 @@ println("sys working directory:",sys().working_directory()["path"]);
 
 
 println("ls:",sys().execute("ls -a"));
+
+
 /*sys().change_working_directory("..");
 println("space_race:",sys().execute("space_race"));*/
 /*println("sys dump:",sys().dump());*/
 
-return_value=1;
+return_value=55;
