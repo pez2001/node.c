@@ -893,6 +893,30 @@ node *create_block_obj(node *base_class,node *block)
   return(base);
 }
 
+/*
+void free_execution_obj(node *exe_obj)
+{
+  node *parameters = node_GetItemByKey(exe_obj,"parameters");
+  if(parameters!=NULL)
+  {
+    node_ItemIterationReset(parameters);
+    while(node_ItemIterationUnfinished(parameters))
+    {
+      node *parameter = node_ItemIterate(parameters);
+      if(!strcmp(node_GetKey(parameter),"exe_object"))
+        free_execution_obj(parameter);
+    }
+  }
+  node_ClearItems(parameters);
+  node *sub_exe_obj = node_GetItemByKey(exe_obj,"sub_exe_object");
+  if(sub_exe_obj!=NULL)
+    free_execution_obj(sub_exe_obj);
+  node_Free(parameters,False);
+  node_ClearItems(exe_obj);
+  node_Free(exe_obj,False);
+}
+*/
+
 void add_garbage(node *state,node *obj)
 {
   node *garbage = node_GetItemByKey(state,"garbage");
@@ -922,7 +946,21 @@ void free_garbage(node *state)
   }
   node_ClearItems(garbage);
 }
-
+/*
+node *create_execution_obj(node *method,node *parameters,node *sub_execution_obj)
+{
+  node *base = create_obj("exe_object");
+  node_AddItem(base,method);
+  node_AddItem(base,parameters);
+  if(sub_execution_obj!=NULL)
+  {
+    node_AddItem(base,sub_execution_obj);
+    node_SetKey(sub_execution_obj,"sub_exe_object");
+  }
+  return(base);
+}
+*/
+//node *create_nyx_state(node *nyx_block,node *base_class)
 node *create_nyx_state(node *base_class)
 {
   node *state = create_obj("nyx_state");
@@ -932,9 +970,27 @@ node *create_nyx_state(node *base_class)
   add_obj_kv(state,class_types);
   add_obj_kv(state,garbage);
   add_obj_kv(state,blocks);
+  //add_obj_kv(state,nyx_block);
   add_obj_kv(state,base_class);
   return(state);
 }
+
+/*
+void prepare_execution_parameters(node *state,node *parameters,node *block,node *output)
+{
+  node_ItemIterationReset(parameters);
+  while(node_ItemIterationUnfinished(parameters))
+  {
+    node *token = node_ItemIterate(parameters);
+    if(!strcmp(node_GetKey(token),"exe_object"))
+    {
+      node *sub = execute_obj(state,token,block,False);//,tmp_dont_execute_block);
+      node_AddItem(output,sub);
+    }
+  }
+}
+
+*/
 
 node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block)
 {
@@ -948,6 +1004,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
   {
     if(execute_block)
     {
+      printf("executing block:%x\n",obj);
       node *block_parameters = node_GetItemByKey(obj,"nyx_parameters");
       if(block_parameters!=NULL)
       {
@@ -967,12 +1024,16 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
             node_RemoveItem(parent,sub);
             node_SetParent(sub,NULL);
             dec_obj_refcount(sub);
+            //printf("adding exec sub:%x(rm:%x)\n",sub,node_GetParent(real_parent));
             add_garbage(state,sub);
             value = node_CopyTree(node_GetItem(pars,p_index),True,True);
             reset_obj_refcount(value);
             set_obj_string(value,"name",node_GetString(obj_name));
+            //printf("added par:%x from:%x (%s)\n",value,node_GetItem(real_parameters,p_index),get_obj_name(value));
+            //fflush(stdout);
             node_AddItem(parent,value);
             node_SetParent(value,parent);
+            //node_SetParent(value,node_GetParent(node_GetItem(real_parameters,p_index)));
             inc_obj_refcount(value);
             node *obj_parameters = node_GetItemByKey(sub,"nyx_parameters");
             if(obj_parameters!=NULL)
@@ -981,15 +1042,19 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
               add_obj_kv(value,node_CopyTree(obj_parameters,True,True));
             }
             //TODO anonymous block ?
+            //printf("added exe value(item:%s):%x\n",node_GetString(obj_name),value);
+            //node_PrintTree(value);
           }
           p_index++;
         }
       }
       else
       {
+        //printf("block has no parameters defined\n");
         if(node_GetItemsNum(pars))
         {
           node *base_class = node_GetItemByKey(state,"nyx_object");
+          //printf("but it has arguments defined.\n");
           node *arguments = create_class_instance(base_class);
           set_obj_string(arguments,"name","arguments");
           node *items = create_obj("items");
@@ -1007,6 +1072,8 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
         }
       }
       value = evaluate_block_instance(state,obj);
+      //printf("returning:\n");
+      //node_PrintTree(value);
       node *obj_members = node_GetItemByKey(obj,"members");
       node *arguments = node_GetItemByKey(obj_members,"arguments");
       if(arguments!=NULL)
@@ -1074,29 +1141,46 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   while(node_ItemIterationUnfinished(statement))
   {
     node *token = node_ItemIterate(statement);
+    if(node_GetType(token)==NODE_TYPE_STRING)
+      printf("token:[%s:%s]\n",node_GetKey(token),node_GetValue(token));
+    else if(node_GetType(token)==NODE_TYPE_SINT32)
+      printf("token:[%s:%d]\n",node_GetKey(token),node_GetSint32(token));
+    fflush(stdout);
+    
+    
     if(!strcmp(node_GetKey(token),"nyx_parameters"))
     {
+      printf("found nyx_parameters\n");
+      fflush(stdout);
       node_ItemIterationReset(token);
       while(node_ItemIterationUnfinished(token))
       {
         node *parameter_token = node_ItemIterate(token);
+        //node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL);
+        //node_AddItem(parameters,sub_obj);
         actual_obj = evaluate_statement(state,parameter_token,block,0,NULL);
+        //node_AddItem(parameters,actual_obj);
       }
 
       if(use_preop!=NULL)
       {
+        printf("got some preop for:%s (%s)\n",get_obj_name(actual_obj),use_preop);
         char *preop_prefixed=StringCat("PRE",use_preop);
+        printf("searching for:[%s]\n",preop_prefixed);
         node *found_obj = get_member_part(actual_obj,preop_prefixed);
         if(found_obj!=NULL)
         {
+          printf("found pre op prefixed function\n");
           actual_obj = execute_obj(state,found_obj,block,NULL,False);
         }
         free(preop_prefixed);
         free(use_preop);
         use_preop=NULL;
       }
+
     }
-    else if(prev_token!=NULL && !strcmp(node_GetKey(prev_token),"val") && !strcmp(node_GetKey(token),"nyx_array"))
+    else 
+    if(prev_token!=NULL && !strcmp(node_GetKey(prev_token),"val") && !strcmp(node_GetKey(token),"nyx_array"))
     {
       node *key_obj = evaluate_statement(state,node_GetItem(token,0),block,0,NULL);
       //key_obj = execute_obj(state,key_obj,block,True);
@@ -1164,6 +1248,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       node *child = create_class_instance(base_class);
       set_obj_string(child,"value",node_GetValue(token));
       add_garbage(state,child);
+      //printf("created str:%x (%s)\n",child,node_GetString(token));
       actual_obj = child;
     }
     else if(!strcmp(node_GetKey(token),"val"))
@@ -1182,6 +1267,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             add_member(actual_obj,child);
             inc_obj_refcount(child);
             actual_obj = child;
+            //printf("created:%x,%s\n",actual_obj,get_obj_name(actual_obj));
+            //fflush(stdout);
             node *peek = node_ItemPeek(statement);
             if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
             {
@@ -1193,6 +1280,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           }
           else
           {
+            //printf("found:%x,%s\n",found_obj,get_obj_name(found_obj));
+            //fflush(stdout);
             //repeat until no parameter blocks left
             while((node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters")) )
             {
@@ -1214,7 +1303,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 }
                 actual_obj = execute_obj(state,found_obj,block,exe_parameters,False);
               }
-              else
+              else// if(!strcmp(get_obj_type(actual_obj),"nyx_il_block"))
               {
                 node *peek = node_ItemPeek(statement);
                 if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
@@ -1264,13 +1353,18 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         set_obj_int(child,"value",node_GetSint32(token));
         actual_obj = child;
         add_garbage(state,child);
+        //printf("created int:%x (%d)\n",actual_obj,node_GetSint32(token));
+        //fflush(stdout);
       }
       if(use_preop!=NULL)
       {
+        printf("got some preop for:%s (%s)\n",get_obj_name(actual_obj),use_preop);
         char *preop_prefixed=StringCat("PRE",use_preop);
+        printf("searching for:[%s]\n",preop_prefixed);
         node *found_obj = get_member_part(actual_obj,preop_prefixed);
         if(found_obj!=NULL)
         {
+          printf("found pre op prefixed function\n");
           actual_obj = execute_obj(state,found_obj,block,NULL,False);
         }
         free(preop_prefixed);
@@ -1278,48 +1372,307 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         use_preop=NULL;
       }
     }
+    /*
+    else if(!strcmp(node_GetKey(token),"ops"))
+    {
+      /*if(!strcmp(node_GetString(token),"."))
+      {
+        //printf("sub id following\n");
+        //
+      }
+      else*/
+      //{
+        //if(prev_token!=NULL && !strcmp(node_GetKey(prev_token),"ops"))
+        //  printf("no val for ops\n");
+        //char *found_preop=NULL;
+/*        if(prev_token!=NULL)
+        {
+          if(!strcmp(node_GetKey(prev_token),"ops"))
+          {
+            printf("op without val\n");
+            use_preop = StringCopy(node_GetString(token));
+            //index++;
+          }
+        }
+        else
+        {
+          printf("op without val\n");
+          use_preop = StringCopy(node_GetString(token));
+          //index++;
+        }
+
+        node *found_obj = get_member_part(actual_obj,node_GetValue(token));
+        if(found_obj!=NULL && use_preop == NULL)
+        {
+          //printf("found obj:%x\n",found_obj);
+          //node_PrintTree(actual_obj);
+          long token_len = strlen(node_GetValue(token));
+          node *found_name = get_obj_name(found_obj);
+          if(strlen(found_name)<token_len)
+          {
+            //printf("found only part of ops:%s of (%s)\n",found_name,node_GetValue(token));
+            long found_name_len=strlen(found_name);
+            //found_preop=Substring(node_GetValue(token),found_name_len,token_len-found_name_len);
+            use_preop=Substring(node_GetValue(token),found_name_len,token_len-found_name_len);
+            //printf("preop:[%s]\n",found_preop);
+            printf("1.preop:[%s]\n",use_preop);
+          }
+
+          /*node *peek = node_ItemPeek(statement);
+          if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
+          {
+            printf("found dupe brackets(%s)\n",node_GetString(token));
+          }*/
+/*          
+          node *peek = node_ItemPeek(statement);
+          if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
+          {
+            printf("1.found dupe brackets()\n");
+            printf("dupe preop:[%s]\n",use_preop);
+            node *exe_parameters = create_obj("parameters");
+            node *token = node_ItemIterate(statement);
+            node_ItemIterationReset(token);
+            while(node_ItemIterationUnfinished(token))
+            {
+              node *parameter_token = node_ItemIterate(token);
+              node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL);
+              node_AddItem(exe_parameters,sub_obj);
+            }
+            index++;
+            if(use_preop!=NULL)
+            {
+              printf("2.dupe preop:[%s]\n",use_preop);
+              //found_obj = get_member_part(found_obj,use_preop);
+            }
+            printf("2.dupe before execute:%x, %s\n",found_obj,get_obj_name(found_obj));
+            found_obj = execute_obj(state,found_obj,block,exe_parameters,False);
+            printf("2.dupe after execute:%x, %s\n",found_obj,get_obj_name(found_obj));
+            //node_PrintTree(found_obj);
+            //node_Free(exe_parameters,True);
+            /*node *peek_op = node_ItemPeek(statement);
+            if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
+            {
+
+            }*/
+/*
+            node *peek_op = node_ItemPeek(statement);
+            if(peek_op!=NULL && !strcmp(node_GetKey(peek_op),"ops"))
+            {
+              node *op_token = node_ItemIterate(statement);
+              found_obj = get_member_part(found_obj,node_GetValue(op_token));
+              if(found_obj!=NULL)
+              {
+                printf("found bracket op:%s\n",node_GetString(peek_op));
+                long token_len = strlen(node_GetValue(op_token));
+                node *found_name = get_obj_name(found_obj);
+                if(strlen(found_name)<token_len)
+                {
+                  long found_name_len=strlen(found_name);
+                  //found_preop=Substring(node_GetValue(op_token),found_name_len,token_len-found_name_len);
+                  //printf("preop:[%s]\n",found_preop);
+                  use_preop=Substring(node_GetValue(op_token),found_name_len,token_len-found_name_len);
+                  printf("preop:[%s]\n",use_preop);
+                }
+              }
+              index++;
+            }
+            if(index+1<node_GetItemsNum(statement))
+            {
+              //printf("getting stuff after dupe brackets op:%s\n",found_preop);
+              node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
+              //node *sub_obj = evaluate_statement(state,statement,block,index+1,found_preop);
+              //node *sub_obj = evaluate_statement(state,statement,block,index+1,NULL);
+              //node_PrintTree(sub_obj);
+              node_AddItem(parameters,sub_obj);
+            }
+          }
+          else 
+          if(index+1<node_GetItemsNum(statement))
+          {
+            //printf("getting stuff after op:%s\n",found_preop);
+            node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
+            //node *sub_obj = evaluate_statement(state,statement,block,index+1,found_preop);
+            //node *sub_obj = evaluate_statement(state,statement,block,index+1,NULL);
+            node_AddItem(parameters,sub_obj);
+          }
+          else
+          {
+            //if(found_preop!=NULL)
+            //  free(found_preop);
+            if(use_preop!=NULL)
+            {
+              free(use_preop);
+              use_preop=NULL;
+            }
+
+          }
+          actual_obj = found_obj;
+        }
+    }*/
     else if(!strcmp(node_GetKey(token),"ops"))
     {
         if(prev_token!=NULL)
         {
           if(!strcmp(node_GetKey(prev_token),"ops"))
           {
+            printf("op without val\n");
             use_preop = StringCopy(node_GetString(token));
+            //index++;
           }
         }
         else
         {
+          printf("op without val\n");
           use_preop = StringCopy(node_GetString(token));
+          //index++;
         }
 
         node *found_obj = get_member_part(actual_obj,node_GetValue(token));
         if(found_obj!=NULL && use_preop == NULL)
         {
+          //printf("found obj:%x\n",found_obj);
+          //node_PrintTree(actual_obj);
           long token_len = strlen(node_GetValue(token));
           node *found_name = get_obj_name(found_obj);
           if(strlen(found_name)<token_len)
           {
+            //printf("found only part of ops:%s of (%s)\n",found_name,node_GetValue(token));
             long found_name_len=strlen(found_name);
+            //found_preop=Substring(node_GetValue(token),found_name_len,token_len-found_name_len);
             use_preop=Substring(node_GetValue(token),found_name_len,token_len-found_name_len);
+            //printf("preop:[%s]\n",found_preop);
+            printf("1.preop:[%s]\n",use_preop);
           }
 
           if(index+1<node_GetItemsNum(statement))
           {
+            //printf("getting stuff after dupe brackets op:%s\n",found_preop);
             node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
+            //node *sub_obj = evaluate_statement(state,statement,block,index+1,found_preop);
+            //node *sub_obj = evaluate_statement(state,statement,block,index+1,NULL);
+            //node_PrintTree(sub_obj);
             node_AddItem(parameters,sub_obj);
           }
+
+          
+          /*
+          node *peek = node_ItemPeek(statement);
+          if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
+          {
+            printf("1.found dupe brackets()\n");
+            printf("dupe preop:[%s]\n",use_preop);
+            node *exe_parameters = create_obj("parameters");
+            node *token = node_ItemIterate(statement);
+            node_ItemIterationReset(token);
+            while(node_ItemIterationUnfinished(token))
+            {
+              node *parameter_token = node_ItemIterate(token);
+              node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL);
+              node_AddItem(exe_parameters,sub_obj);
+            }
+            index++;
+            if(use_preop!=NULL)
+            {
+              printf("2.dupe preop:[%s]\n",use_preop);
+              //found_obj = get_member_part(found_obj,use_preop);
+            }
+            printf("2.dupe before execute:%x, %s\n",found_obj,get_obj_name(found_obj));
+            found_obj = execute_obj(state,found_obj,block,exe_parameters,False);
+            printf("2.dupe after execute:%x, %s\n",found_obj,get_obj_name(found_obj));
+            //node_PrintTree(found_obj);
+            //node_Free(exe_parameters,True);
+
+            node *peek_op = node_ItemPeek(statement);
+            if(peek_op!=NULL && !strcmp(node_GetKey(peek_op),"ops"))
+            {
+              node *op_token = node_ItemIterate(statement);
+              found_obj = get_member_part(found_obj,node_GetValue(op_token));
+              if(found_obj!=NULL)
+              {
+                printf("found bracket op:%s\n",node_GetString(peek_op));
+                long token_len = strlen(node_GetValue(op_token));
+                node *found_name = get_obj_name(found_obj);
+                if(strlen(found_name)<token_len)
+                {
+                  long found_name_len=strlen(found_name);
+                  //found_preop=Substring(node_GetValue(op_token),found_name_len,token_len-found_name_len);
+                  //printf("preop:[%s]\n",found_preop);
+                  use_preop=Substring(node_GetValue(op_token),found_name_len,token_len-found_name_len);
+                  printf("preop:[%s]\n",use_preop);
+                }
+              }
+              index++;
+            }
+            if(index+1<node_GetItemsNum(statement))
+            {
+              //printf("getting stuff after dupe brackets op:%s\n",found_preop);
+              node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
+              //node *sub_obj = evaluate_statement(state,statement,block,index+1,found_preop);
+              //node *sub_obj = evaluate_statement(state,statement,block,index+1,NULL);
+              //node_PrintTree(sub_obj);
+              node_AddItem(parameters,sub_obj);
+            }
+          }
+          else 
+          if(index+1<node_GetItemsNum(statement))
+          {
+            //printf("getting stuff after op:%s\n",found_preop);
+            node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
+            //node *sub_obj = evaluate_statement(state,statement,block,index+1,found_preop);
+            //node *sub_obj = evaluate_statement(state,statement,block,index+1,NULL);
+            node_AddItem(parameters,sub_obj);
+          }
+          else
+          {
+            //if(found_preop!=NULL)
+            //  free(found_preop);
+            if(use_preop!=NULL)
+            {
+              free(use_preop);
+              use_preop=NULL;
+            }
+
+          }
+          */
           actual_obj = found_obj;
         }
         else if(index+1<node_GetItemsNum(statement))
         {
+          //printf("getting stuff after op:%s\n",found_preop);
           node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
+          //node *sub_obj = evaluate_statement(state,statement,block,index+1,found_preop);
+          //node *sub_obj = evaluate_statement(state,statement,block,index+1,NULL);
           node_AddItem(parameters,sub_obj);
         }
+
     }
     prev_token = token;
     index++;    
   }
+  //node *exe_obj = create_execution_obj(actual_obj,parameters,sub_exe_obj);
+  //return(exe_obj);
+  /*
+  if(use_preop!=NULL)
+  {
+    //node_PrintTree(actual_obj);
+    printf("got some preop for:%x, %s (%s)\n",actual_obj,get_obj_name(actual_obj),use_preop);
+    char *preop_prefixed=StringCat("PRE",use_preop);
+    printf("searching for:[%s]\n",preop_prefixed);
+    node *found_obj = get_member_part(actual_obj,preop_prefixed);
+    if(found_obj!=NULL)
+    {
+      printf("found pre op prefixed function:%x\n",found_obj);
+      actual_obj = execute_obj(state,found_obj,block,NULL,False);
+      
+    }
+    free(preop_prefixed);
+    free(use_preop);
+    use_preop=NULL;
+  }
+  */
   actual_obj = execute_obj(state,actual_obj,block,parameters,False);
+  printf("ev returning:%x\n",actual_obj);
+
   return(actual_obj);
 }
 

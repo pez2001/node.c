@@ -291,8 +291,6 @@ void *nyxh_assign(node *state,node *obj,node *block,node *parameters)
   reset_obj_refcount(value);
   set_obj_string(value,"name",node_GetString(obj_name));
   node_AddItem(parent,value);
-  printf("assigned:%x old:%x (%s)\n",value,parent,get_obj_name(value));
-  fflush(stdout);
   inc_obj_refcount(value);
   node_SetParent(value,parent);
   node *obj_parameters = node_GetItemByKey(obj,"nyx_parameters");
