@@ -1,0 +1,33 @@
+read_players()=
+{
+println("querying aluria");
+connected=1;
+println("connecting");
+sock=socket.open(socket.SOCK_STREAM);
+connected=sock.connect("openstrike.de",80);/*.else({println("restarting reading");restart(1)});*/
+println("connected:",connected);
+sock.write("GET /aluria/client/clients.json HTTP/1.1\r\nHost: openstrike.de\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
+println("reading reading first chunk");
+timeouts=1000;
+r=sock.read();
+c=r;
+println("reading next chunks");
+?({len(r)||timeouts},{r=sock.read();c=c+r;?(len(r)==0,{print(".");timeouts=timeouts-1},{},0);},{},1);
+sock.close();
+println("closed connection");
+/*println("answer:",c);*/
+j=http.parse_answer(c)["body"].from_json();
+println("bootloader[0].file:",j.bootloader[0].file);
+};
+
+
+??(i=0,{i<10},{read_players();i=i+1;println("i:",i)},{},1);
+
+read_players();
+read_players();
+
+println("finish");
+
+
+
+

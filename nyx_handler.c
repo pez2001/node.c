@@ -447,7 +447,7 @@ node *nyxh_assign(node *state,node *obj,node *block,node *parameters)
   node_AddItem(parent,value);
   inc_obj_refcount(value);
   node_SetParent(value,parent);
-  printf("assigning:[%s]\n",node_GetString(obj_name));
+  //printf("assigning:[%s]\n",node_GetString(obj_name));
   node *obj_parameters = node_GetItemByKey(obj,"nyx_parameters");
   if(obj_parameters!=NULL)
   {
@@ -481,11 +481,13 @@ node *nyxh_print(node *state,node *obj,node *block,node *parameters)
         {
           node *item = node_ItemIterate(items);
           node_Print(node_GetItemByKey(item,"value"),False,False);
+          fflush(stdout);
         } 
       }
       else
       {
         node_Print(node_GetItemByKey(token,"value"),False,False);
+        fflush(stdout);
       }
     }      
   }
@@ -503,6 +505,7 @@ node *nyxh_println(node *state,node *obj,node *block,node *parameters)
 {
   node *ret = nyxh_print(state,obj,block,parameters);
   printf("\n");
+  fflush(stdout);
   return(ret);
 }
 
@@ -534,12 +537,16 @@ node *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
 
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
-  add_garbage(state,value);
 
   node *expression_block = node_GetItem(parameters,0);
   node *true_block = node_GetItem(parameters,1);
   node *false_block = node_GetItem(parameters,2);
   node *loop_exe = node_GetItem(parameters,3);
+
+  inc_obj_refcount(expression_block);
+  inc_obj_refcount(true_block);
+  inc_obj_refcount(false_block);
+
   node *loop = execute_obj(state,loop_exe,block,NULL,True);
   node *loop_value = node_GetItemByKey(loop,"value");
   long lv = node_GetSint32(loop_value);
@@ -549,35 +556,10 @@ node *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
     while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
     {
       execute_obj(state,true_block,block,NULL,True);
-      node *block_flag=node_GetItemByKey(state,"block_flag");
-      if(block_flag!=NULL) //MOVE TO sep func
-      {
-        char *bf = node_GetString(block_flag);
-        if(!strcmp(bf,"restart"))
-        {
-          set_obj_string(state,"block_flag","");
-        } 
-        else if(!strcmp(bf,"continue"))
-        {
-          set_obj_string(state,"block_flag","");
-        } 
-        else if(!strcmp(bf,"break"))
-        {
-          node *block_break_count = node_GetItemByKey(state,"block_break_count");
-          long count = node_GetSint32(block_break_count);
-          if(!(count-1))
-          {
-            set_obj_int(state,"block_break_count",0);
-            set_obj_string(state,"block_flag","");
-            break;
-          }
-          else
-          {
-            set_obj_int(state,"block_break_count",count-1);
-            break;
-          }
-        } 
-      }
+      char *block_flag=check_block_flag(state);
+      if(!strcmp(block_flag,"break"))
+        break;
+      free(block_flag);
       exp_obj = execute_obj(state,expression_block,block,NULL,True);
     }
     execute_obj(state,false_block,block,NULL,True);
@@ -593,6 +575,15 @@ node *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
     else
       execute_obj(state,false_block,block,NULL,True);
   }
+
+  dec_obj_refcount(expression_block);
+  dec_obj_refcount(true_block);
+  dec_obj_refcount(false_block);
+  add_garbage(state,expression_block);
+  add_garbage(state,true_block);
+  add_garbage(state,false_block);
+
+  add_garbage(state,value);
   return(value);
 }
 
@@ -602,7 +593,6 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
   node *base_class = node_GetItemByKey(state,"nyx_object");
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
-  add_garbage(state,value);
 
   node *init_block = node_GetItem(parameters,0);
   node *expression_block = node_GetItem(parameters,1);
@@ -610,6 +600,11 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
   node *false_block = node_GetItem(parameters,3);
   node *loop_exe = node_GetItem(parameters,4);
   node *loop = execute_obj(state,loop_exe,block,NULL,True);
+  inc_obj_refcount(init_block);
+  inc_obj_refcount(expression_block);
+  inc_obj_refcount(true_block);
+  inc_obj_refcount(false_block);
+
   execute_obj(state,init_block,block,NULL,True);
   node *loop_value = node_GetItemByKey(loop,"value");
   long lv = node_GetSint32(loop_value);
@@ -619,35 +614,12 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
     while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
     {
       execute_obj(state,true_block,block,NULL,True);
-      node *block_flag=node_GetItemByKey(state,"block_flag");
-      if(block_flag!=NULL)
-      {
-        char *bf = node_GetString(block_flag);
-        if(!strcmp(bf,"restart"))
-        {
-          set_obj_string(state,"block_flag","");
-        } 
-        else if(!strcmp(bf,"continue"))
-        {
-          set_obj_string(state,"block_flag","");
-        } 
-        else if(!strcmp(bf,"break"))
-        {
-          node *block_break_count = node_GetItemByKey(state,"block_break_count");
-          long count = node_GetSint32(block_break_count);
-          if(!(count-1))
-          {
-            set_obj_int(state,"block_break_count",0);
-            set_obj_string(state,"block_flag","");
-            break;
-          }
-          else
-          {
-            set_obj_int(state,"block_break_count",count-1);
-            break;
-          }
-        } 
-      }
+      char *block_flag=check_block_flag(state);
+      if(!strcmp(block_flag,"break"))
+        break;
+      else if(!strcmp(block_flag,"restart"))
+        execute_obj(state,init_block,block,NULL,True);
+      free(block_flag);
       exp_obj = execute_obj(state,expression_block,block,NULL,True);
     }
     execute_obj(state,false_block,block,NULL,True);
@@ -661,6 +633,20 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
     else
       execute_obj(state,false_block,block,NULL,True);
   }
+
+  dec_obj_refcount(init_block);
+  dec_obj_refcount(expression_block);
+  dec_obj_refcount(true_block);
+  dec_obj_refcount(false_block);
+  add_garbage(state,init_block);
+  add_garbage(state,expression_block);
+  add_garbage(state,true_block);
+  add_garbage(state,false_block);
+
+  add_garbage(state,value);
+  //printf("returning :%x\n",value);
+  //node_PrintTree(value);
+  //fflush(stdout);
   return(value);
 }
 
@@ -688,6 +674,19 @@ node *nyxh_restart(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = node_GetItemByKey(state,"nyx_object");
   set_obj_string(state,"block_flag","restart");
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *count = node_GetItem(parameters,0);
+    node *real_value = node_GetItemByKey(count,"value");
+    set_obj_int(state,"block_break_count",node_GetSint32(real_value));
+    //printf("called restart:%d\n",node_GetSint32(real_value));
+    //printf("block_flag:[%s]\n",node_GetString(node_GetItemByKey(state,"block_flag")));
+  }
+  else
+  {
+    set_obj_int(state,"block_break_count",1);
+  }
+
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
@@ -698,6 +697,16 @@ node *nyxh_continue(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = node_GetItemByKey(state,"nyx_object");
   set_obj_string(state,"block_flag","continue");
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *count = node_GetItem(parameters,0);
+    node *real_value = node_GetItemByKey(count,"value");
+    set_obj_int(state,"block_break_count",node_GetSint32(real_value));
+  }
+  else
+  {
+    set_obj_int(state,"block_break_count",1);
+  }
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
@@ -1434,7 +1443,7 @@ node *nyxh_eval(node *state,node *obj,node *block,node *parameters)
   node *nyx_block = node_GetItemByKey(nyx_stream,"nyx_block");
   node_RemoveItem(nyx_stream,nyx_block);
   node_FreeTree(nyx_stream);
-  node *value = create_block_obj(base_class,nyx_block);
+  node *value = create_block_class_object(base_class,nyx_block);
   set_obj_node(value,"anonymous_block_parent",block);
   node_SetParent(value,NULL); //needed ?
   reset_obj_refcount(value);
@@ -1589,7 +1598,7 @@ node *nyxh_socket_connect(node *state,node *obj,node *block,node *parameters)
         r = getaddrinfo(host,sport,&hints,&result);
         if(r==0)
         {
-          //printf("host:%s found!:%d\n",host,sock);
+          printf("host:%s found!:%d\n",host,sock);
           struct addrinfo *test=result;
           while(test!=NULL)
           {
@@ -1609,7 +1618,7 @@ node *nyxh_socket_connect(node *state,node *obj,node *block,node *parameters)
             }*/             
             if(connect(sock,test->ai_addr,test->ai_addrlen)!=-1)
             {
-              //printf("connected to host\n");
+              printf("connected to host\n");
               unsigned long one = 1;
               if(ioctlsocket(sock,FIONBIO,&one)==SOCKET_ERROR)
               {
@@ -1720,6 +1729,7 @@ node *nyxh_socket_write(node *state,node *obj,node *block,node *parameters)
     {
       int socket_handle = (int)node_GetSint32(nsocket_handle);
       char *content = node_GetString(real_value);
+      //printf("sending:[%s]\n",content);
       long len = strlen(content);
       int data_send = 0;
       int num = 0;

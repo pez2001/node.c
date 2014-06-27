@@ -128,6 +128,8 @@ node *create_block_obj(node *base_class,node *block);
 
 node *create_nyx_state(node *base_class);
 
+char *check_block_flag(node *state);
+
 
 node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block);
 

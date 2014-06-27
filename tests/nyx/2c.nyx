@@ -1,0 +1,4 @@
+b=10;
+func(a)={c=12;b=a+1;};
+v=1+test(1)+func(1);
+println("b:",b," v:",v);

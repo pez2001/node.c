@@ -1,0 +1,4 @@
+i=0;
+?({i<3},{println("hallo:",i);i=i+1},{println("ende")},1);
+println("finished");
+r=100;

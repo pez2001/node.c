@@ -1,10 +1,12 @@
 read_file()=
 {
- /*f=test(1);*/
-f=open("tests/nyx/3.nyx","rb");
+ 
+ f=open("tests/nyx/3.nyx","rb");
  println("querying file");
- /*f.close();
- r=1;*/
+ f.close();
+ r=1;
+ 
+ {println("hi")}();
 };
 
 println("finish");
