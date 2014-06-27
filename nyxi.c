@@ -1634,58 +1634,7 @@ node *evaluate_block(node *state,node *block)
   node *block_class_instance = create_block_class_object(base_class,block);
   node *blocks = node_GetItemByKey(state,"blocks");
   add_obj_kv(blocks,block_class_instance);
-  return(evaluate_block_instance(state,block_class_instance));
-  /*node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");
-  if(!node_GetItemsNum(il_block))
-  {
-      node *base_class = node_GetItemByKey(state,"nyx_object");
-      ret = create_class_instance(base_class);
-      reset_obj_refcount(ret);
-      add_garbage(state,ret);
-  }
-  else
-  {
-    node_ItemIterationReset(il_block);
-    while(node_ItemIterationUnfinished(il_block))
-    {
-      node *nyx_statement = node_ItemIterate(il_block);
-      ret = evaluate_statement(state,nyx_statement,block_class_instance,0,NULL);
-      if(!node_ItemIterationUnfinished(il_block))
-      {
-        //node_PrintTree(block_class_instance);
-        ret=node_CopyTree(ret,True,True);
-        node_SetParent(ret,NULL);
-        reset_obj_refcount(ret);
-        advance_garbage(state);
-        free_garbage(state);
-        return(ret);
-      }
-      char *block_flag=check_block_flag(state);
-      //printf("block_flag:[%s] %x\n",block_flag,block_flag);
-      if(!strcmp(block_flag,"break"))
-      {
-        //node_FreeTree(block_class_instance);
-        free(block_flag);
-        ret=node_CopyTree(ret,True,True);
-        node_SetParent(ret,NULL);
-        reset_obj_refcount(ret);
-        advance_garbage(state);
-        free_garbage(state);
-        return(ret);
-      }
-      else if(!strcmp(block_flag,"restart"))
-        node_ItemIterationReset(il_block);
-      else if(!strcmp(block_flag,"continue"))
-      {
-        long itindex = node_GetItemIterationIndex(il_block);
-        if(itindex+1<node_GetItemsNum(il_block))
-          node_SetItemIterationIndex(il_block,itindex+1);
-      }
-      free(block_flag);
-      free_garbage(state);
-    }
-  }
-  return(ret);*/
+  return(evaluate_block_instance_in(state,block_class_instance,block_class_instance));
 }
 
 node *evaluate_block_in(node *state,node *block,node *master_block)
@@ -1696,114 +1645,11 @@ node *evaluate_block_in(node *state,node *block,node *master_block)
   node *blocks = node_GetItemByKey(state,"blocks");
   add_obj_kv(blocks,block_class_instance);
   return(evaluate_block_instance_in(state,block_class_instance,master_block));
-/*  node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");
-  if(!node_GetItemsNum(il_block))
-  {
-      node *base_class = node_GetItemByKey(state,"nyx_object");
-      ret = create_class_instance(base_class);
-      reset_obj_refcount(ret);
-      add_garbage(state,ret);
-  }
-  else
-  {
-    node_ItemIterationReset(il_block);
-    while(node_ItemIterationUnfinished(il_block))
-    {
-      node *nyx_statement = node_ItemIterate(il_block);
-      node *obj = evaluate_statement(state,nyx_statement,master_block,0,NULL);
-      if(!node_ItemIterationUnfinished(il_block))
-      {
-        ret=node_CopyTree(obj,True,True);
-        free_garbage(state);
-        return(ret);
-      }
-      char *block_flag=check_block_flag(state);
-      if(!strcmp(block_flag,"break"))
-      {
-        //node_FreeTree(block_class_instance);
-        free(block_flag);
-        return(ret);
-      }
-      else if(!strcmp(block_flag,"restart"))
-        node_ItemIterationReset(il_block);
-      else if(!strcmp(block_flag,"continue"))
-      {
-        long itindex = node_GetItemIterationIndex(il_block);
-        if(itindex+1<node_GetItemsNum(il_block))
-          node_SetItemIterationIndex(il_block,itindex+1);
-      }
-      free(block_flag);
-      free_garbage(state);
-    }
-  }
-  return(ret);*/
 }
 
 node *evaluate_block_instance(node *state,node *block_class_instance)
 {
   return(evaluate_block_instance_in(state,block_class_instance,block_class_instance));
- /*
-  node *ret = NULL;
-  node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");
-  if(!node_GetItemsNum(il_block))
-  {
-      node *base_class = node_GetItemByKey(state,"nyx_object");
-      ret = create_class_instance(base_class);
-      reset_obj_refcount(ret);
-      add_garbage(state,ret);
-  }
-  else
-  {
-    node_ItemIterationReset(il_block);
-    while(node_ItemIterationUnfinished(il_block))
-    {
-      node *nyx_statement = node_ItemIterate(il_block);
-      ret = evaluate_statement(state,nyx_statement,block_class_instance,0,NULL);
-      if(!node_ItemIterationUnfinished(il_block))
-      {
-        //node_PrintTree(block_class_instance);
-        //ret=node_CopyTree(ret,True,True);
-        //ret=node_CopyTree(ret,True,True);
-        //node_SetParent(ret,NULL);
-        //reset_obj_refcount(ret);
-        free_garbage(state);
-        advance_garbage(state);
-        //add_garbage(state,ret);
-        return(ret);
-      }
-      char *block_flag=check_block_flag(state);
-      if(!strcmp(block_flag,"break"))
-      {
-        //node_FreeTree(block_class_instance);
-        //ret=node_CopyTree(ret,True,True);
-        //node_SetParent(ret,NULL);
-        //reset_obj_refcount(ret);
-        free_garbage(state);
-        advance_garbage(state);
-        //add_garbage(state,ret);
-        free(block_flag);
-        return(ret);
-      }
-      else if(!strcmp(block_flag,"restart"))
-      {
-        node_ItemIterationReset(il_block);
-      }
-      else if(!strcmp(block_flag,"continue"))
-      {
-        long itindex = node_GetItemIterationIndex(il_block);
-        if(itindex+1<node_GetItemsNum(il_block))
-          node_SetItemIterationIndex(il_block,itindex+1);
-      }
-      free(block_flag);
-      free_garbage(state);
-    }
-  }
-  if(ret==NULL)
-  {
-    printf("eval return NULL\n");
-  }
-  return(ret);
-  */
 }
 
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block)
@@ -1853,7 +1699,7 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
   return(ret);
 }
 
-node *call_function(node *state,char *name,node *parameters)
+node *call_function(node *state,char *name,node *parameters)//TODO only searches first master block
 {
   node *ret=NULL;
   node *blocks = node_GetItemByKey(state,"blocks");
