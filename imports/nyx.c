@@ -159,7 +159,7 @@ int nyx_is_in_key_space(char c)
     return(1);
   if(c>=97 && c<=122) /*a to z*/
     return(1);
-  if(c==38 || c==95) /* & */
+  if(c==95) /* _ , */   //c==38=& 
     return(1);
   return(0);
 }

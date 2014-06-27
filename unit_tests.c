@@ -105,7 +105,6 @@ void ptr_tests(void)
 void ptr_tests2(void)
 {
   printf("testing ptr list functions 2\n");
-  int r=0;
   list *p = list_Create(0, 0);
   list_Push(p, (void*)1);
   list_Push(p, (void*)2);
@@ -116,8 +115,8 @@ void ptr_tests2(void)
     printf("%d ", (int)list_Get(p,i));
   printf("\n");
 
-  r = (int)list_Remove(p, 0);
-  r = (int)list_Remove(p, 1);
+  list_Remove(p, 0);
+  list_Remove(p, 1);
   for(unsigned int i = 0; i < list_GetLen(p); i++)
     printf("%d ", list_Get(p,i));
   printf("\n");
@@ -149,6 +148,11 @@ void node_tests(void)
   node_SetString(n3,"memory");
   node_AddItem(n,n3);
 
+  node *n4 = node_Create();
+  node_SetKey(n4,"tales");
+  node_SetString(n4,"of the sea");
+  node_InsertItem(n,n4,0);
+  node_PrintTree(n);
 
 
   node *query = node_GetItemByKey(n,"version");
@@ -163,8 +167,6 @@ void node_tests(void)
 
 
   node_Free(n,True);
-  node_Free(n2,True);
-  node_Free(n3,True);
 
 
   printf("node tests thru\n");
@@ -207,7 +209,6 @@ void json_speed_tests(void)
   mem_Close();
   #endif
   printf("json speed tests thru\n");
-
 }
 
 void json_tests(void)
@@ -448,15 +449,15 @@ void hashing_tests(void)
   #endif
 }
 
-void yeti_tests(void)
+void nyx_tests(void)
 {
-  printf("yeti tests\n");
+  printf("nyx tests\n");
   #ifdef USE_MEMORY_DEBUGGING
   mem_Init();
   #endif
   
   printf("loading test_block2.yeti\n");
-  node *root = yeti_LoadFile("tests/test_block2.yeti");
+  node *root = nyx_LoadFile("tests/test_block2.yeti");
   if(root!=NULL)
   {
     printf("test_block2.yeti node tree:\n");
@@ -466,7 +467,7 @@ void yeti_tests(void)
 
 
   printf("loading test.yeti\n");
-  root = yeti_LoadFile("tests/test.yeti");
+  root = nyx_LoadFile("tests/test.yeti");
   if(root!=NULL)
   {
     printf("test.yeti node tree:\n");
@@ -475,7 +476,7 @@ void yeti_tests(void)
   }
   
   printf("loading test_comment.yeti\n");
-  root = yeti_LoadFile("tests/test_comment.yeti");
+  root = nyx_LoadFile("tests/test_comment.yeti");
   if(root!=NULL)
   {
     printf("test_comment.yeti node tree:\n");
@@ -484,7 +485,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_print.yeti\n");
-  root = yeti_LoadFile("tests/test_print.yeti");
+  root = nyx_LoadFile("tests/test_print.yeti");
   if(root!=NULL)
   {
     printf("test_print.yeti node tree:\n");
@@ -493,7 +494,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_block.yeti\n");
-  root = yeti_LoadFile("tests/test_block.yeti");
+  root = nyx_LoadFile("tests/test_block.yeti");
   if(root!=NULL)
   {
     printf("test_block.yeti node tree:\n");
@@ -502,7 +503,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_empty.yeti\n");
-  root = yeti_LoadFile("tests/test_empty.yeti");
+  root = nyx_LoadFile("tests/test_empty.yeti");
   if(root!=NULL)
   {
     printf("test_empty.yeti node tree:\n");
@@ -511,7 +512,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_empty2.yeti\n");
-  root = yeti_LoadFile("tests/test_empty2.yeti");
+  root = nyx_LoadFile("tests/test_empty2.yeti");
   if(root!=NULL)
   {
     printf("test_empty2.yeti node tree:\n");
@@ -520,7 +521,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_empty3.yeti\n");
-  root = yeti_LoadFile("tests/test_empty3.yeti");
+  root = nyx_LoadFile("tests/test_empty3.yeti");
   if(root!=NULL)
   {
     printf("test_empty3.yeti node tree:\n");
@@ -529,7 +530,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_empty4.yeti\n");
-  root = yeti_LoadFile("tests/test_empty4.yeti");
+  root = nyx_LoadFile("tests/test_empty4.yeti");
   if(root!=NULL)
   {
     printf("test_empty4.yeti node tree:\n");
@@ -538,7 +539,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_broken.yeti\n");
-  root = yeti_LoadFile("tests/test_broken.yeti");
+  root = nyx_LoadFile("tests/test_broken.yeti");
   if(root!=NULL)
   {
     printf("test_broken.yeti node tree:\n");
@@ -547,7 +548,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_block2.yeti\n");
-  root = yeti_LoadFile("tests/test_block2.yeti");
+  root = nyx_LoadFile("tests/test_block2.yeti");
   if(root!=NULL)
   {
     printf("test_block2.yeti node tree:\n");
@@ -556,7 +557,7 @@ void yeti_tests(void)
   }
 
   printf("loading test_nesting.yeti\n");
-  root = yeti_LoadFile("tests/test_nesting.yeti");
+  root = nyx_LoadFile("tests/test_nesting.yeti");
   if(root!=NULL)
   {
     printf("test_nesting.yeti node tree:\n");
@@ -564,7 +565,7 @@ void yeti_tests(void)
     node_FreeTree(root);
   }
 
-  /*root = yeti_LoadFile("tests/test_comment_strings.yeti");
+  /*root = nyx_LoadFile("tests/test_comment_strings.yeti");
   printf("node tree:\n");
   if(root!=NULL)
   {
@@ -576,19 +577,19 @@ void yeti_tests(void)
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
-  printf("yeti tests thru\n");
+  printf("nyx tests thru\n");
 }
 
-void yeti_tests2(void)
+void nyx_tests2(void)
 {
-  printf("yeti tests 2\n");
+  printf("nyx tests 2\n");
   #ifdef USE_MEMORY_DEBUGGING
   mem_Init();
   #endif
   
 
   printf("loading test_nesting.yeti\n");
-  node *root = yeti_LoadFile("tests/test_nesting.yeti");
+  node *root = nyx_LoadFile("tests/test_nesting.yeti");
   if(root!=NULL)
   {
     printf("test_nesting.yeti node tree:\n");
@@ -597,7 +598,7 @@ void yeti_tests2(void)
   }
 
   printf("loading test_last_statement.yeti\n");
-  root = yeti_LoadFile("tests/test_last2.yeti");
+  root = nyx_LoadFile("tests/test_last2.yeti");
   if(root!=NULL)
   {
     printf("test_nesting.yeti node tree:\n");
@@ -609,18 +610,18 @@ void yeti_tests2(void)
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif
-  printf("yeti tests 2 thru\n");
+  printf("nyx tests 2 thru\n");
 }
 
 int main(int argc, char *argv[])
 {
 	//ptr_tests2();
-  //node_tests();
+  node_tests();
   //mem_tests();
   //json_tests();
   //fbx_tests();
-  //yeti_tests();
-  yeti_tests2();
+  //nyx_tests();
+  //nyx_tests2();
   //hashing_tests();
   //json_speed_tests();
 }

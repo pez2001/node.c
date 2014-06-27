@@ -1,7 +1,56 @@
+
+s="Trenne diesen Satz bitte in einzelne Woerter auf!";
+println(s[0]);
+println("string len:",len(s));
+
+s=sys().execute("ls -a");
+words = s.split(" \n");
+
+??(i=0,{i<len(words)},{println(words[i]);i=i+1},{},1);
+
+
+
+
+a=[1];
+a[0]=10;
+/*a[1]=12;*/
+println("array:",a[0]);
+
+a=open("tests/output.json","rb").readall().close().from_json();
+println("c:float:",a.float_val);
+
+/*a=open("tests/test_yeti.json","rb").readall().close().from_json();*/
+println(a.float_val);
+println(a.phoneNumbers[0].type);
+println(a.phoneNumbers[1].type);
+
+a.float_val=a.float_val+0.85;
+a.floats=14;
+
+o=to_json(a);
+/*println("output json:");
+println(o);*/
+
+out=open("tests/output.json","wb+");
+out.writeall(o);
+out.close();
+
+
+c=open("tests/output.json","rb").readall().close().from_json();
+println("c:float:",c.float_val);
+
+files=sys().execute("ls -a");
+sp=split()
+
+
+/*
 a=open("tests/test_yeti.json","rb+");
 content=a.readall();
 a.close();
 println("file content:",content);
+
+a.b=1;
+println(a.b);
 
 
 
@@ -38,9 +87,9 @@ println("sys working directory:",sys().working_directory()["path"]);
 
 println("ls:",sys().execute("ls -a"));
 
+return_value=55;
+*/
 
 /*sys().change_working_directory("..");
 println("space_race:",sys().execute("space_race"));*/
 /*println("sys dump:",sys().dump());*/
-
-return_value=55;

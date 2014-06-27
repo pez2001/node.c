@@ -60,25 +60,26 @@ seeking
 read write (num bytes)
 
 
-add evaluate_string function
+x add evaluate_string function
 
 catch ctrl-D
-and interpret each received line via stdin seperately
+x interpret each received line via stdin seperately
 
 add create pre sized arrays function
 
 
-function call ptr mechanism and seperation from execute_object
-add_handler etc
+x function call ptr mechanism and seperation from execute_object
+x add_handler etc
 
 */
 
 
-void add_json_tree(node *state,node *output,node *tree)
+void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array)
 {
   node *base_class = node_GetItemByKey(state,"nyx_object");
   node *child = create_class_instance(base_class);
-  set_obj_string(child,"name",node_GetKey(tree));
+  if(node_GetKey(tree)!=NULL)
+    set_obj_string(child,"name",node_GetKey(tree));
   if(node_GetType(tree)==NODE_TYPE_STRING)
     set_obj_string(child,"value",node_GetValue(tree));
   else if(node_GetType(tree)==NODE_TYPE_UINT32)
@@ -87,24 +88,43 @@ void add_json_tree(node *state,node *output,node *tree)
     set_obj_int(child,"value",node_GetInt(tree));
   else if(node_GetType(tree)==NODE_TYPE_SINT32)
     set_obj_int(child,"value",node_GetSint32(tree));
-  add_member(output,child);
+  else if(node_GetType(tree)==NODE_TYPE_FLOAT)
+    set_obj_float(child,"value",(double)node_GetFloat(tree));
+  else if(node_GetType(tree)==NODE_TYPE_DOUBLE)
+    set_obj_float(child,"value",node_GetDouble(tree));
+  else if(node_GetType(tree)==NODE_TYPE_ARRAY)
+  {
+    node *items = create_obj("items");
+    add_obj_kv(child,items);
+    node_array_IterationReset(tree);
+    while(node_array_IterationUnfinished(tree))
+    {
+      node *array_token = node_array_Iterate(tree);
+      add_json_tree(state,items,array_token,1);
+    }
+  }
+  if(add_to_array)
+    node_AddItem(output,child);
+  else
+    add_member(output,child);
   node_ItemIterationReset(tree);
   while(node_ItemIterationUnfinished(tree))
   {
     node *sub = node_ItemIterate(tree);
-    add_json_tree(state,child,sub);
+    add_json_tree(state,child,sub,0);
   }
 }
 
 void convert_from_json(node *state,node *output,char *json)
 {
-  node *base_class = node_GetItemByKey(state,"nyx_object");
   node *json_tree = json_LoadString(json);
+  if(json_tree==NULL)
+    return;
   node_ItemIterationReset(json_tree);
   while(node_ItemIterationUnfinished(json_tree))
   {
     node *sub = node_ItemIterate(json_tree);
-    add_json_tree(state,output,sub);
+    add_json_tree(state,output,sub,0);
   }
   node_FreeTree(json_tree);
 }
@@ -113,64 +133,92 @@ char *add_tabs(char *s,long tabs_num)
 {
   int i=0;
   char *tmp = s;
-  for(int i=0;i<tabs_num;i++)
+  for(i=0;i<tabs_num;i++)
     tmp = StringAdd(tmp,"\t");
   return(tmp);
 }
 
-char *add_to_json(node *state,node *tree,long level)
+char *add_to_json(node *state,node *tree,long level,BOOL print_key)
 {
   node *name = node_GetItemByKey(tree,"name");
   node *members = node_GetItemByKey(tree,"members");
+  node *items = node_GetItemByKey(tree,"items");
   node *value = node_GetItemByKey(tree,"value");
   char *json = CreateEmptyString();
   long items_num=0;
 
   json=add_tabs(json,level);
-  json = StringAdd(json,"\"");
-  json = StringAdd(json,node_GetString(name));
-  json = StringAdd(json,"\" : ");
-  if(node_GetItemsNum(members))
+  if(print_key)
   {
-    char *json_sub = CreateEmptyString();
-    node_ItemIterationReset(members);
-    while(node_ItemIterationUnfinished(members))
-    {
-      node *sub = node_ItemIterate(members);
-      node *type = node_GetItemByKey(sub,"type");
-      if(!strcmp(node_GetString(type),"function"))
-        continue;
-      char *json_sub_tmp = add_to_json(state,sub,level+1);
-      json_sub = StringAdd(json_sub,json_sub_tmp);
-      free(json_sub_tmp);
-      items_num++;
-    }
-    if(items_num)
-    {
-      json = StringAdd(json,"\n");
-      json=add_tabs(json,level);
-      json = StringAdd(json,"{\n");
-      json = StringAdd(json,json_sub);
-      json=add_tabs(json,level);
-      json = StringAdd(json,"}\n");
-    }
-    free(json_sub);
+    json = StringAdd(json,"\"");
+    json = StringAdd(json,node_GetString(name));
+    json = StringAdd(json,"\": ");
   }
-  if(!items_num)
+  if(items!=NULL)
   {
-    if(node_GetType(value)==NODE_TYPE_STRING)
+    json = StringAdd(json,"[");
+    node_ItemIterationReset(items);
+    while(node_ItemIterationUnfinished(items))
     {
-      json = StringAdd(json,"\"");
-      json = StringAdd(json,node_GetString(value));
-      json = StringAdd(json,"\"");
+      node *sub = node_ItemIterate(items);
+      char *json_sub_tmp = add_to_json(state,sub,level+1,0);
+      json = StringAdd(json,json_sub_tmp);
+      json = StringAdd(json,",");
+      free(json_sub_tmp);
     }
-    else if(node_GetType(value)==NODE_TYPE_SINT32)
+    json = StringAdd(json,"\n]");
+  }
+  else
+  {
+    if(node_GetItemsNum(members))
     {
-      char *num=convert_to_string(node_GetSint32(value));
-      json = StringAdd(json,num);
-      free(num);
+      char *json_sub = CreateEmptyString();
+      node_ItemIterationReset(members);
+      while(node_ItemIterationUnfinished(members))
+      {
+        node *sub = node_ItemIterate(members);
+        node *type = node_GetItemByKey(sub,"type");
+        if(!strcmp(node_GetString(type),"function"))
+          continue;
+        char *json_sub_tmp = add_to_json(state,sub,level+1,1);
+        json_sub = StringAdd(json_sub,json_sub_tmp);
+        json_sub = StringAdd(json_sub,",\n");
+        free(json_sub_tmp);
+        items_num++;
+      }
+      if(items_num)
+      {
+        json = StringAdd(json,"\n");
+        json=add_tabs(json,level);
+        json = StringAdd(json,"{\n");
+        json = StringAdd(json,json_sub);
+        json=add_tabs(json,level);
+        json = StringAdd(json,"}");
+      }
+      free(json_sub);
     }
-    json = StringAdd(json,",\n");
+    if(!items_num)
+    {
+      if(node_GetType(value)==NODE_TYPE_STRING)
+      {
+        json = StringAdd(json,"\"");
+        json = StringAdd(json,node_GetString(value));
+        json = StringAdd(json,"\"");
+      }
+      else if(node_GetType(value)==NODE_TYPE_SINT32)
+      {
+        char *num=convert_long_to_string(node_GetSint32(value));
+        json = StringAdd(json,num);
+        free(num);
+      }
+      else if(node_GetType(value)==NODE_TYPE_DOUBLE)
+      {
+        char *num=convert_double_to_string(node_GetDouble(value));
+        json = StringAdd(json,num);
+        free(num);
+      }
+      //json = StringAdd(json,",");
+    }
   }
   return(json);
 }
@@ -189,8 +237,9 @@ char *convert_to_json(node *state,node *obj)
       node *type = node_GetItemByKey(sub,"type");
       if(!strcmp(node_GetString(type),"function"))
         continue;
-      char *json_sub=add_to_json(state,sub,1);
+      char *json_sub=add_to_json(state,sub,1,1);
       json = StringAdd(json,json_sub);
+      json = StringAdd(json,",\n");
       free(json_sub);
     }
   }
@@ -240,7 +289,13 @@ char *state_add_to_json(node *state,node *tree,long level)
     }
     else if(node_GetType(tree)==NODE_TYPE_SINT32)
     {
-      char *num=convert_to_string(node_GetSint32(tree));
+      char *num=convert_long_to_string(node_GetSint32(tree));
+      json = StringAdd(json,num);
+      free(num);
+    }
+    else if(node_GetType(tree)==NODE_TYPE_DOUBLE)
+    {
+      char *num=convert_double_to_string(node_GetDouble(tree));
       json = StringAdd(json,num);
       free(num);
     }
@@ -332,14 +387,28 @@ void append_http_query_array(node *state,node *value)
   free(val);
 }
 
-char *convert_to_string(long i)
+char *convert_long_to_string(long i)
 {
   char *ret=NULL;
-  long len = snprintf(NULL,0,"%d",i);
+  long len = snprintf(NULL,0,"%ld",i);
   if(len)
   {
     ret = (char*)malloc(len+1);
-    snprintf(ret,len+1,"%d",i);
+    snprintf(ret,len+1,"%ld",i);
+  }
+  else
+    ret=CreateEmptyString();
+  return(ret);
+} 
+
+char *convert_double_to_string(double d)
+{
+  char *ret=NULL;
+  long len = snprintf(NULL,0,"%13g",d);
+  if(len)
+  {
+    ret = (char*)malloc(len+1);
+    snprintf(ret,len+1,"%13g",d);
   }
   else
     ret=CreateEmptyString();
@@ -435,7 +504,7 @@ long StringMatchCount(char *a,char *b)
   return(match_max_len);
 }
 
-char *Substring(char *a,long start,long len)
+char *SubString(char *a,long start,long len)
 {
   long e = start + len;
   long l=len;
@@ -477,6 +546,13 @@ void add_obj_kv(node *obj,node *kv)
   node_SetParent(kv,obj);
 }
 
+void insert_obj_kv(node *obj,node *kv)
+{
+  node_InsertItem(obj,kv,0);
+  node_SetParent(kv,obj);
+}
+
+
 void add_obj_string(node *obj,char *key,char *string)
 {
   node *kv = node_Create();
@@ -490,6 +566,14 @@ void add_obj_int(node *obj,char *key,long i)
   node *kv = node_Create();
   node_SetKey(kv,key);
   node_SetSint32(kv,i);
+  add_obj_kv(obj,kv); 
+}
+
+void add_obj_float(node *obj,char *key,double d)
+{
+  node *kv = node_Create();
+  node_SetKey(kv,key);
+  node_SetDouble(kv,d);
   add_obj_kv(obj,kv); 
 }
 
@@ -519,6 +603,15 @@ void set_obj_int(node *obj,char *key,long i)
     node_SetSint32(kv,i);
 }
 
+void set_obj_float(node *obj,char *key,double d)
+{
+  node *kv = node_GetItemByKey(obj,key);
+  if(kv==NULL)
+    add_obj_float(obj,key,d);
+  else
+    node_SetDouble(kv,d);
+}
+
 void set_obj_node(node *obj,char *key,node *n)
 {
   node *kv = node_GetItemByKey(obj,key);
@@ -527,6 +620,26 @@ void set_obj_node(node *obj,char *key,node *n)
   else
   {
     node_SetType(kv,NODE_TYPE_NODE);
+    kv->value = n;
+  }
+}
+
+void add_obj_ptr(node *obj,char *key,node *n)
+{
+  node *kv = node_Create();
+  node_SetKey(kv,key);
+  node_SetUser(kv,n);
+  add_obj_kv(obj,kv); 
+}
+
+void set_obj_ptr(node *obj,char *key,void *n)
+{
+  node *kv = node_GetItemByKey(obj,key);
+  if(kv==NULL)
+    add_obj_ptr(obj,key,n);
+  else
+  {
+    node_SetType(kv,NODE_TYPE_USER);
     kv->value = n;
   }
 }
@@ -573,14 +686,6 @@ long get_obj_refcount(node *obj)
   return(node_GetSint32(refcount));
 }
 
-void add_obj_double(node *obj,char *key,double d)
-{
-  node *kv = node_Create();
-  node_SetKey(kv,key);
-  node_SetDouble(kv,d);
-  add_obj_kv(obj,kv); 
-}
-
 node *get_value(node *obj)
 {
   /*returns the object's value*/
@@ -596,6 +701,7 @@ void obj_print(node *obj)
 void add_member(node *obj,node *member)
 {
   node *members = node_GetItemByKey(obj,"members");
+  //insert_obj_kv(members,member);
   add_obj_kv(members,member);
 }
 
@@ -667,10 +773,11 @@ node *get_member_part(node *obj,char *key)
       {
         match = member; 
         match_len = mmlen;
+        //printf("best match so far with:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
       }
     }
   }
-  
+
   node *mem = node_GetParent(obj);
   if(mem!=NULL)
   {
@@ -680,12 +787,11 @@ node *get_member_part(node *obj,char *key)
       node *sub_match=get_member_part(p,key);
       if(sub_match!=NULL)
       {
-        //node_PrintTree(sub_match);
-        node *sub_member_name = node_GetItemByKey(sub_match,"name");
-        long sub_mmlen = strlen(node_GetString(sub_member_name));
+        long sub_mmlen = StringMatchCount(get_obj_name(sub_match),key);
         if(sub_mmlen>match_len)
         {
           match = sub_match;
+          //printf("better match with:%d as %d [%s] of [%s]\n",sub_mmlen,match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
           match_len = sub_mmlen;
         }
       }
@@ -693,7 +799,10 @@ node *get_member_part(node *obj,char *key)
     }
   }
   if(match_len)
+  {
+    //printf("ret match:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
     return(match);
+  }
   return(NULL);
 }
 
@@ -780,13 +889,13 @@ void add_class_object_internal_function(node *class,node *base_class,char *metho
 }
 
 //state,execution_obj,block
-void add_class_object_function(node *class,node *base_class,char *method_name,node*(*handler)(node*,node*,node*))//void *addr
+void add_class_object_function(node *class,node *base_class,char *method_name,node*(*handler)(node*,node*,node*,node*))
 {
   node *method = create_base_obj_layout(method_name);
   set_obj_string(method,"type","function");
   //set_obj_node(base,"base_class_instance",class);
   set_obj_node(method,"base_class_type",base_class);
-  set_obj_node(method,"handler",handler);
+  set_obj_ptr(method,"handler",(void*)handler);
   inc_obj_refcount(method);
   add_member(class,method);
 }
@@ -808,6 +917,37 @@ node *create_file_class_object(void)
 
   return(base);
 }
+
+
+node *create_http_class_object(void)
+{
+  node *base = create_base_obj_layout("http");
+  add_class_object_function(base,base,"create_request",nyxh_http_create_request);
+  add_class_object_function(base,base,"parse_answer",nyxh_http_parse_answer);
+  return(base);
+}
+
+
+node *create_socket_class_object(void)
+{
+  node *base = create_base_obj_layout("socket");
+  add_class_object_function(base,base,"open",nyxh_socket_open);
+  add_class_object_function(base,base,"close",nyxh_socket_close);
+  add_class_object_function(base,base,"write",nyxh_socket_write);
+  add_class_object_function(base,base,"read",nyxh_socket_read);
+  add_class_object_function(base,base,"set_address",nyxh_socket_set_address);
+  add_class_object_function(base,base,"connect",nyxh_socket_connect);
+  node *sock_dgram_const = create_base_obj_layout("SOCK_DGRAM");
+  node *sock_stream_const = create_base_obj_layout("SOCK_STREAM");
+  add_member(base,sock_dgram_const);
+  add_member(base,sock_stream_const);
+
+  //add_class_object_function(base,base,"write",nyxh_socket_write);
+  //add_class_object_function(base,base,"read",nyxh_socket_read);
+  return(base);
+}
+
+
 
 
 node *create_sys_class_object(void)
@@ -846,6 +986,7 @@ node *create_class_object(void)
   add_class_object_function(base,base,"http_query",nyxh_http_query);
   add_class_object_function(base,base,"str",nyxh_str);
   add_class_object_function(base,base,"int",nyxh_int);
+  add_class_object_function(base,base,"float",nyxh_float);
   add_class_object_function(base,base,"len",nyxh_len);
   add_class_object_function(base,base,"-",nyxh_sub);
   add_class_object_function(base,base,"/",nyxh_div);
@@ -856,6 +997,8 @@ node *create_class_object(void)
   add_class_object_function(base,base,"<=",nyxh_lt_eq);
   add_class_object_function(base,base,">=",nyxh_gt_eq);
   add_class_object_function(base,base,"!=",nyxh_neq);
+  add_class_object_function(base,base,"&&",nyxh_and);
+  add_class_object_function(base,base,"||",nyxh_or);
   add_class_object_function(base,base,"?",nyxh_cmp);
   add_class_object_function(base,base,"??",nyxh_init_cmp);
   add_class_object_function(base,base,"else",nyxh_else);
@@ -868,6 +1011,7 @@ node *create_class_object(void)
   add_class_object_function(base,base,"close",nyxh_close);
   add_class_object_function(base,base,"from_json",nyxh_from_json);
   add_class_object_function(base,base,"to_json",nyxh_to_json);
+  add_class_object_function(base,base,"split",nyxh_split);
   add_class_object_function(base,base,"sys",nyxh_sys);
   add_class_object_function(base,base,"test",nyxh_test);
   //add_class_object_function(base,base,"args",nyxh_args);
@@ -877,7 +1021,9 @@ node *create_class_object(void)
   add_class_object_function(base,base,"PRE+",nyxh_pre_add);
 
   //add_class_object_function(base,base,"!",nyxh_not);
-  //add_member(base,create_file_class_object());
+  add_member(base,create_file_class_object());
+  add_member(base,create_socket_class_object());
+  add_member(base,create_http_class_object());
   //add_member(base,create_sys_class_object());
 
   return(base);
@@ -1003,7 +1149,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
             node_SetParent(item,items);
             inc_obj_refcount(item);
           }          
-          add_member(obj,arguments);
+          add_member(obj,arguments);//TODO what if arguments already exists ?
         }
       }
       value = evaluate_block_instance(state,obj);
@@ -1025,7 +1171,8 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
     node *handler = node_GetItemByKey(obj,"handler");
     if(handler!=NULL)
     {
-      node *(*real_handler)(node*,node*,node*,node*) = node_GetValue(handler);
+      //node *(*real_handler)(node*,node*,node*,node*) = (nyx_function_handler)node_GetValue(handler);
+      nyx_function_handler real_handler = (nyx_function_handler)node_GetValue(handler);
       node *parent = node_GetParent(node_GetParent(obj));
       value = real_handler(state,parent,block,pars);
     }
@@ -1074,6 +1221,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   while(node_ItemIterationUnfinished(statement))
   {
     node *token = node_ItemIterate(statement);
+    printf("------\nevaluating next token\n");
+    node_PrintTree(token);
+    printf("------\n");
     if(!strcmp(node_GetKey(token),"nyx_parameters"))
     {
       node_ItemIterationReset(token);
@@ -1099,17 +1249,35 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     else if(prev_token!=NULL && !strcmp(node_GetKey(prev_token),"val") && !strcmp(node_GetKey(token),"nyx_array"))
     {
       node *key_obj = evaluate_statement(state,node_GetItem(token,0),block,0,NULL);
-      //key_obj = execute_obj(state,key_obj,block,True);
-      node *found_obj = get_item(actual_obj,key_obj);
-      if(found_obj==NULL)
+      if(node_GetItemByKey(actual_obj,"items")!=NULL)
       {
-        actual_obj = create_class_instance(base_class);
-        reset_obj_refcount(actual_obj);
-        add_garbage(state,actual_obj);
+        node *found_obj = get_item(actual_obj,key_obj);
+        if(found_obj==NULL)
+        {
+          actual_obj = create_class_instance(base_class);
+          reset_obj_refcount(actual_obj);
+          add_garbage(state,actual_obj);
+        }
+        else
+        {
+          actual_obj = found_obj;
+        }
       }
-      else
+      else //check if string is used as array with a number as key - return a single char string
       {
-        actual_obj = found_obj;
+        node *real_value = node_GetItemByKey(actual_obj,"value");
+        node *real_key_value = node_GetItemByKey(key_obj,"value");
+        if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_key_value)==NODE_TYPE_SINT32)
+        {
+          char *tok = SubString(node_GetString(real_value),node_GetSint32(real_key_value),1);
+          actual_obj = create_class_instance(base_class);
+          reset_obj_refcount(actual_obj);
+          set_obj_string(actual_obj,"name","character");
+          set_obj_string(actual_obj,"value",tok);
+          free(tok);
+          reset_obj_refcount(actual_obj);
+          add_garbage(state,actual_obj);
+        }
       }
     }
     else if(!strcmp(node_GetKey(token),"nyx_array"))
@@ -1133,7 +1301,6 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     else if(!strcmp(node_GetKey(token),"nyx_block"))
     {
       node *block_class_instance = create_block_obj(base_class,token);
-      node *bmembers = node_GetItemByKey(block,"members");
       node *exe_parameters = create_obj("parameters");
       node *peek = node_ItemPeek(statement);
       if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
@@ -1196,6 +1363,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             //repeat until no parameter blocks left
             while((node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters")) )
             {
+
               if(!strcmp(get_obj_type(found_obj),"function"))
               {
                 node *exe_parameters = create_obj("parameters");
@@ -1261,7 +1429,37 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       else if(node_GetType(token) == NODE_TYPE_SINT32)
       {
         node *child = create_class_instance(base_class);
-        set_obj_int(child,"value",node_GetSint32(token));
+        node *peek = node_ItemPeek(statement);
+        if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp(node_GetString(peek),"."))
+        {
+          //TODO check if val is really a number
+          node *sub_ops = node_ItemIterate(statement);
+          node *tenth_val = node_ItemIterate(statement);
+          index+=2;
+          long tenth = node_GetSint32(tenth_val);
+          char *t=convert_long_to_string(tenth);
+          long tlen=strlen(t);
+          free(t);
+          double d=((double)node_GetSint32(token))+(((double)tenth)/pow(10,tlen));
+          //array increase if key is an index > array_len
+          //global functions (copy and parenting on the fly)
+          //socket class
+          //select/poll events
+          //api clean ups
+          //parse error reporting
+          //error/exception handling
+          //shell mode
+          //node.c better hashing support /easy use with getitembykey function ?per defines?
+          //add some examples
+          //build nyx homepage using nyx and jquery ajax json css
+          //sdl api subset support 
+          //secure http input values
+          //node.c sockets support
+          //insert members at pos 0 instead of adding
+          set_obj_float(child,"value",d);
+        }
+        else
+          set_obj_int(child,"value",node_GetSint32(token));
         actual_obj = child;
         add_garbage(state,child);
       }
@@ -1291,16 +1489,18 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         {
           use_preop = StringCopy(node_GetString(token));
         }
-
+        printf("searching member part:[%s][%s]\n",get_obj_name(actual_obj),node_GetValue(token));
+        node_PrintTree(actual_obj);
         node *found_obj = get_member_part(actual_obj,node_GetValue(token));
+        printf("found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
         if(found_obj!=NULL && use_preop == NULL)
         {
-          long token_len = strlen(node_GetValue(token));
-          node *found_name = get_obj_name(found_obj);
+          long token_len = strlen(node_GetString(token));
+          char *found_name = get_obj_name(found_obj);
           if(strlen(found_name)<token_len)
           {
             long found_name_len=strlen(found_name);
-            use_preop=Substring(node_GetValue(token),found_name_len,token_len-found_name_len);
+            use_preop=SubString(node_GetValue(token),found_name_len,token_len-found_name_len);
           }
 
           if(index+1<node_GetItemsNum(statement))
@@ -1309,17 +1509,21 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             node_AddItem(parameters,sub_obj);
           }
           actual_obj = found_obj;
-        }
-        else if(index+1<node_GetItemsNum(statement))
+          actual_obj = execute_obj(state,actual_obj,block,parameters,False);
+          printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
+          return(actual_obj);
+       }
+        /*else if(index+1<node_GetItemsNum(statement))
         {
           node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop);
           node_AddItem(parameters,sub_obj);
-        }
+        }*/
     }
     prev_token = token;
     index++;    
   }
   actual_obj = execute_obj(state,actual_obj,block,parameters,False);
+  printf("evaluate obj in ret:[%s]\n",get_obj_name(actual_obj));
   return(actual_obj);
 }
 
@@ -1347,6 +1551,7 @@ node *evaluate_block(node *state,node *block)
       node *obj = evaluate_statement(state,nyx_statement,block_class_instance,0,NULL);
       if(!node_ItemIterationUnfinished(il_block))
       {
+        //node_PrintTree(block_class_instance);
         ret=node_CopyTree(obj,True,True);
         free_garbage(state);
         return(ret);
@@ -1376,13 +1581,13 @@ node *evaluate_block(node *state,node *block)
             set_obj_int(state,"block_break_count",0);
             set_obj_string(state,"block_flag","");
             node_FreeTree(block_class_instance);
-            return;
+            return(ret);
           }
           else
           {
             set_obj_int(state,"block_break_count",count-1);
             node_FreeTree(block_class_instance);
-            return;
+            return(ret);
           }
         } 
       }
@@ -1445,13 +1650,13 @@ node *evaluate_block_in(node *state,node *block,node *master_block)
             set_obj_int(state,"block_break_count",0);
             set_obj_string(state,"block_flag","");
             node_FreeTree(block_class_instance);
-            return;
+            return(ret);
           }
           else
           {
             set_obj_int(state,"block_break_count",count-1);
             node_FreeTree(block_class_instance);
-            return;
+            return(ret);
           }
         } 
       }
@@ -1604,7 +1809,7 @@ node *call_function(node *state,char *name,node *parameters)
   return(ret);
 }
 
-node *init_nyx()
+node *init_nyx(void)
 {
   node *base_class = create_class_object();
   //node *nyx_state = create_nyx_state(nyx_block,base_class);
@@ -1623,7 +1828,7 @@ void sig_handler(int sig)//,siginfo_t *siginfo,void *context)
 }
 
 //struct termios *setup_terminal()
-void setup_terminal()
+void setup_terminal(void)
 {
     //struct termios old;
     //struct termios new;
@@ -1645,7 +1850,7 @@ void setup_terminal()
 }
 
 //void close_terminal(struct termios *old)
-void close_terminal()
+void close_terminal(void)
 {
   //tcsettr(0,TCSANOW,old);
 }
@@ -1663,9 +1868,15 @@ int main(int argc, char** argv)
   #ifdef USE_MEMORY_DEBUGGING
   mem_Init();
   #endif
+  #ifdef WIN32
+  WSADATA wsaData;
+  WSAStartup(MAKEWORD(2, 2), &wsaData);
+  #endif
+
+
   int c = 0;
   int print_return_value=0;
-  int interactive_mode=0;
+  //int interactive_mode=0;
   int print_ast=0;
   int use_input_as_script_string=0;
 
@@ -1700,9 +1911,9 @@ int main(int argc, char** argv)
       case 'p':
         print_return_value = 1;
         break;
-      case 'i':
+      /*case 'i':
         interactive_mode = 1;
-        break;
+        break;*/
       case 'a':
         print_ast = 1;
         break;
@@ -1748,12 +1959,11 @@ int main(int argc, char** argv)
     setup_terminal();
     node *state = init_nyx();
     node *blocks=node_GetItemByKey(state,"blocks");
-    char *line = CreateEmptyString();
     char *buf =(char*)malloc(100);
     char *tmp_get=NULL;
     node *ret_obj=NULL;
     //printf("reading standard input\n");
-    while((tmp_get=fgets(buf,100,stdin))!=NULL && !done &&tmp_get!=EOF)
+    while((tmp_get=fgets(buf,100,stdin))!=NULL && !done && ((long)(tmp_get)!=EOF))
     {
       //printf("interpreting:[%s]\n",buf);
       nyx_stream = nyx_LoadString(buf);
@@ -1847,6 +2057,9 @@ int main(int argc, char** argv)
     }
     close_nyx(state);
   }
+  #ifdef WIN32
+  WSACleanup();
+  #endif
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif

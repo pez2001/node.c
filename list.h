@@ -39,7 +39,14 @@
 extern "C"  {
 #endif
 
+#ifndef WIN32
 #define BOOL int
+#else
+//#include "windef.h"
+#define _WIN32_WINNT  0x501 
+#include "windows.h"
+#endif
+
 #define TRUE 1
 #define FALSE 0
 #define True 1

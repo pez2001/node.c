@@ -27,7 +27,7 @@
 #include "node.h"
 #include "imports/json.h"
 #include "imports/fbx.h"
-#include "imports/yeti.h"
+#include "imports/nyx.h"
 
 
 #include "stdio.h"

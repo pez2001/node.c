@@ -153,6 +153,7 @@ void node_ParseNumber(node *n,char *number_string);
 
 /*tree access*/
 long node_AddItem(node *n,node *s);
+void node_InsertItem(node *n,node *s,long index);
 int node_RemoveItem(node *n,node *s);
 node *node_RemoveItemByIndex(node *n,long index);
 int node_RemoveItemByKey(node *n,char *key);
@@ -181,7 +182,6 @@ void node_FreeTree(node *n);
 
 
 /*standard value types quick access*/
-void node_SetNull(node *n);
 int node_GetInt(node *n);
 float node_GetFloat(node *n);
 double node_GetDouble(node *n);
@@ -195,7 +195,26 @@ long node_GetSint32(node *n);
 long long node_GetSint64(node *n);
 char *node_GetString(node *n);
 int node_GetBool(node *n);
+void *node_GetUser(node *n);
 
+
+/*these do conversions on the fly if needed*/
+/*double node_GetAsDouble(node *n);
+float node_GetAsFloat(node *n);
+int node_GetAsInt(node *n);
+char *node_GetAsString(node *n);
+unsigned char node_GetAsUint8(node *n);
+unsigned short node_GetAsUint16(node *n);
+unsigned long node_GetAsUint32(node *n);
+unsigned long long node_GetAsUint64(node *n);
+char node_GetAsSint8(node *n);
+short node_GetAsSint16(node *n);
+long node_GetAsSint32(node *n);
+long long node_GetAsSint64(node *n);
+int node_GetAsBool(node *n);
+*/
+
+void node_SetNull(node *n);
 void node_SetBool(node *n, int b);
 void node_SetInt(node *n, int i);
 void node_SetFloat(node *n,float f);
@@ -209,7 +228,8 @@ void node_SetSint8(node *n,char c);
 void node_SetSint16(node *n,short s);
 void node_SetSint32(node *n,long l);
 void node_SetSint64(node *n,long long ll);
-
+void node_SetNode(node *n,node *dst);
+void node_SetUser(node *n,void *user);
 
 /*special types*/
 

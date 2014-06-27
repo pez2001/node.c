@@ -1,0 +1,30 @@
+read_players()=
+{
+println("querying steam");
+sock=socket.open(socket.SOCK_STREAM);
+connected=sock.connect("api.steampowered.com",80);
+println("connected:",connected);
+/*?({!(sock.connect("api.steampowered.com",80))},{println("connected");},{println("failed")},1);*/
+sock.write("GET /ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=570&format=json HTTP/1.1\r\nHost: api.steampowered.com\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
+timeouts=1000;
+r=sock.read();
+c=r;
+?({len(r)||timeouts},{r=sock.read();c=c+r;?(len(r)==0,{print(".");timeouts=timeouts-1},{},0);},{},1);
+sock.close();
+println("answer:",c);
+j=http.parse_answer(c)["body"].from_json();
+println("Number of players in Dota2 now:",j.response.player_count);
+/*??(c=r=sock.read(),{len(r)||timeouts},{c=c+r=sock.read();timeouts=timeouts-1;},{sock.close()},1);*/
+/*??(i=0,{i<len(j.appnews.newsitems)},{item = j.appnews.newsitems[i];println(i+1,".news title:",item.title);i=i+1;},{},1);*/
+};
+
+/*??(i=0,{i<10},{read_players();i=i+1;println("i:",i)},{},1);*/
+
+println("finish");
+read_players();
+read_players();
+read_players();
+
+
+
+

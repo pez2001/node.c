@@ -145,7 +145,7 @@ void json_SetNode(node *n,char *value_string,int is_value_string)
           node_SetBool(n,False);
         else
         {
-          double d = atof(value_string);
+          //double d = atof(value_string);
           //node_SetDouble(n,d);/*used for easier fbx parsing - refactor this in*/
           node_ParseNumber(n,value_string);
         }
@@ -231,6 +231,12 @@ node *json_Load(char *json,unsigned long len)
             //printf("closed array\n");
        case '}':
             list_Pop(obj_stack);
+            if(!list_GetLen(obj_stack))
+            {
+              free(value_string);
+              list_Close(obj_stack);
+              return(root_obj);
+            }
             //printf("obj above:%s\n",node_GetKey((node*)list_GetTop(obj_stack)));
        case '\n':
        case '\r':

@@ -163,6 +163,7 @@ void *node_CreateValue(int type,void *value)
     case NODE_TYPE_STUB:
          break;
     case NODE_TYPE_USER:
+         r = value;
          break;
     case NODE_TYPE_BINARY:
          r = (void*)node_CreateBinary(((node_binary*)value)->value,((node_binary*)value)->len);
@@ -670,7 +671,7 @@ node *node_CopySub(node *n,BOOL copy_value)
 }
 
 
-node *node_CopySubTree(node *n,node *parent,BOOL copy_values,BOOL update_parents)
+void node_CopySubTree(node *n,node *parent,BOOL copy_values,BOOL update_parents)
 {
   node *new = node_CopySub(n,copy_values);
   //printf("copied node:\n");
@@ -810,9 +811,23 @@ int node_GetBool(node *n)
     return(*(unsigned char*)n->value);
 }
 
+void *node_GetUser(node *n)
+{
+    return(n->value);
+}
+
+void node_SetUser(node *n,void *user)
+{
+  if(!node_IsType(n,NODE_TYPE_USER))
+  {
+     node_FreeValue(n->type,n->value);
+     n->value = node_CreateValue(NODE_TYPE_USER,user);
+     node_SetType(n,NODE_TYPE_USER);
+  }
+}
+
 void node_SetNull(node *n)
 {
-  //printf("setting null\n");
   if(!node_IsType(n,NODE_TYPE_NULL))
   {
      node_FreeValue(n->type,n->value);
@@ -888,8 +903,6 @@ void node_SetNode(node *n,node *dst)
      node_SetType(n,NODE_TYPE_NODE);
   }
 }
-
-
 
 void node_SetUint8(node *n,unsigned char c)
 {
@@ -985,6 +998,80 @@ void node_SetSint64(node *n,long long ll)
      n->value = node_CreateValue(NODE_TYPE_SINT64,&ll);
      node_SetType(n,NODE_TYPE_SINT64);
   }
+}
+
+
+
+/*
+double node_GetAsDouble(node *n)
+{
+
+}
+
+float node_GetAsFloat(node *n)
+{
+
+}
+
+int node_GetAsInt(node *n)
+{
+
+}
+
+char *node_GetAsString(node *n)
+{
+
+}
+
+unsigned char node_GetAsUint8(node *n)
+{
+
+}
+
+unsigned short node_GetAsUint16(node *n)
+{
+
+}
+
+unsigned long node_GetAsUint32(node *n)
+{
+
+}
+
+unsigned long long node_GetAsUint64(node *n)
+{
+
+}
+
+char node_GetAsSint8(node *n)
+{
+
+}
+
+short node_GetAsSint16(node *n)
+{
+
+}
+
+long node_GetAsSint32(node *n)
+{
+
+}
+
+long long node_GetAsSint64(node *n)
+{
+
+}
+
+int node_GetAsBool(node *n)
+{
+
+}
+*/
+
+void node_InsertItem(node *n,node *s,long index)
+{
+  list_Insert(n->items,0,s);
 }
 
 

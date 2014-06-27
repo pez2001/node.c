@@ -3,35 +3,58 @@ UNAME := $(shell uname)
 ifeq ($(UNAME), Linux)
 PLATFORM_EXT = 
 PLATFORM_NAME = Linux
+PLATFORM_LIBS = -lm
+PLATFORM_CFLAGS =
+PLATFORM_DEBUG_CFLAGS =
 endif
 ifeq ($(UNAME), MINGW32_NT-6.2)
 PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
+PLATFORM_LIBS = -lwsock32 -lws2_32 -lm
+PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
+PLATFORM_DEBUG_CFLAGS = -DWIN32
 else
 PLATFORM_NAME = Win32
 PLATFORM_EXT = 
+PLATFORM_LIBS = -lwsock32 -lws2_32 -lm
+PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
+PLATFORM_DEBUG_CFLAGS = -DWIN32
 endif
 
 #.PHONY: print_version
 
+#BEGIN_NOTIFY =	@playsound.exe /c/Users/pez2001/Downloads/217656__reitanna__knuckles-cracking.wav
+#FAILED_NOTIFY = || @playsound.exe /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
+#SUCCESS_NOTIFY = @playsound.exe /c/Users/pez2001/Downloads/187404__mazk1985__robot-ready.wav
+
+BEGIN_NOTIFY = 
+FAILED_NOTIFY = 
+SUCCESS_NOTIFY = 
+
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 2
-BUILD = 2019
-DEBUG_BUILD = 2356
+BUILD = 2296
+DEBUG_BUILD = 2635
+
+CSTD = c99
 
 #-DUSE_MEMORY_DEBUGGING
-CFLAGS= -W -w -Os -std=c99 -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -lm
-DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=c99 -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
+#CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS) -lm
+#DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
+CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)
+#DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
+DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
+
 CC=gcc
 AR=ar
 LD=ld
 
-NODE_FILES = list.c node.c memory.c imports/json.c imports/fbx.c imports/yeti.c imports/nyx.c
+NODE_FILES = list.c node.c memory.c imports/json.c imports/fbx.c imports/nyx.c
 NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h imports/fbx.h imports/yeti.h imports/nyx.h
-NODE_OBJ = node.o list.o memory.o imports/json.o imports/fbx.o imports/yeti.o imports/nyx.o
-NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do imports/fbx.do imports/yeti.do imports/nyx.do
+NODE_INCLUDE_FILES = node.h list.h memory.h imports/json.h imports/fbx.h imports/nyx.h
+NODE_OBJ = node.o list.o memory.o imports/json.o imports/fbx.o imports/nyx.o
+NODE_DEBUG_OBJ = node.do list.do memory.do imports/json.do imports/fbx.do imports/nyx.do
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
@@ -45,21 +68,11 @@ NODE_PRINT_INCLUDE_FILES = node_print.h
 NODE_PRINT_OBJ = node_print.o 
 NODE_PRINT_DEBUG_OBJ = node_print.do 
 
-YETII_FILES = yetii.c
-YETII_OBJ = yetii.o
-YETII_BINS = yetii$(PLATFORM_EXT)
-YETII_DEBUG_OBJ = yetii.do
-YETII_INCLUDE_FILES = yetii.h
-
-
 NYXI_FILES = nyxi.c nyx_handler.c
 NYXI_OBJ = nyxi.o nyx_handler.o
 NYXI_BINS = nyxi$(PLATFORM_EXT)
 NYXI_DEBUG_OBJ = nyxi.do nyx_handler.do
 NYXI_INCLUDE_FILES = nyxi.h nyx_handler.h
-
-
-
 
 TOOLS_BUILD_INC_FILES = tools/build_inc/build_inc.c
 TOOLS_BUILD_INC_BINS = build_inc$(PLATFORM_EXT)
@@ -68,11 +81,7 @@ TOOLS_BUILD_INC_OBJ = tools/build_inc/build_inc.o
 
 
 print_version:
-#	@echo "$(MAJOR_VERSION)"
-#	@echo "$(MINOR_VERSION)"
 	@echo -n "$(BUILD)"
-#	@echo "$(BUILD) $(DEBUG_BUILD)"
-#	@echo "$(DEBUG_BUILD)"
 
 test: all
 	./unit_tests$(PLATFORM_EXT)
@@ -80,57 +89,41 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc node_print_debug unit_tests_debug yetii_debug nyxi_debug
+debug: build_inc node_print_debug unit_tests_debug nyxi_debug nyxi_debug_no_mem
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
-
-
-clean_all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests yetii nyxi debug 
+clean_all: clean clean_debug clean_binaries node_static node_dynamic build_inc node_print unit_tests nyxi debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
-	@playsound.exe /c/Users/pez2001/Downloads/187404__mazk1985__robot-ready.wav
+	$(SUCCESS_NOTIFY)
 
-
-all: node_static node_dynamic build_inc node_print unit_tests yetii nyxi debug 
+all: node_static node_dynamic build_inc node_print unit_tests nyxi debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
-	@playsound.exe /c/Users/pez2001/Downloads/187404__mazk1985__robot-ready.wav
+	$(SUCCESS_NOTIFY)
 
 unit_tests: node_static $(UT_OBJ) 
-	$(CC) $(UT_OBJ) node.a -lm -o unit_tests 
+	$(CC) $(UT_OBJ) node.a $(PLATFORM_LIBS) -o unit_tests 
 	strip ./unit_tests$(PLATFORM_EXT)
 
 unit_tests_debug: node_static_debug $(UT_DEBUG_OBJ) 
-	$(CC) $(UT_DEBUG_OBJ) node.da -lm -o unit_tests_debug 
-
-yetii: node_static $(YETII_OBJ) 
-	$(CC) $(YETII_OBJ) node.a -lm -o yetii 
-	strip ./yetii$(PLATFORM_EXT)
-
-yetii_debug: node_static_debug $(YETII_DEBUG_OBJ) 
-	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_debug 
-
-yetii_debug_no_memm: node_static_debug $(YETII_DEBUG_OBJ) 
-	$(CC) $(YETII_DEBUG_OBJ) node.da -lm -o yetii_no_mem_debug 
-
-yetii_o: $(NODE_OBJ) $(YETII_OBJ)
-	$(CC) $(NODE_OBJ) $(YETII_OBJ)  -lm -o yetii 
+	$(CC) $(UT_DEBUG_OBJ) node.da $(PLATFORM_LIBS) -o unit_tests_debug 
 
 nyxi: node_static $(NYXI_OBJ) 
-	$(CC) $(NYXI_OBJ) node.a -lm -o nyxi 
+	$(CC) $(NYXI_OBJ) node.a $(PLATFORM_LIBS) -o nyxi 
 	strip ./nyxi$(PLATFORM_EXT)
 
 nyxi_debug: node_static_debug $(NYXI_DEBUG_OBJ) 
-	$(CC) $(NYXI_DEBUG_OBJ) node.da -lm -o nyxi_debug 
+	$(CC) $(NYXI_DEBUG_OBJ) node.da $(PLATFORM_LIBS) -o nyxi_debug 
 
-nyxi_debug_no_memm: node_static_debug $(NYXI_DEBUG_OBJ) 
-	$(CC) $(NYXI_DEBUG_OBJ) node.da -lm -o nyxi_no_mem_debug 
+nyxi_debug_no_mem: node_static_debug $(NYXI_DEBUG_OBJ) 
+	$(CC) $(NYXI_DEBUG_OBJ) node.da $(PLATFORM_LIBS) -o nyxi_no_mem_debug 
 
 nyxi_o: $(NODE_OBJ) $(NYXI_OBJ)
-	$(CC) $(NODE_OBJ) $(NYXI_OBJ)  -lm -o nyxi 
+	$(CC) $(NODE_OBJ) $(NYXI_OBJ) $(PLATFORM_LIBS) -o nyxi 
 
 unit_tests_o: $(NODE_OBJ) $(UT_OBJ)
-	$(CC) $(NODE_OBJ) $(UT_OBJ)  -lm -o unit_tests 
+	$(CC) $(NODE_OBJ) $(UT_OBJ) $(PLATFORM_LIBS) -o unit_tests 
 
 build_inc: $(TOOLS_BUILD_INC_OBJ) 
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
@@ -139,13 +132,13 @@ build_inc_o: $(TOOLS_BUILD_INC_OBJ)
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
 
 node_print: node_static  $(NODE_PRINT_OBJ)
-	$(CC) $(NODE_PRINT_OBJ) node.a -lm -o node_print 
+	$(CC) $(NODE_PRINT_OBJ) node.a $(PLATFORM_LIBS) -o node_print 
 
 node_print_debug: node_static_debug $(NODE_PRINT_DEBUG_OBJ)
-	$(CC) $(NODE_PRINT_DEBUG_OBJ) node.da -lm -o node_print_debug 
+	$(CC) $(NODE_PRINT_DEBUG_OBJ) node.da $(PLATFORM_LIBS) -o node_print_debug 
 
 node_print_o: $(NODE_OBJ) $(NODE_PRINT_OBJ)
-	$(CC) $(NODE_OBJ) $(NODE_PRINT_OBJ)  -lm -o node_print 
+	$(CC) $(NODE_OBJ) $(NODE_PRINT_OBJ) $(PLATFORM_LIBS) -o node_print 
 	
 node_static: $(NODE_OBJ)
 	$(AR) -rs node.a $(NODE_OBJ)
@@ -159,16 +152,14 @@ node_dynamic: $(NODE_OBJ)
 	strip node.dll	
 
 %.o: %.c 
-	$(CC) $(CFLAGS) -c -o $@ $< || playsound /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
+	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
 
 %.do: %.c 
-	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< || playsound /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
+	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
-
-	
 clean:
-	@playsound /c/Users/pez2001/Downloads/217656__reitanna__knuckles-cracking.wav	
+	$(BEGIN_NOTIFY)
 	rm -f *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
 
 clean_binaries:
@@ -213,7 +204,6 @@ binariesdist: clean_binaries clean all clean
 dist:	srcdist binariesdist 
 	make clean clean_binaries
 git:	
-	#echo $(shell echo $(MAKECMDGOALS) | sed 's!^.* $@ !!')
 	git add .
 	git commit -m "$(msg)"
 	git push 

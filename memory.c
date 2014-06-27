@@ -35,6 +35,8 @@ void (*free_ptr)(void *ptr) = free;
 
 long mem_chunks_num = 0;
 unsigned long mem_max_chunk_size = 0;
+unsigned long mem_max_allocated_size = 0;
+unsigned long mem_allocated_size = 0;
 mem_chunk **mem_chunk_items;
 
 
@@ -43,6 +45,8 @@ void mem_Init(void)
 	mem_chunk_items = (mem_chunk**) malloc_ptr(1 * sizeof(mem_chunk*));
 	mem_chunks_num = 0;
 	mem_max_chunk_size = 0;
+	mem_max_allocated_size = 0;
+	mem_allocated_size = 0;
 }
 
 long mem_get_chunk(void *ptr)
@@ -68,6 +72,9 @@ long mem_AddChunk(void *ptr,char *description,unsigned long size)
 	mem_chunk_items = (mem_chunk**) realloc_ptr(mem_chunk_items,(mem_chunks_num+1)*sizeof(mem_chunk*));
 	mem_chunk_items[mem_chunks_num] = chunk;
 	mem_chunks_num++;
+	mem_allocated_size+=size;
+	if(mem_allocated_size>mem_max_allocated_size)
+		mem_max_allocated_size = mem_allocated_size;
 	return(mem_chunks_num-1);
 }
 
@@ -110,6 +117,8 @@ int mem_DebugHeapWalk(int show_leaked)
 int mem_Close(void)
 {
 	printf("mem chunks allocated:%d\n",mem_chunks_num);
+	printf("mem allocated size:%d\n",mem_allocated_size);
+	printf("mem max allocated size:%d\n",mem_max_allocated_size);
 	printf("mem max chunk size:%d\n",mem_max_chunk_size);
 	//printf("heap peaked @ %d\n",mem_max_allocated_size);
 	int r = mem_DebugHeapWalk(1);
@@ -162,8 +171,13 @@ void *mem_realloc(void *ptr, unsigned long size)
 		
 	memcpy(tmp,ptr,msize);
 	free_ptr(ptr);
+	mem_allocated_size = mem_allocated_size - mem_chunk_items[index]->size + size;
+
 	mem_chunk_items[index]->ptr = tmp;
 	mem_chunk_items[index]->size = size;	
+
+	if(mem_allocated_size>mem_max_allocated_size)
+		mem_max_allocated_size = mem_allocated_size;
 	return(tmp);
 }
 
@@ -172,8 +186,8 @@ void mem_free(void *ptr)
 	long index = mem_get_chunk(ptr);
 	if(!mem_chunk_items[index]->is_freed)
 	{
-		unsigned long i =0;
-		/*for(i=0;i<mem_chunk_items[index]->size;i++)
+		/*unsigned long i =0;
+		for(i=0;i<mem_chunk_items[index]->size;i++)
 		{
 
 		}*/
@@ -181,6 +195,7 @@ void mem_free(void *ptr)
 		free_ptr(ptr);
 		mem_chunk_items[index]->is_freed = 1;
 		mem_chunk_items[index]->ptr = NULL;
+		mem_allocated_size-=mem_chunk_items[index]->size;
 	}
 	else
 	{

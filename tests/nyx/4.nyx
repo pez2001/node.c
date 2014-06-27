@@ -1,0 +1,53 @@
+/*1=2;*/
+/*a=(1.1+2);
+
+println("a:",a);
+println("f:",float("1.2"));
+println("s:"+str(a));
+
+println(float("1.0")+1.1);
+*/
+/*
+println("and:",1&&1);
+println("and false:",1&&0);
+println("and false2:",0&&0);
+println("and false3:",0&&1);
+println("or:",1||1);
+println("or2:",1||0);
+println("or3:",0||1);
+println("or false:",0||0);
+*/
+
+/*sock.set_addr("openstrike.de",80);*/
+/*sock.write("GET / HTTP/1.1\nHost: openstrike.de\n\n");*/
+/*timeouts=1000;
+sock=socket.open(socket.SOCK_STREAM);
+sock.connect("openstrike.de",80);
+sock.write("GET / HTTP/1.1\nHost: voyagerproject.de\n\n");
+r=sock.read();
+c=r;
+?({len(r)||timeouts},{c=c+r=sock.read();print(".");timeouts=timeouts-1;},{},1);
+println("\nanswer from server:",c);
+sock.close();
+*/
+
+timeouts=1000;
+sock=socket.open(socket.SOCK_STREAM);
+/*sock.connect("api.steampowered.com",80);*/
+/*sock.write("GET /ISteamNews/GetNewsForApp/v0002/?appid=570&count=3&maxlength=300&format=json HTTP/1.1\r\nHost: api.steampowered.com\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");*/
+
+sock.connect("openstrike.de",80);
+sock.write("GET / HTTP/1.1\nHost: openstrike.de\n\n");
+/*sock.write("GET / HTTP/1.1\r\nHost: openstrike.de\r\n\r\n");*/
+r=sock.read();
+c=r;
+?({len(r)||timeouts},{c=c+r=sock.read();print(".");timeouts=timeouts-1;},{},1);
+println("\nanswer from server:",c);
+j=http.parse_answer(c);/*.from_json();*/
+item = j.appnews.newsitems[0];
+println(item.title);
+sock.close();
+
+
+
+

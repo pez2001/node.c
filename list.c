@@ -156,14 +156,6 @@ void *list_Remove(list *l, long index)
 	if(index < l->num)
 	{
 		void *tmp = l->items[index];
-		/*for(long i = l->num - 1; i > index; i--)
-		{
-			list_MoveUp(l, i);
-		}*/
-		/*for(long i = index+1; i > l->num; i++)
-		{
-			list_MoveUp(l, i);
-		}*/
 		long i=index+1;
 		while(i<l->num)
 		{

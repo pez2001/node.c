@@ -1,0 +1,17 @@
+read_file()=
+{
+ /*f=test(1);*/
+f=open("tests/nyx/3.nyx","rb");
+ println("querying file");
+ /*f.close();
+ r=1;*/
+};
+
+println("finish");
+read_file();
+read_file();
+read_file();
+read_file();
+println("end");
+
+
