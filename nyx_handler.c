@@ -65,6 +65,20 @@ node *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+node *nyxh_pre_not(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_CopyTree(obj,True,True);
+  node_SetParent(value,NULL);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(value,"value");
+  if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,!node_GetSint32(real_value));
+  else if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetDouble(real_value,!node_GetDouble(real_value));
+  return(value);
+}
+
 node *nyxh_handler_test(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = node_GetItemByKey(state,"nyx_object");

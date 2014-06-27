@@ -871,7 +871,6 @@ node *create_base_obj_layout(char *obj_name)
   //add_obj_kv(base,create_obj("base_class_instance"));
   add_obj_kv(base,create_obj("base_class_type"));
   add_obj_kv(base,create_obj("members"));
-  add_obj_kv(base,create_obj("value"));
   set_obj_int(base,"value",0);
   add_obj_int(base,"refcount",0);
   return(base);
@@ -972,6 +971,7 @@ node *create_sys_class_object(void)
   return(base);
 }
 
+
 /*implement class construction via classic constructor*/
 
 node *create_class_object(void)
@@ -980,14 +980,6 @@ node *create_class_object(void)
   add_class_object_function(base,base,"=",nyxh_assign);
   add_class_object_function(base,base,":",nyxh_set_value_only);
   add_class_object_function(base,base,"+",nyxh_add);
-  add_class_object_function(base,base,"print",nyxh_print);
-  add_class_object_function(base,base,"println",nyxh_println);
-  add_class_object_function(base,base,"input",nyxh_input);
-  add_class_object_function(base,base,"http_query",nyxh_http_query);
-  add_class_object_function(base,base,"str",nyxh_str);
-  add_class_object_function(base,base,"int",nyxh_int);
-  add_class_object_function(base,base,"float",nyxh_float);
-  add_class_object_function(base,base,"len",nyxh_len);
   add_class_object_function(base,base,"-",nyxh_sub);
   add_class_object_function(base,base,"/",nyxh_div);
   add_class_object_function(base,base,"*",nyxh_mul);
@@ -999,28 +991,42 @@ node *create_class_object(void)
   add_class_object_function(base,base,"!=",nyxh_neq);
   add_class_object_function(base,base,"&&",nyxh_and);
   add_class_object_function(base,base,"||",nyxh_or);
+  add_class_object_function(base,base,"PRE!",nyxh_not);
+  add_class_object_function(base,base,"PRE-",nyxh_pre_sub);
+  add_class_object_function(base,base,"PRE+",nyxh_pre_add);
+  
+
+  add_class_object_function(base,base,"print",nyxh_print);
+  add_class_object_function(base,base,"println",nyxh_println);
+  add_class_object_function(base,base,"input",nyxh_input);
+  add_class_object_function(base,base,"http_query",nyxh_http_query);
+  add_class_object_function(base,base,"str",nyxh_str);
+  add_class_object_function(base,base,"int",nyxh_int);
+  add_class_object_function(base,base,"float",nyxh_float);
+  add_class_object_function(base,base,"len",nyxh_len);
+  add_class_object_function(base,base,"else",nyxh_else);
+  add_class_object_function(base,base,"from_json",nyxh_from_json);
+  add_class_object_function(base,base,"to_json",nyxh_to_json);
+  add_class_object_function(base,base,"split",nyxh_split);
+  
+  add_class_object_function(base,base,"open",nyxh_open);
+  add_class_object_function(base,base,"close",nyxh_close);
+  
+
   add_class_object_function(base,base,"?",nyxh_cmp);
   add_class_object_function(base,base,"??",nyxh_init_cmp);
-  add_class_object_function(base,base,"else",nyxh_else);
+  
   add_class_object_function(base,base,"break",nyxh_break);
   add_class_object_function(base,base,"continue",nyxh_continue);
   add_class_object_function(base,base,"restart",nyxh_restart);
   add_class_object_function(base,base,"import",nyxh_import);
   add_class_object_function(base,base,"eval",nyxh_eval);
-  add_class_object_function(base,base,"open",nyxh_open);
-  add_class_object_function(base,base,"close",nyxh_close);
-  add_class_object_function(base,base,"from_json",nyxh_from_json);
-  add_class_object_function(base,base,"to_json",nyxh_to_json);
-  add_class_object_function(base,base,"split",nyxh_split);
   add_class_object_function(base,base,"sys",nyxh_sys);
   add_class_object_function(base,base,"test",nyxh_test);
   //add_class_object_function(base,base,"args",nyxh_args);
   add_class_object_function(base,base,"handler_test",nyxh_handler_test);
 
-  add_class_object_function(base,base,"PRE-",nyxh_pre_sub);
-  add_class_object_function(base,base,"PRE+",nyxh_pre_add);
 
-  //add_class_object_function(base,base,"!",nyxh_not);
   add_member(base,create_file_class_object());
   add_member(base,create_socket_class_object());
   add_member(base,create_http_class_object());
@@ -1029,7 +1035,7 @@ node *create_class_object(void)
   return(base);
 }
 
-node *create_block_obj(node *base_class,node *block)
+node *create_block_class_object(node *base_class,node *block)
 {
   node *base = create_class_instance(base_class);//,"block");
   set_obj_string(base,"name","block");
@@ -1531,7 +1537,7 @@ node *evaluate_block(node *state,node *block)
 {
   node *ret = NULL;
   node *base_class = node_GetItemByKey(state,"nyx_object");
-  node *block_class_instance = create_block_obj(base_class,block);
+  node *block_class_instance = create_block_class_object(base_class,block);
   node *blocks = node_GetItemByKey(state,"blocks");
   add_obj_kv(blocks,block_class_instance);
   node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");
@@ -1601,7 +1607,7 @@ node *evaluate_block_in(node *state,node *block,node *master_block)
 {
   node *ret = NULL;
   node *base_class = node_GetItemByKey(state,"nyx_object");
-  node *block_class_instance = create_block_obj(base_class,block);
+  node *block_class_instance = create_block_class_object(base_class,block);
   node *blocks = node_GetItemByKey(state,"blocks");
   add_obj_kv(blocks,block_class_instance);
   node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");

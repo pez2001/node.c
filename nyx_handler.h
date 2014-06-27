@@ -106,6 +106,7 @@ node *nyxh_args(node *state,node *obj,node *block,node *parameters);
 
 node *nyxh_and(node *state,node *obj,node *block,node *parameters);
 node *nyxh_or(node *state,node *obj,node *block,node *parameters);
+node *nyxh_pre_not(node *state,node *obj,node *block,node *parameters);
 
 
 
