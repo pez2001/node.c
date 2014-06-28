@@ -1,10 +1,10 @@
 read_players()=
 {
-println("querying steam");
+/*println("querying steam");*/
 sock=socket.open(socket.SOCK_STREAM);
 /*connected=sock.connect("api.steampowered.com",80);*/
-connected=sock.connect("api.steampowered.com",80).else({println("restarting reading");restart(1)});
-println("connected:",connected);
+connected=sock.connect("api.steampowered.com",80).else({println("restarting reading");restart(2)});
+/*println("connected:",connected);*/
 connected=0;
 /*?({println("!c:",!connected,",c:",connected);!connected},{println("connected");},{println("failed");connected=sock.connect("api.steampowered.com",80)},1);*/
 sock.write("GET /ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=570&format=json HTTP/1.1\r\nHost: api.steampowered.com\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
@@ -20,7 +20,7 @@ println("Number of players in Dota2 now:",j.response.player_count);
 /*??(i=0,{i<len(j.appnews.newsitems)},{item = j.appnews.newsitems[i];println(i+1,".news title:",item.title);i=i+1;},{},1);*/
 };
 
-??(i=0,{i<10},{read_players();i=i+1;println("i:",i)},{},1);
+??(i=0,{i<100},{read_players();i=i+1;print("[i:",i,"]")},{},1);
 
 println("finish");
 /*read_players();

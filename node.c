@@ -541,7 +541,8 @@ void node_Print(node *n,int with_key,int include_items)
          printf("%d",*(unsigned long long*)n->value);
          break;
     case NODE_TYPE_STRING:
-         printf((char*)n->value);
+         //SetConsoleOutputCP(CP_UTF8);
+         printf("%s",(char*)n->value);
          break;
     case NODE_TYPE_ARRAY:
          {

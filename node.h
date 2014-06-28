@@ -29,6 +29,7 @@
 #include "memory.h"
 #endif
 
+#include <wchar.h>
 
 //#define USE_WHOLE_NODE_FUNCTION_SET ;TODO Later filter some functions to get even smaller code
 

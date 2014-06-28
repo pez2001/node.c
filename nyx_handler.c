@@ -1489,7 +1489,7 @@ node *nyxh_socket_open(node *state,node *obj,node *block,node *parameters)
       int sock = socket(domain,type,protocol);
       set_obj_int(value,"socket_handle",(long)sock);
       set_obj_int(value,"socket_type",(long)type);
-      printf("socket_handle opened:%d\n",sock);
+      //printf("socket_handle opened:%d\n",sock);
     }
   }
   return(value);
@@ -1598,7 +1598,7 @@ node *nyxh_socket_connect(node *state,node *obj,node *block,node *parameters)
         r = getaddrinfo(host,sport,&hints,&result);
         if(r==0)
         {
-          printf("host:%s found!:%d\n",host,sock);
+          //printf("host:%s found!:%d\n",host,sock);
           struct addrinfo *test=result;
           while(test!=NULL)
           {
@@ -1618,7 +1618,7 @@ node *nyxh_socket_connect(node *state,node *obj,node *block,node *parameters)
             }*/             
             if(connect(sock,test->ai_addr,test->ai_addrlen)!=-1)
             {
-              printf("connected to host\n");
+              //printf("connected to host\n");
               unsigned long one = 1;
               if(ioctlsocket(sock,FIONBIO,&one)==SOCKET_ERROR)
               {

@@ -1080,9 +1080,30 @@ void advance_garbage(node *state)
   node_ClearItems(gc_cache);
 }
 
+long get_execution_level(node *state)
+{
+  node *nexecution_level = node_GetItemByKey(state,"execution_level");
+  long execution_level = node_GetSint32(nexecution_level);
+  return(execution_level);
+}
+
+void inc_execution_level(node *state)
+{
+  node *nexecution_level = node_GetItemByKey(state,"execution_level");
+  node_SetSint32(nexecution_level,node_GetSint32(nexecution_level)+1);
+}
+
+void dec_execution_level(node *state)
+{
+  node *nexecution_level = node_GetItemByKey(state,"execution_level");
+  node_SetSint32(nexecution_level,node_GetSint32(nexecution_level)-1);
+}
+
 void add_garbage(node *state,node *obj)
 {
-  node *garbage = node_GetItemByKey(state,"garbage_cache");
+  node *garbage = node_GetItemByKey(state,"garbage");
+  long execution_level = get_execution_level(state);
+  //printf("adding to gc with exe level:%d\n",execution_level); 
   if(node_HasItem(garbage,obj))
     return;
   if(node_GetParent(obj)!=NULL)
@@ -1090,24 +1111,34 @@ void add_garbage(node *state,node *obj)
     printf("tried add gc obj with a parent:%x\n",obj);
   }
   node_AddItem(garbage,obj);
+  node_SetTag(obj,(void*)execution_level);
 }
 
-void free_garbage(node *state)
+void free_garbage(node *state,long min_level)
 {
+  //printf("freeing garbage items with min: %d\n",min_level);
+  //fflush(stdout);
   node *garbage = node_GetItemByKey(state,"garbage");
   node_ItemIterationReset(garbage);
   while(node_ItemIterationUnfinished(garbage))
   {
     node *gc = node_ItemIterate(garbage);
-    if(get_obj_refcount(gc)<=0)
+    long gc_level = (long)node_GetTag(gc);
+    if((get_obj_refcount(gc)<=0) && (gc_level >= min_level))
     {
-      if(node_GetParent(gc)!=NULL)
-        node_FreeTree(gc);
-      else 
-        node_FreeTree(gc);
+      //printf("removing:%x,%d\n",gc,gc_level);
+      //fflush(stdout);
+      node_FreeTree(gc);
+      node_RemoveItem(garbage,gc);
+      //node_ItemIterationReset(garbage);
+      node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
+      //printf("removed:%x,%d\n",gc,gc_level);
+      //fflush(stdout);
     }
   }
-  node_ClearItems(garbage);
+  //printf("garbage collected\n");
+  //fflush(stdout);
+  //node_ClearItems(garbage);
 }
 
 node *create_nyx_state(node *base_class)
@@ -1117,6 +1148,7 @@ node *create_nyx_state(node *base_class)
   node *garbage2 = create_obj("garbage_cache");
   node *class_types = create_obj("class_types");
   node *blocks = create_obj("blocks");
+  add_obj_int(state,"execution_level",1);
   add_obj_kv(state,class_types);
   add_obj_kv(state,garbage);
   add_obj_kv(state,garbage2);
@@ -1260,7 +1292,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   node *prev_token = NULL;
   node *base_class = node_GetItemByKey(state,"nyx_object");
   char *use_preop = preop;
-
+  inc_execution_level(state);
   //node *gc_cache = create_obj("garbage_cache");
 
 
@@ -1564,6 +1596,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           actual_obj = execute_obj(state,actual_obj,block,parameters,False);
           //printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
           //advance_garbage(state);
+          dec_execution_level(state);
           return(actual_obj);
        }
         /*else if(index+1<node_GetItemsNum(statement))
@@ -1578,6 +1611,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   actual_obj = execute_obj(state,actual_obj,block,parameters,False);
   //printf("evaluate obj in ret:[%s]\n",get_obj_name(actual_obj));
   //advance_garbage(state);
+  dec_execution_level(state);
   return(actual_obj);
 }
 
@@ -1654,6 +1688,7 @@ node *evaluate_block_instance(node *state,node *block_class_instance)
 
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block)
 {
+  inc_execution_level(state);
   node *ret = NULL;
   node *il_block = node_GetItemByKey(block_class_instance,"nyx_block");
   if(!node_GetItemsNum(il_block))
@@ -1675,8 +1710,9 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
       {
         //node_FreeTree(block_class_instance);
         free(block_flag);
-        //free_garbage(state);
+        free_garbage(state,get_execution_level(state)+2);
         //advance_garbage(state);
+        dec_execution_level(state);
         return(ret);
       }
       else if(!strcmp(block_flag,"restart"))
@@ -1694,6 +1730,8 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
   {
     printf("eval return NULL\n");
   }
+  free_garbage(state,get_execution_level(state)+2);
+  dec_execution_level(state);
   //free_garbage(state);
   //advance_garbage(state);
   return(ret);
@@ -1741,6 +1779,7 @@ void sig_handler(int sig)//,siginfo_t *siginfo,void *context)
 }
 
 //struct termios *setup_terminal()
+//#define _O_U16TEXT 0x20000
 void setup_terminal(void)
 {
     //struct termios old;
@@ -1749,6 +1788,7 @@ void setup_terminal(void)
     //signal(SIGABRT,sig_handler);
     //signal(SIGTERM,sig_handler);
     signal(SIGINT,sig_handler);
+    //_setmode(_fileno(stdout), _O_U16TEXT);
     //signal(1,sig_handler);
     //signal(3,sig_handler);
     //signal(20,sig_handler);
@@ -1911,8 +1951,8 @@ int main(int argc, char** argv)
             ret = node_GetSint32(real_value);
           else if(node_GetType(real_value)==NODE_TYPE_STRING)
             ret = atoi(node_GetString(real_value));
-          advance_garbage(state);
-          free_garbage(state);
+          //advance_garbage(state);
+          free_garbage(state,0);
 
           //node_FreeTree(ret_obj);
           //fflush(stdout);
@@ -1965,8 +2005,8 @@ int main(int argc, char** argv)
           ret = node_GetSint32(real_value);
         else if(node_GetType(real_value)==NODE_TYPE_STRING)
           ret = atoi(node_GetString(real_value));
-        advance_garbage(state);
-        free_garbage(state);
+        //advance_garbage(state);
+        free_garbage(state,0);
         //node_FreeTree(ret_obj);
         //fflush(stdout);
       }

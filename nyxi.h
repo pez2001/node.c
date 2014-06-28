@@ -130,6 +130,9 @@ node *create_nyx_state(node *base_class);
 
 char *check_block_flag(node *state);
 
+long get_execution_level(node *state);
+void inc_execution_level(node *state);
+void dec_execution_level(node *state);
 
 node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block);
 
