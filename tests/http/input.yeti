@@ -1,4 +1,18 @@
-#!c:/space_race/node.c/yetii.exe
+#!c:/space_race/node.c/nyxi.exe
+
+if(ex,do)={?(ex,do,{},0)};
+
+since(seconds)={
+	ret="long ago";
+	if(seconds<3600,{ret="less than an hour ago"});
+	if(seconds<1800,{ret="less than an half an hour ago"});
+	if(seconds<300,{ret="less than five minutes"});
+	if(seconds<60,{ret="less than a minute"});
+	if(seconds<30,{ret="less than thirty seconds"});
+	if(seconds<5,{ret="just now"});
+	return=ret;
+};
+
 println("Connection: close");
 println("Content-Type: text/html");
 println("");
@@ -10,6 +24,17 @@ println("
 <title>Test Post Input Parsing Page</title>
 </head>
 <body>
+
+<h2>
+");
+
+json_input=open("inputs.json","rb+").readall().close().from_json();
+println("last inputs were: A=",json_input.a," B=",json_input.b);
+println("since passed:",sys.time()-json_input.time);
+println("since passed:",since(sys.time-json_input.time));
+
+println("
+</h2>
 
 <h1>Content of Post Variables transfered</h1>
 
@@ -24,15 +49,28 @@ input().println();
 h=http_query();
 /*println("h:",h);*/
 
+
+
+last="";
+
+
 ?(len(h),{
 p1=h[0].int();
 p2=h[1].int();
+/*h[1].value=h[1];
+h[1].sub = "test";*/
+last.a=h[0];
+last.b=h[1];
+last.time = sys.time();
 println("<h1>result(a+b)=",p1+p2,"</h1><br>");
 println("named var:['t1'] = ",h["t1"],"<br>");
 },{},0);
 
 
-/*println(h[0]);*/
+open("inputs.json","wb+").writeall(last.to_json()).close();
+
+
+println(last.to_json());
 
 println("</html>");
 

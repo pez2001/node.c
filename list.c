@@ -101,6 +101,15 @@ void *list_GetBottom(list *l)
 	return(r);
 }
 
+void list_SetLen(list *l,long len)
+{
+	if(len!=l->num)
+	{
+		l->items = realloc(l->items, len * sizeof(void*));
+		l->num = len;
+	}
+}
+
 BOOL list_Insert(list *l, long index, void *obj)
 {
 	if(index == 0 && !l->num)

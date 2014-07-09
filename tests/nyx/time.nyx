@@ -1,0 +1,8 @@
+t=12;
+t.a=6;
+println("ta:",-t.a);
+
+time=-sys.time;
+println("time:",time);
+time2=sys.time;
+println("diff:",time2-time);

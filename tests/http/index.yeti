@@ -1,4 +1,4 @@
-#!c:/space_race/node.c/yetii.exe
+#!c:/space_race/node.c/nyxi.exe
 println("Connection: close");
 println("Content-Type: text/html");
 println("");

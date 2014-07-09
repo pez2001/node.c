@@ -1,0 +1,10 @@
+if(ex,do)={?(ex,do,{},0)};
+
+since(seconds)={
+	ret="long ago";
+	if(seconds<300,{ret="less than five minutes ago"});
+	if(seconds<180,{ret="less than an half an hour ago"});
+	return=ret;
+};
+
+println("since passed:",since(100));

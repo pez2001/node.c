@@ -118,7 +118,7 @@ void add_garbage(node *state,node *obj);
 /*class handling*/
 void add_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
-node *get_item(node *obj,node *key);
+node *get_item(node *state,node *obj,node *key);
 
 node *create_class_instance(node *class_obj);
 node *create_base_obj_layout(char *obj_name);

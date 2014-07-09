@@ -1,0 +1,9 @@
+println("script:",sys.script_filename);
+println("interpreter:",sys.interpreter_filename);
+get_block().a="Hallo";
+println(a);
+get_block.b="Welt";
+println(b);
+println("major:",sys.interpreter_version()["major"]," minor:",sys.interpreter_version()["minor"]," build:",sys.interpreter_version()["build"]);
+sys.exit(12);
+println("major:",sys.interpreter_version["major"]," minor:",sys.interpreter_version["minor"]," build:",sys.interpreter_version["build"]);

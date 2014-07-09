@@ -1,0 +1,26 @@
+a=[1,2,3,alpha="test"];
+a[0] = "hi";
+a[0] = beta = "hi2";
+a[16] = "last";
+a["key"] = "welt";
+println("beta:",a["beta"]);
+println("beta2:",beta);
+println("a[0]._name_:",a[0]._name_);
+println("a:",a);
+println("alpha:",a["alpha"]);
+println("alpha2:",alpha);	
+println("a['key']:",a["key"]);
+println("a[16]:",a[16]);
+println("a[17]._name_:",a[17]._name_);
+n=[];
+n["first"]="entry";
+println("n:",n.to_json());
+println("testing empty key statement");
+n[]="test";
+println("n2:",n.to_json());
+i=0;
+?({println("i:",i);i<len(a)},{print("a[",i," of ",len(a),"]:");println(a.item_at(i));i=i+1},{},1);
+
+
+
+

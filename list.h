@@ -24,6 +24,10 @@
 #ifndef LIST_H
 #define LIST_H
 
+
+//#define LIST_AUTOMATIC_
+
+
 #include "stdio.h"
 #include "stdarg.h"
 #include "stdlib.h"
@@ -87,6 +91,8 @@ long list_RemoveItem(list *l, void *obj);
 unsigned long list_GetIndex(list *l, void *obj);
 
 void list_Clear(list *l);
+
+void list_SetLen(list *l,long len);
 
 unsigned long list_GetLen(list *l);
 

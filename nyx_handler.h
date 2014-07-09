@@ -59,11 +59,11 @@
 
 node *nyxh_eval(node *state,node *obj,node *block,node *parameters);
 node *nyxh_sys(node *state,node *obj,node *block,node *parameters);
-node *nyxh_name(node *state,node *obj,node *block,node *parameters);
-node *nyxh_working_directory(node *state,node *obj,node *block,node *parameters);
-node *nyxh_change_working_directory(node *state,node *obj,node *block,node *parameters);
-node *nyxh_execute(node *state,node *obj,node *block,node *parameters);
-node *nyxh_dump(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_name(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_working_directory(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_change_working_directory(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_execute(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_dump(node *state,node *obj,node *block,node *parameters);
 node *nyxh_import(node *state,node *obj,node *block,node *parameters);
 node *nyxh_to_json(node *state,node *obj,node *block,node *parameters);
 node *nyxh_from_json(node *state,node *obj,node *block,node *parameters);
@@ -101,6 +101,7 @@ node *nyxh_split(node *state,node *obj,node *block,node *parameters);
 node *nyxh_handler_test(node *state,node *obj,node *block,node *parameters);
 
 node *nyxh_else(node *state,node *obj,node *block,node *parameters);
+node *nyxh_do(node *state,node *obj,node *block,node *parameters);
 node *nyxh_args(node *state,node *obj,node *block,node *parameters);
 
 
@@ -108,6 +109,21 @@ node *nyxh_and(node *state,node *obj,node *block,node *parameters);
 node *nyxh_or(node *state,node *obj,node *block,node *parameters);
 node *nyxh_pre_not(node *state,node *obj,node *block,node *parameters);
 
+node *nyxh_sys_time(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_sys_interpreter_version(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_interpreter_filename(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_script_filename(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_exit(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_parent(node *state,node *obj,node *block,node *parameters);
+node *nyxh_get_block(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_return(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_name(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_item_at(node *state,node *obj,node *block,node *parameters);
 
 
 node *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters);

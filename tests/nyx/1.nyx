@@ -1,13 +1,17 @@
+println("retrieving unix timestamp");
+ut=sys.name();
+println("actual timestamp:",ut);
+ut=sys.time();
+println("actual timestamp:",ut);
 
 s="Trenne diesen Satz bitte in einzelne Woerter auf!";
 println(s[0]);
 println("string len:",len(s));
 
-s=sys().execute("ls -a");
+s=sys.execute("ls -a");
 words = s.split(" \n");
 
 ??(i=0,{i<len(words)},{println(words[i]);i=i+1},{},1);
-
 
 
 
@@ -79,17 +83,17 @@ println("0: ",ar[0]," 3: ",ar[3]," k:",ar["k"]);
 ar2=["hi","to",k="all"];
 println("0: ",ar2[0]," 3: ",ar2[3]," k:",ar2["k"]);
 
-println("name:",sys().name());
+println("name:",sys.name());
 
-println("sys working directory:",sys().working_directory()["path"]);
+println("sys working directory:",sys.working_directory()["path"]);
 
 
 
-println("ls:",sys().execute("ls -a"));
+println("ls:",sys.execute("ls -a"));
 
 return_value=55;
 */
 
-/*sys().change_working_directory("..");
-println("space_race:",sys().execute("space_race"));*/
-/*println("sys dump:",sys().dump());*/
+/*sys.change_working_directory("..");
+println("space_race:",sys.execute("space_race"));*/
+/*println("sys dump:",sys.dump());*/
