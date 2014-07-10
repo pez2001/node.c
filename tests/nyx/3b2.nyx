@@ -1,0 +1,15 @@
+read_players()=
+{
+j=open("tests/web/clients.json","rb+").readall().close().from_json();
+println("bootloader[0].file:",j.bootloader[0].file);
+};
+
+
+i=0;
+??({i=0},{i<3},{read_players();i=i+1;println("i:",i)},{},1);
+
+println("finish");
+
+
+
+

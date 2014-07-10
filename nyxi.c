@@ -70,7 +70,7 @@ x add_handler etc
 */
 
 
-void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array)
+void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array,long item_index)
 {
   node *base_class = node_GetItemByKey(state,"nyx_object");
   node *child = create_class_instance(base_class);
@@ -93,21 +93,25 @@ void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array)
     node *items = create_obj("items");
     add_obj_kv(child,items);
     node_array_IterationReset(tree);
+    long i = 0;
     while(node_array_IterationUnfinished(tree))
     {
       node *array_token = node_array_Iterate(tree);
-      add_json_tree(state,items,array_token,1);
+      add_json_tree(state,items,array_token,1,i);
     }
   }
   if(add_to_array)
+  {
     node_AddItem(output,child);
+    set_obj_int(child,"item_index",item_index);
+  }
   else
     add_member(output,child);
   node_ItemIterationReset(tree);
   while(node_ItemIterationUnfinished(tree))
   {
     node *sub = node_ItemIterate(tree);
-    add_json_tree(state,child,sub,0);
+    add_json_tree(state,child,sub,0,-1);
   }
 }
 
@@ -120,7 +124,7 @@ void convert_from_json(node *state,node *output,char *json)
   while(node_ItemIterationUnfinished(json_tree))
   {
     node *sub = node_ItemIterate(json_tree);
-    add_json_tree(state,output,sub,0);
+    add_json_tree(state,output,sub,0,-1);
   }
   node_FreeTree(json_tree);
 }
@@ -1298,6 +1302,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
         }
       }
       value = evaluate_block_instance(state,obj);
+      //value = evaluate_block_instance_in(state,obj,block);
       node *obj_members = node_GetItemByKey(obj,"members");
       node *arguments = node_GetItemByKey(obj_members,"arguments");
       if(arguments!=NULL)
@@ -1375,9 +1380,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   while(node_ItemIterationUnfinished(statement))
   {
     node *token = node_ItemIterate(statement);
-    //printf("------\nevaluating next token\n");
-    //node_PrintTree(token);
-    //printf("------\n");
+    /*printf("------\nevaluating next token\n");
+    node_PrintTree(token);
+    printf("------\n");*/
     fflush(stdout);
     if(!strcmp(node_GetKey(token),"nyx_parameters"))
     {
@@ -1431,7 +1436,12 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         node *key_obj = evaluate_statement(state,node_GetItem(token,0),block,0,NULL);
         if(node_GetItemByKey(actual_obj,"items")!=NULL)
         {
+          //printf("searching in :\n");
+          //fflush(stdout);
           node *found_obj = get_item(state,actual_obj,key_obj);
+          //printf("found:%x\n",found_obj);
+          //node_PrintTree(found_obj);
+          //fflush(stdout);
           actual_obj = found_obj;
         }
         else //check if string is used as array with a number as key - return a single char string
