@@ -21,47 +21,6 @@
  */
 #include "fbx.h"
 
-char *fbx_AddCharToString(char *string,char letter)
-{ 
-  int len=strlen(string);
-  string = (char*)realloc(string,len+2);
-  string[len+1] = 0;
-  string[len] = letter;
-  return(string);
-}
-
-char *fbx_CreateEmptyString(void)
-{
-    char *string = (char*)malloc(1);
-    string[0] = 0;
-    return(string);
-}
-
-char *fbx_TrimString(char *string)
-{
-  long len = strlen(string);
-  if(!len)
-    return(string);
-  long s=0;
-  long e=len-1;
-  while(s<len && isspace(string[s]))s++;
-  while(e>0 && isspace(string[e]))e--;
-  e=e+1;
-  long nlen = e-s;
-  if(nlen<=0)
-  {
-    free(string);
-    return(fbx_CreateEmptyString());
-  }
-  if(nlen==len)
-    return(string);
-  char *r = (char*)malloc(nlen+1);
-  memcpy(r,string+s,nlen);
-  r[nlen] = 0;
-  free(string);
-  return(r);
-}
-
 char fbx_ConvertEscapeChar(char escape_char)
 {
     char r = 0;
@@ -162,7 +121,7 @@ node *fbx_Load(char *fbx,unsigned long len)
   int state=0;   
   list *obj_stack=list_Create(0,0);
   unsigned long offset=0;
-  char *value_string = fbx_CreateEmptyString();
+  char *value_string = str_CreateEmpty();
   int is_last_digit = 0;
   node *new_obj  = NULL;
   node *root_obj = node_Create();
@@ -190,16 +149,16 @@ node *fbx_Load(char *fbx,unsigned long len)
       if(add_char == '"')
       {
          state &= ~FBX_STATE_IN_STRING;
-         value_string = fbx_TrimString(value_string);
+         value_string = str_Trim(value_string);
          node *array_obj = node_Create();
          fbx_SetNode(array_obj,value_string,True);
          node_array_Add(new_obj,array_obj);
          node_SetParent(array_obj,new_obj);
          free(value_string);
-         value_string=fbx_CreateEmptyString();
+         value_string=str_CreateEmpty();
          continue;
       }
-     value_string = fbx_AddCharToString(value_string,add_char);
+     value_string = str_AddChar(value_string,add_char);
      continue;
     }
 
@@ -213,7 +172,7 @@ node *fbx_Load(char *fbx,unsigned long len)
             list_Push(obj_stack,new_obj);
             is_last_digit=0;
             offset++;
-            value_string = fbx_TrimString(value_string);
+            value_string = str_Trim(value_string);
             if(strlen(value_string))
             {
               node *array_obj = node_Create();
@@ -221,14 +180,14 @@ node *fbx_Load(char *fbx,unsigned long len)
               node_array_Add(new_obj,array_obj);
               node_SetParent(array_obj,new_obj);
               free(value_string);
-              value_string=fbx_CreateEmptyString();
+              value_string=str_CreateEmpty();
             }
             break;
        case '}':
             list_Pop(obj_stack);
             is_last_digit=0;
             offset++;
-            value_string = fbx_TrimString(value_string);
+            value_string = str_Trim(value_string);
             if(strlen(value_string))
             {
               node *array_obj = node_Create();
@@ -236,11 +195,11 @@ node *fbx_Load(char *fbx,unsigned long len)
               node_array_Add(new_obj,array_obj);
               node_SetParent(array_obj,new_obj);
               free(value_string);
-              value_string=fbx_CreateEmptyString();
+              value_string=str_CreateEmpty();
             }
             break;
        case ':':
-            value_string = fbx_TrimString(value_string);
+            value_string = str_Trim(value_string);
             new_obj = node_Create();
             node_SetArray(new_obj,0);
             node_SetKey(new_obj,value_string);
@@ -249,18 +208,18 @@ node *fbx_Load(char *fbx,unsigned long len)
             if(strlen(value_string))
             {
               free(value_string);
-              value_string = fbx_CreateEmptyString();
+              value_string = str_CreateEmpty();
             }
             is_last_digit=0;
             offset++;
             break;
        case '"':
             state |= FBX_STATE_IN_STRING;
-            value_string = fbx_TrimString(value_string);
+            value_string = str_Trim(value_string);
             if(strlen(value_string))
             { 
               free(value_string);
-              value_string = fbx_CreateEmptyString();
+              value_string = str_CreateEmpty();
             }
             is_last_digit=0;
             offset++;
@@ -277,7 +236,7 @@ node *fbx_Load(char *fbx,unsigned long len)
               if((is_last_digit==1 && fbx_isdigit(fbx[offset])==0 ))
               {
                 is_last_digit = fbx_isdigit(fbx[offset]);
-                value_string = fbx_TrimString(value_string);
+                value_string = str_Trim(value_string);
                 if(strlen(value_string))
                 {
                   node *array_obj = node_Create();
@@ -285,8 +244,8 @@ node *fbx_Load(char *fbx,unsigned long len)
                   node_array_Add(new_obj,array_obj);
                   node_SetParent(array_obj,new_obj);
                   free(value_string);
-                  value_string=fbx_CreateEmptyString();
-                  value_string = fbx_AddCharToString(value_string,fbx[offset]);
+                  value_string= str_CreateEmpty();
+                  value_string = str_AddChar(value_string,fbx[offset]);
                 }
                 offset++;
                 break;
@@ -294,13 +253,13 @@ node *fbx_Load(char *fbx,unsigned long len)
                else
               {
                 is_last_digit = fbx_isdigit(fbx[offset]);
-                value_string = fbx_AddCharToString(value_string,fbx[offset]);
+                value_string = str_AddChar(value_string,fbx[offset]);
                 offset++;
                 break;
               }
        case ' ':
        case ',': 
-               value_string = fbx_TrimString(value_string);
+               value_string = str_Trim(value_string);
                if(strlen(value_string))
                {
                  node *array_obj = node_Create();
@@ -308,7 +267,7 @@ node *fbx_Load(char *fbx,unsigned long len)
                  node_array_Add(new_obj,array_obj);
                  node_SetParent(array_obj,new_obj);
                  free(value_string);
-                 value_string=fbx_CreateEmptyString();
+                 value_string = str_CreateEmpty();
                }
                is_last_digit=0;
                offset++;
@@ -333,8 +292,9 @@ node *fbx_LoadFile(char *filename)
   fseek(fbx, 0, SEEK_END);
   long fbx_len = ftell(fbx);
   fseek(fbx,0,SEEK_SET);
-  char *fbx_data = (char*)malloc(fbx_len);
+  char *fbx_data = (char*)malloc(fbx_len+1);
   int r = fread((void*)fbx_data,fbx_len,1,fbx);
+  fbx_data[fbx_len]=0;
   if(r)
   	rn = fbx_Load(fbx_data,fbx_len);
   free(fbx_data);

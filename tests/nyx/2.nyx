@@ -54,9 +54,7 @@ h= 1+-1;
 
 ?(2==1,{println("true")},{println("false")},0).else({println("executed else")});
 
-if(exp,do)={?(exp,do,{},0)};
-
-if(1==2,{println("true if")}).else({println("else if")});
+if(exp,_do)={?(exp,_do,{},0)};
 
 b=open("tests/test_yeti.json","rb").close();
 
@@ -73,3 +71,6 @@ println(a);
 
 a=open("tests/test_yeti.json","rb").readall().close();
 println(a);
+
+println("deep check");
+if({1==2},{println("true if")}).else({println("else if")});

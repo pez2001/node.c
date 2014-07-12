@@ -21,8 +21,8 @@
  */
 
 
-#ifndef JSON_H
-#define JSON_H
+#ifndef JSON_IMPORT_H
+#define JSON_IMPORT_H
 
 #include "../node.h"
 
@@ -46,8 +46,37 @@
 
 //im not shooting for an ast , more of a stream and state based interpreter
 
+
+/**
+ * json_Load() - Load JSON from string
+ * @json: JSON formatted input string
+ * @len: Length of input string
+ *
+ * Creates a node tree from the JSON formatted input string
+ * Note: string does not need to be terminated
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *json_Load(char *json,unsigned long len); 
+
+/**
+ * json_LoadFile() - Load JSON from a file
+ * @filename: Filename of JSON formatted input file
+ *
+ * Creates a node tree from the JSON formatted input file
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *json_LoadFile(char *filename); 
+
+/**
+ * json_LoadString() - Load JSON from string
+ * @content: JSON formatted input string
+ *
+ * Creates a node tree from the JSON formatted input string
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *json_LoadString(char *content);
 
 #endif

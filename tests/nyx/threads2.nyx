@@ -1,0 +1,5 @@
+g=0;
+f1()={i=0;i=i+1;println("f1:",i,"g:",g);g=g+1;};
+f2()={i=0;i=i+1;println("f2:",i,"g:",g);g=g+1;};
+sys.start(f1);
+sys.start(f2);

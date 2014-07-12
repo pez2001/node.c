@@ -21,8 +21,8 @@
  */
 
 
-#ifndef FBX_H
-#define FBX_H
+#ifndef FBX_IMPORT_H
+#define FBX_IMPORT_H
 
 #include "../node.h"
 
@@ -45,7 +45,26 @@
 #define FBX_STATE_IN_COMMENT 32
 
 
+/**
+ * fbx_Load() - Load fbx ast data from string
+ * @json: fbx formatted input string
+ * @len: Length of input string
+ *
+ * Creates a node tree from the fbx formatted input string
+ * Note: string does not need to be terminated
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *fbx_Load(char *fbx,unsigned long len); 
+
+/**
+ * fbx_LoadFile() - Load fbx ast from a file
+ * @filename: Filename of fbx formatted input file
+ *
+ * Creates a node tree from the fbx formatted input file
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *fbx_LoadFile(char *filename); 
 
 #endif

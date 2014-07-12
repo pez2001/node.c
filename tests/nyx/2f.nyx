@@ -1,0 +1,7 @@
+
+if(exp,_do)={?(exp,_do,{},0)};
+println("deep check");
+if({1==2},{println("true if")}).else({println("else if")});
+a=1;
+a.do({println("doing stuff")});
+1.do({println("doing stuff too")});

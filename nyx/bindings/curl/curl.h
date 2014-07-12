@@ -20,14 +20,17 @@
  *
  */
 
-#include "node_print.h"
+#ifndef BINDING_CURL_H
+#define BINDING_CURL_H
+
+#include "../../nyx.h"
+
+#include <stdio.h>
+#include <curl/curl.h>
+
+void bind_curl(node *class);
+node *create_curl_class_object(void);
+node *nyxh_curl(node *state,node *obj,node *block,node *parameters);
 
 
-#ifdef USE_DEBUGGING
-int debug_level = 0;
 #endif
-
-int main(int argc, char *argv[])
-{
-
-}

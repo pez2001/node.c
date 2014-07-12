@@ -21,47 +21,6 @@
  */
 #include "nyx.h"
 
-char *nyx_AddCharToString(char *string,char letter)
-{ 
-  int len=strlen(string);
-  string = (char*)realloc(string,len+2);
-  string[len+1] = 0;
-  string[len] = letter;
-  return(string);
-}
-
-char *nyx_CreateEmptyString(void)
-{
-    char *string = (char*)malloc(1);
-    string[0] = 0;
-    return(string);
-}
-
-char *nyx_TrimString(char *string)
-{
-  long len = strlen(string);
-  if(!len)
-    return(string);
-  long s=0;
-  long e=len-1;
-  while(s<len && (isspace(string[s]) || string[s]=='\t'))s++;
-  while(e>0 && (isspace(string[e]) || string[s]=='\t'))e--;
-  e=e+1;
-  long nlen = e-s;
-  if(nlen<=0)
-  {
-    free(string);
-    return(nyx_CreateEmptyString());
-  }
-  if(nlen==len)
-    return(string);
-  char *r = (char*)malloc(nlen+1);
-  memcpy(r,string+s,nlen);
-  r[nlen] = 0;
-  free(string);
-  return(r);
-}
-
 char nyx_ConvertEscapeChar(char escape_char)
 {
   char r = 0;
@@ -145,9 +104,9 @@ void nyx_SetNode(node *n,char *value_string,int is_value_string)
           node_SetBool(n,False);
         else
         {
-          double d = atof(value_string);
-          node_SetDouble(n,d);
-          //node_ParseNumber(n,value_string);
+          //double d = atof(value_string);
+          //node_SetDouble(n,d);
+          node_ParseNumber(n,value_string);
         }
 }
 
@@ -166,7 +125,7 @@ int nyx_is_in_key_space(char c)
 
 void nyx_add_value_string(char **value_string,int state,node *nyx_stream)
 {
- *value_string = nyx_TrimString(*value_string);
+ *value_string = str_Trim(*value_string);
  if(strlen(*value_string))
  { 
   if(state & NYX_STATE_IN_VALUE  && !(state & NYX_STATE_IN_COMMENT))
@@ -182,10 +141,9 @@ void nyx_add_value_string(char **value_string,int state,node *nyx_stream)
     node_SetParent(ops,nyx_stream);
   }
   free(*value_string);
-  *value_string = nyx_CreateEmptyString();
+  *value_string = str_CreateEmpty();
  }
 }
-
 
 node *nyx_Load(char *nyx,unsigned long len)
 {
@@ -193,7 +151,7 @@ node *nyx_Load(char *nyx,unsigned long len)
   int comment_level=0;   
   list *obj_stack=list_Create(0,0);
   unsigned long offset=0;
-  char *value_string = nyx_CreateEmptyString();
+  char *value_string = str_CreateEmpty();
   node *new_obj  = NULL;
   node *root_obj = node_Create();
   node_SetType(root_obj,NODE_TYPE_NODE);
@@ -246,7 +204,7 @@ node *nyx_Load(char *nyx,unsigned long len)
         node_SetParent(str,actual_obj);
 
         free(value_string);
-        value_string = nyx_CreateEmptyString();
+        value_string = str_CreateEmpty();
         state &= ~NYX_STATE_IN_STRING;
         offset++;
         continue;
@@ -254,10 +212,10 @@ node *nyx_Load(char *nyx,unsigned long len)
       if((state & NYX_STATE_IN_STRING) && nyx[offset]=='\\')
       {
         offset++;
-        value_string = nyx_AddCharToString(value_string,nyx_ConvertEscapeChar(nyx[offset]));
+        value_string = str_AddChar(value_string,nyx_ConvertEscapeChar(nyx[offset]));
       }
       else
-        value_string = nyx_AddCharToString(value_string,nyx[offset]);
+        value_string = str_AddChar(value_string,nyx[offset]);
       offset++;
       continue;
     }
@@ -292,23 +250,8 @@ node *nyx_Load(char *nyx,unsigned long len)
       offset++;
       continue;
     }
-
-    /*
     if(nyx[offset]==' ' || nyx[offset]=='\t')
     {
-      nyx_add_value_string(&value_string,state,actual_obj);
-      state &= ~NYX_STATE_IN_OP;
-      state &= ~NYX_STATE_IN_VALUE;
-      offset++;
-      continue;
-    }
-    */
-
-    if(nyx[offset]==' ' || nyx[offset]=='\t')
-    {
-      //nyx_add_value_string(&value_string,state,actual_obj);
-      //state &= ~NYX_STATE_IN_OP;
-      //state &= ~NYX_STATE_IN_VALUE;
       offset++;
       continue;
     }
@@ -451,7 +394,7 @@ node *nyx_Load(char *nyx,unsigned long len)
       state |= NYX_STATE_IN_OP;
     }
 
-    value_string = nyx_AddCharToString(value_string,nyx[offset]);
+    value_string = str_AddChar(value_string,nyx[offset]);
     offset++;
   } 
  free(value_string);
@@ -494,8 +437,9 @@ node *nyx_LoadFile(char *filename)
     return(NULL);
   fseek(nyx,0,SEEK_SET);
   char *nyx_data = (char*)malloc(nyx_len+1);
-  memset(nyx_data+nyx_len,0,1);
+  //memset(nyx_data+nyx_len,0,1);
   int r = fread((void*)nyx_data,nyx_len,1,nyx);
+  nyx_data[nyx_len]=0;
   if(r)
     rn = nyx_Load(nyx_data,nyx_len+1);
   free(nyx_data);

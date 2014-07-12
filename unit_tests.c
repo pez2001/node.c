@@ -615,13 +615,15 @@ void nyx_tests2(void)
 
 int main(int argc, char *argv[])
 {
-	//ptr_tests2();
+  ptr_tests();
+  ptr_tests2();
   node_tests();
-  //mem_tests();
-  //json_tests();
-  //fbx_tests();
-  //nyx_tests();
-  //nyx_tests2();
-  //hashing_tests();
+  mem_tests();
+  fflush(stdout);
+  json_tests();
+  fbx_tests();
+  nyx_tests();
+  nyx_tests2();
+  hashing_tests();
   //json_speed_tests();
 }

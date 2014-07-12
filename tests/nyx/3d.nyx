@@ -1,17 +1,12 @@
 read_players()=
 {
 sock=socket.open(socket.SOCK_STREAM);
-/*connected=sock.connect("api.steampowered.com",80);*/
 connected=sock.connect("api.steampowered.com",80).else({println("restarting reading");restart(2)});
-connected=0;
 sock.write("GET /ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=570&format=json HTTP/1.1\r\nHost: api.steampowered.com\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
-timeouts=1000;
-/*r=sock.read();
-c=r;
-?({len(r)||timeouts},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0);},{},1);*/
-??({r=c=sock.read()},{len(r)||timeouts},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0)},{sock.close()},1);
-/*sock.close();*/
-/*println("answer:",c);*/
+
+??({timeouts=1000;c=sock.read();r=c;},{len(r)||timeouts},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0)},{sock.close()},1);
+println("answer:[",c,"]");
+c=="".do({restart(2)});
 j=http.parse_answer(c)["body"].from_json();
 chars = ["|","\\","-","/"];
 char = chars[ch];
@@ -22,10 +17,7 @@ print("Number of players in Dota2 now:",j.response.player_count);
 print("[",char,"]");
 
 ?({ch==len(chars)},{ch=0},{},0);
-/*??(i=0,{i<len(j.appnews.newsitems)},{item = j.appnews.newsitems[i];println(i+1,".news title:",item.title);i=i+1;},{},1);*/
 };
-
-println("");
 ?(1,{read_players()},{},1);
 
 

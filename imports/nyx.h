@@ -21,8 +21,8 @@
  */
 
 
-#ifndef NYX_H
-#define NYX_H
+#ifndef NYX_IMPORT_H
+#define NYX_IMPORT_H
 
 #include "../node.h"
 
@@ -42,8 +42,37 @@
 #define NYX_STATE_IN_OP 4
 #define NYX_STATE_IN_SINGLE_QUOTE_STRING 32
 
+
+/**
+ * nyx_Load() - Load nyx ast from string
+ * @json: nyx formatted input string
+ * @len: Length of input string
+ *
+ * Creates a node tree from the nyx formatted input string
+ * Note: string does not need to be terminated
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *nyx_Load(char *NYX,unsigned long len); 
+
+/**
+ * nyx_LoadFile() - Load nyx ast from a file
+ * @filename: Filename of nyx formatted input file
+ *
+ * Creates a node tree from the nyx formatted input file
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *nyx_LoadFile(char *filename); 
+
+/**
+ * nyx_LoadString() - Load nyx ast from string
+ * @content: nyx formatted input string
+ *
+ * Creates a node tree from the nyx formatted input string
+ *
+ * Return: Node tree or NULL if failed
+ */
 node *nyx_LoadString(char *content); 
 
 #endif

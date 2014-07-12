@@ -1,8 +1,10 @@
 {
+
+{
 	"phoneNumbers": 
 	{
 		"type": 0,
 	},
-	"float_val":          0.85,
+	"float_val":           5.1,
 	"floats": 14,
-}
+}}

@@ -20,30 +20,15 @@
  *
  */
 
-
-#ifndef YETI_H
-#define YETI_H
+#ifndef UNIT_TESTS_H
+#define UNIT_TESTS_H
 
 #include "../node.h"
+#include "../imports/nyx.h"
+
 
 #include "stdio.h"
 #include "stdlib.h"
 #include "string.h"
-#include "ctype.h"
-
-#ifdef USE_MEMORY_DEBUGGING
-#include "../memory.h"
-#endif
-
-#define YETI_STATE_IN_NOTHING 0
-#define YETI_STATE_IN_VALUE 1
-#define YETI_STATE_IN_STRING 2
-#define YETI_STATE_IN_COMMENT 8
-#define YETI_STATE_IN_OP 4
-#define YETI_STATE_IN_SINGLE_QUOTE_STRING 32
-
-node *yeti_Load(char *yeti,unsigned long len); 
-node *yeti_LoadFile(char *filename); 
-node *yeti_LoadString(char *content); 
 
 #endif

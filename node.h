@@ -23,13 +23,17 @@
 #ifndef NODE_H
 #define NODE_H
 
-#include "list.h"
 
 #ifdef USE_MEMORY_DEBUGGING
 #include "memory.h"
 #endif
 
-#include <wchar.h>
+
+#include "list.h"
+#include "strings.h"
+
+
+//#include <wchar.h>
 
 //#define USE_WHOLE_NODE_FUNCTION_SET ;TODO Later filter some functions to get even smaller code
 
@@ -69,7 +73,8 @@ typedef struct _node
   char *key;
   void *value;
   struct _node *parent;
-  int type;
+  //int type;
+  unsigned char type;
   list *items;
   void *tag;
   #ifdef USE_FNV_HASHES
@@ -119,10 +124,10 @@ char *node_CopyString(char *string);
 
 /*basic node management*/
 node *node_Create(void);
-node *node_CreateFilled(node *parent,char *key,void *value,int type,list *items);
-void *node_CreateValue(int type,void *value);
+node *node_CreateFilled(node *parent,char *key,void *value,unsigned char type,list *items);
+void *node_CreateValue(unsigned char type,void *value);
 void node_Free(node *n,BOOL free_value);
-void node_FreeValue(int type,void *value);
+void node_FreeValue(unsigned char type,void *value);
 node *node_Copy(node *n,BOOL copy_value);
 
 node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents);
@@ -130,16 +135,16 @@ node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents);
 /*basic node access*/
 void node_SetKey(node *n,char *key);
 void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
-void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_old_value);
+void node_SetValueType(node *n,unsigned char type,void *value,BOOL copy_value,BOOL free_old_value);
 void node_SetTag(node *n,void *tag);
 void *node_GetTag(node *n);
-void node_SetType(node *n,int type);
+void node_SetType(node *n,unsigned char type);
 void node_SetParent(node *n,node *p);
 void node_SetItems(node *n, list *items);
 char *node_GetKey(node *n);
 void *node_GetValue(node *n);
-int node_GetType(node *n);
-int node_IsType(node *n, int type);
+unsigned char node_GetType(node *n);
+int node_IsType(node *n, unsigned char type);
 node *node_GetParent(node *n);
 list *node_GetItems(node *n);
 int node_HasKey(node *n);
@@ -172,6 +177,7 @@ int node_HasItem(node *n,node *s);
 void node_ClearItems(node *n);
 node *node_ItemIterate(node *n);
 node *node_ItemPeek(node *n);
+node *node_ItemPeekFurther(node *n,long offset);
 
 int node_ItemIterationUnfinished(node *n);
 void node_ItemIterationReset(node *n);
@@ -197,23 +203,6 @@ long long node_GetSint64(node *n);
 char *node_GetString(node *n);
 int node_GetBool(node *n);
 void *node_GetUser(node *n);
-
-
-/*these do conversions on the fly if needed*/
-/*double node_GetAsDouble(node *n);
-float node_GetAsFloat(node *n);
-int node_GetAsInt(node *n);
-char *node_GetAsString(node *n);
-unsigned char node_GetAsUint8(node *n);
-unsigned short node_GetAsUint16(node *n);
-unsigned long node_GetAsUint32(node *n);
-unsigned long long node_GetAsUint64(node *n);
-char node_GetAsSint8(node *n);
-short node_GetAsSint16(node *n);
-long node_GetAsSint32(node *n);
-long long node_GetAsSint64(node *n);
-int node_GetAsBool(node *n);
-*/
 
 void node_SetNull(node *n);
 void node_SetBool(node *n, int b);

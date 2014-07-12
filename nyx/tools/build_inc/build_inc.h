@@ -20,14 +20,12 @@
  *
  */
 
-#ifndef NODE_PRINT_H
-#define NODE_PRINT_H
+#ifndef BUILD_INC_H
+#define BUILD_INC_H
 
-#include "list.h"
-#include "node.h"
-
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
 #endif

@@ -184,6 +184,10 @@ void *mem_realloc(void *ptr, unsigned long size)
 void mem_free(void *ptr)
 {	
 	long index = mem_get_chunk(ptr);
+	if(index==-1)
+	{
+		printf("double freeing:%x\n",ptr);
+	}
 	if(!mem_chunk_items[index]->is_freed)
 	{
 		/*unsigned long i =0;

@@ -21,7 +21,6 @@ PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 PLATFORM_DEBUG_CFLAGS = -DWIN32
 endif
 
-#.PHONY: print_version
 
 #BEGIN_NOTIFY =	@playsound.exe /c/Users/pez2001/Downloads/217656__reitanna__knuckles-cracking.wav
 #FAILED_NOTIFY = || @playsound.exe /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
@@ -34,8 +33,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 4
-BUILD = 2565
-DEBUG_BUILD = 2904
+BUILD = 54
+DEBUG_BUILD = 110
 
 CSTD = c99
 
@@ -52,23 +51,17 @@ CC=gcc
 AR=ar
 LD=ld
 
-NODE_FILES = list.c node.c memory.c strings.c imports/json.c imports/fbx.c imports/nyx.c
-NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h list.h memory.h strings.h imports/json.h imports/fbx.h imports/nyx.h
-NODE_OBJ = node.o list.o memory.o strings.o imports/json.o imports/fbx.o imports/nyx.o
-NODE_DEBUG_OBJ = node.do list.do memory.do strings.do imports/json.do imports/fbx.do imports/nyx.do
+NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c
+NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o
+NYX_BINS = nyx$(PLATFORM_EXT)
+NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do
+NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
 UT_BINS = unit_tests$(PLATFORM_EXT)
 UT_DEBUG_OBJ = unit_tests.do
 UT_INCLUDE_FILES = unit_tests.h
-
-NYXI_FILES = nyxi.c
-NYXI_OBJ = nyxi.o
-NYXI_BINS = nyxi$(PLATFORM_EXT)
-NYXI_DEBUG_OBJ = nyxi.do
-NYXI_INCLUDE_FILES = nyxi.h
 
 TOOLS_BUILD_INC_FILES = tools/build_inc/build_inc.c
 TOOLS_BUILD_INC_BINS = build_inc$(PLATFORM_EXT)
@@ -85,59 +78,38 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc node_static_debug libnyx_debug unit_tests_debug nyxi_debug
+debug: build_inc nyx_static_debug unit_tests_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
-clean_all: clean libnyx_clean clean_debug clean_binaries all debug 
+clean_all: clean clean_debug clean_binaries all 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 	$(SUCCESS_NOTIFY)
 
-all: node_static node_dynamic build_inc unit_tests debug libnyx nyxi
+all: build_inc nyx_static nyx_dynamic unit_tests debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 	$(SUCCESS_NOTIFY)
 
-.PHONY: libnyx
-.PHONY: libnyx_clean
-.PHONY: libnyx_debug
-	
-libnyx: node_static
-	$(MAKE) -C nyx all
-
-libnyx_clean: 
-	$(MAKE) -C nyx clean
-
-libnyx_debug: node_static_debug
-	$(MAKE) -C nyx debug
-
-unit_tests: node_static $(UT_OBJ) 
-	$(CC) $(UT_OBJ) libnode.a  $(LDFLAGS) -o unit_tests 
+unit_tests: nyx_static $(UT_OBJ) 
+	$(CC) $(UT_OBJ) libnyx.a ../libnode.da $(LDFLAGS) -o unit_tests 
 	strip ./unit_tests$(PLATFORM_EXT)
 
-unit_tests_debug: node_static_debug $(UT_DEBUG_OBJ) 
-	$(CC) $(UT_DEBUG_OBJ) libnode.da $(DEBUG_LDFLAGS) -o unit_tests_debug 
-
-nyxi: node_static libnyx $(NYXI_OBJ) 
-	$(CC) $(NYXI_OBJ) nyx/libnyx.a libnode.a $(LDFLAGS) -o nyxi 
-	strip ./nyxi$(PLATFORM_EXT)
-
-nyxi_debug: node_static_debug libnyx $(NYXI_DEBUG_OBJ) 
-	$(CC) $(NYXI_DEBUG_OBJ) nyx/libnyx.da libnode.da $(DEBUG_LDFLAGS) -o nyxi_debug 
+unit_tests_debug: nyx_static_debug $(UT_DEBUG_OBJ) 
+	$(CC) $(UT_DEBUG_OBJ) libnyx.da ../libnode.da $(DEBUG_LDFLAGS) -o unit_tests_debug 
 
 build_inc: $(TOOLS_BUILD_INC_OBJ) 
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
 
+nyx_static: $(NYX_OBJ)
+	$(AR) -rs libnyx.a ../libnode.a $(NYX_OBJ) 
 
-node_static: $(NODE_OBJ)
-	$(AR) -rs libnode.a $(NODE_OBJ)
+nyx_static_debug: $(NYX_DEBUG_OBJ)
+	$(AR) -rs libnyx.da ../libnode.da $(NYX_DEBUG_OBJ) 
 
-node_static_debug: $(NODE_DEBUG_OBJ)
-	$(AR) -rs libnode.da $(NODE_DEBUG_OBJ)
-
-node_dynamic: $(NODE_OBJ)
-	$(CC) -DCREATELIB -shared $(NODE_OBJ) -o node.dll
-	strip node.dll	
+nyx_dynamic: $(NYX_OBJ)
+	$(CC) -DCREATELIB -shared ../node.dll $(NYX_OBJ) $(PLATFORM_LIBS) -o nyx.dll
+	strip nyx.dll	
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
@@ -146,15 +118,15 @@ node_dynamic: $(NODE_OBJ)
 %.do: %.c 
 	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
-clean: libnyx_clean
+clean:
 	$(BEGIN_NOTIFY)
-	rm -f node.dll *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
+	rm -f nyx.dll *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
 
 clean_binaries:
-	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) nyxi$(PLATFORM_EXT) nyxi_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 
+	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 
 
 clean_debug:
-	rm -f build_inc$(PLATFORM_EXT) nyxi_debug$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) *.do *.da 
+	rm -f build_inc$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) *.do *.da 
 	
 srcdist:	clean clean_binaries
 	rm -f -r node.c-$(MAJOR_VERSION).$(MINOR_VERSION)-$(BUILD)

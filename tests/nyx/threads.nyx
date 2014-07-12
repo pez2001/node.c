@@ -1,0 +1,2 @@
+f1()={i=0;i=i+1;println("f1:",i)};
+f2()={i=0;i=i+1;println("f2:",i)};

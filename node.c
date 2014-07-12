@@ -70,17 +70,7 @@ void *node_GetItemByKeyHash(node *n,unsigned long key_hash)
   return(item);
 }
 
-
-
 #endif
-
-char *node_CopyString(char *string)
-{
-  char *r = (char*)malloc(strlen(string) + 1);
-  memset(r, 0, strlen(string) + 1);
-  memcpy(r, string, strlen(string));
-  return(r);
-}
 
 node *node_Create(void)
 {
@@ -96,10 +86,10 @@ node *node_Create(void)
   return(n);
 }
 
-node *node_CreateFilled(node *parent,char *key,void *value,int type,list *items)
+node *node_CreateFilled(node *parent,char *key,void *value,unsigned char type,list *items)
 {
   node *n = (node*)malloc(sizeof(node));
-  n->key = node_CopyString(key);
+  n->key = str_Copy(key);
   n->value = value;
   n->type = type;
   n->items = items;
@@ -110,7 +100,7 @@ node *node_CreateFilled(node *parent,char *key,void *value,int type,list *items)
   return(n);
 }
 
-void *node_CreateValue(int type,void *value)
+void *node_CreateValue(unsigned char type,void *value)
 {
   void *r = NULL;
   switch(type)
@@ -150,7 +140,7 @@ void *node_CreateValue(int type,void *value)
          memcpy(r, value, sizeof(unsigned long long));
          break;
     case NODE_TYPE_STRING:
-         r = (void*)node_CopyString(value);
+         r = (void*)str_Copy(value);
          break;
     case NODE_TYPE_ARRAY:
          r = (void*)node_CopyArray(value,True);
@@ -190,7 +180,7 @@ void node_Free(node *n,BOOL free_value)
   free(n);
 }
 
-void node_FreeValue(int type,void *value)
+void node_FreeValue(unsigned char type,void *value)
 {
   switch(type)
   {
@@ -348,7 +338,6 @@ void node_print_tabs(int num)
   for(int i=0;i<num;i++)
    printf("\t");
 }
-
 
 void node_PrintWithTabs(node *n,int with_key,int tabs_num)
 {
@@ -598,13 +587,11 @@ void node_PrintTree(node *n)
   node_PrintTreeLevel(n,0);
 }
 
-
-
 void node_SetKey(node *n,char *key)
 {
   if(n->key != NULL)
     free(n->key);
-  n->key = node_CopyString(key);
+  n->key = str_Copy(key);
   #ifdef USE_FNV_HASHES
   n->key_hash = node_ComputeHash(key);
   #endif
@@ -622,12 +609,12 @@ void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value)
     n->value = value;
 }
 
-void node_SetType(node *n,int type)
+void node_SetType(node *n,unsigned char type)
 {
   n->type = type;
 }
 
-void node_SetValueType(node *n,int type,void *value,BOOL copy_value,BOOL free_old_value)
+void node_SetValueType(node *n,unsigned char type,void *value,BOOL copy_value,BOOL free_old_value)
 {
   node_SetType(n,type);
   node_SetValue(n,value,copy_value,free_old_value);
@@ -704,7 +691,7 @@ node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents)
   return(new);
 }
 
-int node_IsType(node *n, int type)
+int node_IsType(node *n, unsigned char type)
 {
   return(n->type == type);
 }
@@ -719,7 +706,7 @@ void *node_GetValue(node *n)
   return(n->value);
 }
 
-int node_GetType(node *n)
+unsigned char node_GetType(node *n)
 {
   return(n->type);
 }
@@ -743,9 +730,6 @@ int node_HasValue(node *n)
 {
   return(n->value!=NULL);
 }
-
-
-
 
 int node_GetInt(node *n)
 {
@@ -1001,80 +985,10 @@ void node_SetSint64(node *n,long long ll)
   }
 }
 
-
-
-/*
-double node_GetAsDouble(node *n)
-{
-
-}
-
-float node_GetAsFloat(node *n)
-{
-
-}
-
-int node_GetAsInt(node *n)
-{
-
-}
-
-char *node_GetAsString(node *n)
-{
-
-}
-
-unsigned char node_GetAsUint8(node *n)
-{
-
-}
-
-unsigned short node_GetAsUint16(node *n)
-{
-
-}
-
-unsigned long node_GetAsUint32(node *n)
-{
-
-}
-
-unsigned long long node_GetAsUint64(node *n)
-{
-
-}
-
-char node_GetAsSint8(node *n)
-{
-
-}
-
-short node_GetAsSint16(node *n)
-{
-
-}
-
-long node_GetAsSint32(node *n)
-{
-
-}
-
-long long node_GetAsSint64(node *n)
-{
-
-}
-
-int node_GetAsBool(node *n)
-{
-
-}
-*/
-
 void node_InsertItem(node *n,node *s,long index)
 {
   list_Insert(n->items,0,s);
 }
-
 
 long node_AddItem(node *n,node *s)
 {
@@ -1114,7 +1028,6 @@ int node_HasItem(node *n,node *s)
   return(False);
 
 }
-
 
 void *node_GetItem(node *n,long index)
 {
@@ -1191,6 +1104,27 @@ node *node_ItemPeek(node *n)
   return(r);
 }
 
+node *node_ItemPeekFurther(node *n,long offset)
+{
+  if(!list_IterationUnfinished(n->items))
+    return(NULL);
+
+  long old = list_GetIterationIndex(n->items);
+  long c=0;
+  node *r=NULL;
+  while(c<offset)
+  {
+    if(!list_IterationUnfinished(n->items))
+    {
+      list_SetIterationIndex(n->items,old);
+      return(NULL);
+    }
+    r = list_Iterate(n->items);
+    c++;
+  }
+  list_SetIterationIndex(n->items,old);
+  return(r);
+}
 
 int node_ItemIterationUnfinished(node *n)
 {
@@ -1211,9 +1145,6 @@ void node_SetItemIterationIndex(node *n,long iteration_index)
 {
   list_SetIterationIndex(n->items,iteration_index);
 }
-
-
-
 
 node_array *node_CreateArray(long num)
 {
@@ -1247,8 +1178,6 @@ node_array *node_CopyArray(node_array *array,BOOL copy_values)
   }
   return(new_array);
 }
-
-
 
 void node_SetArray(node *n,long num)
 {
@@ -1314,8 +1243,6 @@ void node_array_SetIterationIndex(node *n,long iteration_index)
 {
   list_SetIterationIndex(((node_array*)n->value)->nodes,iteration_index);
 }
-
-
 
 node_binary *node_CreateBinary(void *binary,unsigned long len)
 {
