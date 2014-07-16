@@ -104,12 +104,21 @@ node *nyxh_do(node *state,node *obj,node *block,node *parameters);
 node *nyxh_args(node *state,node *obj,node *block,node *parameters);
 
 
+node *nyxh_switch_name_value(node *state,node *obj,node *block,node *parameters);
+node *nyxh_immediate_add(node *state,node *obj,node *block,node *parameters);
+node *nyxh_immediate_sub(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_pre_immediate_add(node *state,node *obj,node *block,node *parameters);
+node *nyxh_pre_immediate_sub(node *state,node *obj,node *block,node *parameters);
+
+
 node *nyxh_and(node *state,node *obj,node *block,node *parameters);
 node *nyxh_or(node *state,node *obj,node *block,node *parameters);
 node *nyxh_pre_not(node *state,node *obj,node *block,node *parameters);
 
-node *nyxh_sys_time(node *state,node *obj,node *block,node *parameters);
 
+node *nyxh_sys_time(node *state,node *obj,node *block,node *parameters);
+node *nyxh_sys_sleep(node *state,node *obj,node *block,node *parameters);
 node *nyxh_sys_interpreter_version(node *state,node *obj,node *block,node *parameters);
 node *nyxh_sys_interpreter_filename(node *state,node *obj,node *block,node *parameters);
 node *nyxh_sys_script_filename(node *state,node *obj,node *block,node *parameters);

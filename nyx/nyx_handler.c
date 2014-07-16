@@ -29,25 +29,11 @@ node *nyxh_pre_add(node *state,node *obj,node *block,node *parameters)//TODO
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
   add_garbage(state,value);
-  node *value2 = node_GetItem(parameters,0);
   node *real_value = node_GetItemByKey(value,"value");
-  node *real_value2 = node_GetItemByKey(value2,"value");
-  if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
-    node_SetSint32(real_value,node_GetSint32(real_value)+node_GetSint32(real_value2));
-  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_STRING)
-  {
-    char *cat_string=str_Cat(node_GetString(real_value),node_GetString(real_value2));
-    node_SetString(real_value,cat_string);
-    free(cat_string);
-  }
-  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_SINT32)
-  {
-    char *num=str_FromLong(node_GetSint32(real_value2));
-    char *cat_string=str_Cat(node_GetString(real_value),num);
-    node_SetString(real_value,cat_string);
-    free(cat_string);
-    free(num);
-  }
+  if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,+node_GetSint32(real_value));
+  else if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
+    node_SetDouble(real_value,+node_GetDouble(real_value));
   return(value);
 }
 
@@ -60,7 +46,7 @@ node *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters)
   node *real_value = node_GetItemByKey(value,"value");
   if(node_GetType(real_value)==NODE_TYPE_SINT32)
     node_SetSint32(real_value,-node_GetSint32(real_value));
-  else if(node_GetType(real_value)==NODE_TYPE_SINT32)
+  else if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
     node_SetDouble(real_value,-node_GetDouble(real_value));
   return(value);
 }
@@ -533,7 +519,7 @@ node *nyxh_else(node *state,node *obj,node *block,node *parameters)
   node *exe_block = node_GetItem(parameters,0);
   if(!parent_value)
   {
-    execute_obj(state,exe_block,block,NULL,True);
+    execute_obj(state,exe_block,block,NULL,True,False);
   }
   set_obj_int(value,"value",parent_value);
   return(value);
@@ -551,11 +537,112 @@ node *nyxh_do(node *state,node *obj,node *block,node *parameters)
   node *exe_block = node_GetItem(parameters,0);
   if(parent_value)
   {
-    execute_obj(state,exe_block,block,NULL,True);
+    execute_obj(state,exe_block,block,NULL,True,False);
   }
   set_obj_int(value,"value",parent_value);
   return(value);
 }
+
+node *nyxh_sys_sleep(node *state,node *obj,node *block,node *parameters)
+{
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *time_par = node_GetItem(parameters,0);
+  node *time_val = node_GetItemByKey(time_par,"value");
+  long ms = node_GetSint32(time_val);
+  Sleep(ms);
+  node_SetSint32(real_value,0);
+  return(value);
+}
+
+node *nyxh_switch_name_value(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_GetItemByKey(obj,"value");
+  node *name = node_GetItemByKey(obj,"name");
+  if(node_GetType(value)!=NODE_TYPE_STRING)
+    return(obj);
+  node_SetString(name,node_GetString(value));
+  node *switch_obj = node_GetItem(parameters,0);
+  node *switch_value = node_GetItemByKey(switch_obj,"value");
+  node_SetValueType(value,node_GetType(switch_value),node_GetValue(switch_value),True,False);
+  return(obj);
+}
+
+node *nyxh_immediate_add(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_CopyTree(obj,True,True);
+  node_SetParent(value,NULL);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(obj,"value");
+  if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
+  {
+    double d1;
+    d1=node_GetDouble(real_value);
+    node_SetDouble(real_value,d1+1.0f);
+  }
+  else if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,node_GetSint32(real_value)+1);
+  else if(node_GetType(real_value)==NODE_TYPE_STRING)
+  {
+    node_SetSint32(real_value,atoi(node_GetString(real_value))+1);
+  }
+  return(value);
+}
+
+node *nyxh_immediate_sub(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = node_CopyTree(obj,True,True);
+  node_SetParent(value,NULL);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(obj,"value");
+  if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
+  {
+    double d1;
+    d1=node_GetDouble(real_value);
+    node_SetDouble(real_value,d1-1.0f);
+  }
+  else if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,node_GetSint32(real_value)-1);
+  else if(node_GetType(real_value)==NODE_TYPE_STRING)
+  {
+    node_SetSint32(real_value,atoi(node_GetString(real_value))+1);
+  }
+  return(value);
+}
+
+node *nyxh_pre_immediate_add(node *state,node *obj,node *block,node *parameters)
+{
+  node *real_value = node_GetItemByKey(obj,"value");
+  if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,node_GetSint32(real_value)+1);
+  else if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
+    node_SetDouble(real_value,node_GetDouble(real_value)+1.0f);
+  else if(node_GetType(real_value)==NODE_TYPE_STRING)
+  {
+    node_SetSint32(real_value,atoi(node_GetString(real_value))+1);
+  }
+  return(obj);
+}
+
+node *nyxh_pre_immediate_sub(node *state,node *obj,node *block,node *parameters)
+{
+  node *real_value = node_GetItemByKey(obj,"value");
+  if(node_GetType(real_value)==NODE_TYPE_SINT32)
+    node_SetSint32(real_value,node_GetSint32(real_value)-1);
+  else if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
+    node_SetDouble(real_value,node_GetDouble(real_value)-1.0f);
+  else if(node_GetType(real_value)==NODE_TYPE_STRING)
+  {
+    node_SetSint32(real_value,atoi(node_GetString(real_value))-1);
+  }
+  return(obj);
+}
+
 
 //? handler
 node *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
@@ -577,33 +664,33 @@ node *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
   inc_obj_refcount(true_block);
   inc_obj_refcount(false_block);
 
-  node *loop = execute_obj(state,loop_exe,block,NULL,True);
+  node *loop = execute_obj(state,loop_exe,block,NULL,True,False);
   node *loop_value = node_GetItemByKey(loop,"value");
   long lv = node_GetSint32(loop_value);
   if(lv)
   {
-    node *exp_obj = execute_obj(state,expression_block,block,NULL,True);
+    node *exp_obj = execute_obj(state,expression_block,block,NULL,True,False);
     while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
     {
-      execute_obj(state,true_block,block,NULL,True);
+      execute_obj(state,true_block,block,NULL,True,False);
       char *block_flag=check_block_flag(state);
       if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit"))
         break;
       free(block_flag);
-      exp_obj = execute_obj(state,expression_block,block,NULL,True);
+      exp_obj = execute_obj(state,expression_block,block,NULL,True,False);
     }
-    execute_obj(state,false_block,block,NULL,True);
+    execute_obj(state,false_block,block,NULL,True,False);
   }
   else
   {
-    node *exp_val=execute_obj(state,expression_block,block,NULL,True);
+    node *exp_val=execute_obj(state,expression_block,block,NULL,True,False);
     set_obj_int(value,"value",node_GetSint32(node_GetItemByKey(exp_val,"value")));
     if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
     {
-      execute_obj(state,true_block,block,NULL,True);
+      execute_obj(state,true_block,block,NULL,True,False);
     }
     else
-      execute_obj(state,false_block,block,NULL,True);
+      execute_obj(state,false_block,block,NULL,True,False);
   }
 
   dec_obj_refcount(expression_block);
@@ -629,39 +716,39 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
   node *true_block = node_GetItem(parameters,2);
   node *false_block = node_GetItem(parameters,3);
   node *loop_exe = node_GetItem(parameters,4);
-  node *loop = execute_obj(state,loop_exe,block,NULL,True);
+  node *loop = execute_obj(state,loop_exe,block,NULL,True,False);
   inc_obj_refcount(init_block);
   inc_obj_refcount(expression_block);
   inc_obj_refcount(true_block);
   inc_obj_refcount(false_block);
 
-  execute_obj(state,init_block,block,NULL,True);
+  execute_obj(state,init_block,block,NULL,True,True);
   node *loop_value = node_GetItemByKey(loop,"value");
   long lv = node_GetSint32(loop_value);
   if(lv)
   {
-    node *exp_obj = execute_obj(state,expression_block,block,NULL,True);
+    node *exp_obj = execute_obj(state,expression_block,block,NULL,True,False);
     while(node_GetSint32(node_GetItemByKey(exp_obj,"value")))
     {
-      execute_obj(state,true_block,block,NULL,True);
+      execute_obj(state,true_block,block,NULL,True,False);
       char *block_flag=check_block_flag(state);
       if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit"))
         break;
       else if(!strcmp(block_flag,"restart"))
-        execute_obj(state,init_block,block,NULL,True);
+        execute_obj(state,init_block,block,NULL,True,False);
       free(block_flag);
-      exp_obj = execute_obj(state,expression_block,block,NULL,True);
+      exp_obj = execute_obj(state,expression_block,block,NULL,True,False);
     }
-    execute_obj(state,false_block,block,NULL,True);
+    execute_obj(state,false_block,block,NULL,True,False);
   }
   else
   {
-    node *exp_val=execute_obj(state,expression_block,block,NULL,True);
+    node *exp_val=execute_obj(state,expression_block,block,NULL,True,False);
     set_obj_int(value,"value",node_GetSint32(node_GetItemByKey(exp_val,"value")));
     if(node_GetSint32(node_GetItemByKey(exp_val,"value")))
-      execute_obj(state,true_block,block,NULL,True);
+      execute_obj(state,true_block,block,NULL,True,False);
     else
-      execute_obj(state,false_block,block,NULL,True);
+      execute_obj(state,false_block,block,NULL,True,False);
   }
 
   dec_obj_refcount(init_block);
@@ -1414,7 +1501,7 @@ node *nyxh_sys_execute(node *state,node *obj,node *block,node *parameters)
     if(node_GetType(real_command)==NODE_TYPE_STRING)
     {
       char *cc = node_GetString(real_command);
-      FILE *f = popen(cc,"rb");
+      FILE *f = (FILE*)popen(cc,"rb");
       if(f!=NULL)
       {
         char *buf = (char*)malloc(100);
@@ -1864,16 +1951,15 @@ node *nyxh_socket_read(node *state,node *obj,node *block,node *parameters)
   node *real_value = node_GetItemByKey(value,"value");
   node *nsocket_handle = node_GetItemByKey(obj,"socket_handle");
   //node *ntype = node_GetItemByKey(fvalue,"socket_type");
+  char *ret = str_CreateEmpty();
   if(nsocket_handle!=NULL)
   {
-    char *ret = NULL;
     int socket_handle = (int)node_GetSint32(nsocket_handle);
     //printf("receiving data:%d\n",socket_handle);
     //fflush(stdout);
     int len = 1023;
     int data_received = 0;
     char buf[1024];
-    ret = str_CreateEmpty();
     while(len==1023)
     {
       memset(buf,0,1024);
@@ -1899,10 +1985,10 @@ node *nyxh_socket_read(node *state,node *obj,node *block,node *parameters)
       if(len)
         ret=str_CatFree(ret,buf);
     }
-    node_SetString(real_value,ret);
     set_obj_int(value,"socket_handle",(long)socket_handle);
-    free(ret);
   }
+  node_SetString(real_value,ret);
+  free(ret);
   return(value);
 }
 

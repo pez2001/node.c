@@ -1,23 +1,11 @@
 sock=socket.open(socket.SOCK_STREAM);
-
-sock.connect("api.steampowered.com",80);
+connected=sock.connect("api.steampowered.com",80).else({restart(2)});
 sock.write("GET /ISteamNews/GetNewsForApp/v0002/?appid=570&count=30&maxlength=300&format=json HTTP/1.1\r\nHost: api.steampowered.com\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
-
-
-timeouts=6000;
-/*sock.connect("openstrike.de",80);
-sock.write("GET /aluria/client/clients.json HTTP/1.1\r\nHost: openstrike.de\r\n\r\n");*/
-/*print("Waiting for data");*/
-
-??(c=r=sock.read(),{len(r)||timeouts},{c=c+r=sock.read();/*print(".");*/timeouts=timeouts-1;},{sock.close()},1);
-
-/*println("\nConnection closed");*/
-
-/*answer=http.parse_answer(c);*/
-/*println("\nanswer from server:",answer["body"]);*/
+??({timeouts=1000;r=c=sock.read()},{len(r)||timeouts},{r=sock.read();c=c+r;?({len(r)==0},{timeouts=timeouts-1},{},0)},{sock.close()},1);
+/*println("answer:",c);*/
 
 j=http.parse_answer(c)["body"].from_json();
-??(i=0,{i<len(j.appnews.newsitems)},{item = j.appnews.newsitems[i];println(i+1,".news title:",item.title);i=i+1;},{},1);
+??({i=0},{i<len(j.appnews.newsitems)},{item = j.appnews.newsitems[i];println(i+1,".news title:",item.title);i=i+1;},{},1);
 
 
 

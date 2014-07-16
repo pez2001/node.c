@@ -1,0 +1,43 @@
+read_bars()=
+{
+ f=open("tests/nyx/bars.json","rb");
+ fc=f.readall();
+ println("read file:",fc);
+ f.close();
+ r=1;
+};
+
+b=3;
+c=b++;
+println("c:",c," b:",b);
+sys.sleep(2000);
+
+a=["key":"val"];
+println("a.json:",a.to_json());
+println("key:",a[0]._name_," val:",a[0]);
+
+d=--b;
+println("d:",d," b:",b);
+
+e=(b--)+d;
+
+println("e:",e," d:",d," b:",b);
+
+
+*/
+/*single char setting in strings*/
+/*
+s="434";
+s[0]="5";
+s[2]="76";/*multi char with increase*/
+
+return(109);
+
+try({},{println("exception:",sys.exception)})
+*/
+
+println("finish");
+read_bars();
+println("end");
+
+

@@ -50,6 +50,7 @@ void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array,long it
     {
       node *array_token = node_array_Iterate(tree);
       add_json_tree(state,items,array_token,1,i);
+      i++;
     }
   }
   if(add_to_array)
@@ -827,6 +828,7 @@ node *create_sys_class_object(void)
   add_class_object_function(base,"time",nyxh_sys_time);
   add_class_object_function(base,"execute",nyxh_sys_execute);
   add_class_object_function(base,"exit",nyxh_sys_exit);
+  add_class_object_function(base,"sleep",nyxh_sys_sleep);
   add_class_object_function(base,"script_filename",nyxh_sys_script_filename);//if applicable
   add_class_object_function(base,"interpreter_filename",nyxh_sys_interpreter_filename);
   add_class_object_function(base,"interpreter_version",nyxh_sys_interpreter_version);//returns array with major/minor/build
@@ -840,14 +842,14 @@ node *create_sys_class_object(void)
   return(base);
 }
 
-
-/*implement class construction via classic constructor*/
-
 node *create_class_object(void)
 {
   node *base = create_base_obj_layout("object");
   add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,":",nyxh_set_value_only);
+  //add_class_object_function(base,":",nyxh_set_value_only);
+  add_class_object_function(base,":",nyxh_switch_name_value);
+
+
   add_class_object_function(base,"+",nyxh_add);
   add_class_object_function(base,"-",nyxh_sub);
   add_class_object_function(base,"/",nyxh_div);
@@ -863,6 +865,12 @@ node *create_class_object(void)
   add_class_object_function(base,"PRE!",nyxh_pre_not);
   add_class_object_function(base,"PRE-",nyxh_pre_sub);
   add_class_object_function(base,"PRE+",nyxh_pre_add);
+
+  add_class_object_function(base,"++",nyxh_immediate_add);
+  add_class_object_function(base,"--",nyxh_immediate_sub);
+  add_class_object_function(base,"PRE--",nyxh_pre_immediate_sub);
+  add_class_object_function(base,"PRE++",nyxh_pre_immediate_add);
+
   
   add_class_object_function(base,"print",nyxh_print);
   add_class_object_function(base,"println",nyxh_println);
@@ -902,6 +910,7 @@ node *create_block_class_object(node *base_class,node *block)
   add_class_object_function(base,"break",nyxh_break);
   add_class_object_function(base,"continue",nyxh_continue);
   add_class_object_function(base,"restart",nyxh_restart);
+  add_class_object_function(base,"return",nyxh_return);
   add_class_object_function(base,"import",nyxh_import);
   add_class_object_function(base,"eval",nyxh_eval);
   /*add_class_object_function(base,"sys",nyxh_sys);*/
@@ -995,7 +1004,7 @@ node *create_nyx_state(node *base_class)
   return(state);
 }
 
-node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block)
+node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block)
 {
   node *value = NULL;
   node *pars = NULL;
@@ -1024,6 +1033,8 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
             node *obj_name = node_GetItemByKey(sub,"name");
             node *parent = node_GetParent(sub);
             //printf("sub:%x,%s\n",sub,get_obj_name(sub));
+            //fflush(stdout);
+            //printf("parent:%x,%s\n",parent,get_obj_name(parent));
             //fflush(stdout);
             node_RemoveItem(parent,sub);
             node_SetParent(sub,NULL);
@@ -1071,8 +1082,10 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
           add_member(obj,arguments);//TODO what if arguments already exists ?
         }
       }
-      value = evaluate_block_instance(state,obj);
-      //value = evaluate_block_instance_in(state,obj,block);
+      if(execute_in_block)
+        value = evaluate_block_instance_in(state,obj,block);
+      else
+        value = evaluate_block_instance(state,obj);
       node *obj_members = node_GetItemByKey(obj,"members");
       node *arguments = node_GetItemByKey(obj_members,"arguments");
       if(arguments!=NULL)
@@ -1173,7 +1186,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         node *found_obj = get_member_part(actual_obj,preop_prefixed);
         if(found_obj!=NULL)
         {
-          actual_obj = execute_obj(state,found_obj,block,NULL,False);
+          actual_obj = execute_obj(state,found_obj,block,NULL,False,False);
         }
         free(preop_prefixed);
         free(use_preop);
@@ -1274,7 +1287,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node_AddItem(exe_parameters,sub_obj);
         }
         index++;
-        actual_obj = execute_obj(state,block_class_instance,block,exe_parameters,True);
+        actual_obj = execute_obj(state,block_class_instance,block,exe_parameters,True,False);
         add_garbage(state,block_class_instance);
         //node_AddItem(gc_cache,block_class_instance);
       }
@@ -1330,7 +1343,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             {
                 //printf("found function without brackets:%s\n",node_GetValue(token));
                 node *exe_parameters = create_obj("parameters");
-                actual_obj = execute_obj(state,found_obj,block,exe_parameters,False);
+                actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False);
                 //node_PrintTree(actual_obj);
             }
             else 
@@ -1354,7 +1367,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                     }
                     index++;
                   }
-                  actual_obj = execute_obj(state,found_obj,block,exe_parameters,False);//True //function assign test
+                  actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False);//True //function assign test
                 }
                 else
                 {
@@ -1385,7 +1398,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                         node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL);
                         node_AddItem(exe_parameters,sub_obj);
                       }
-                      actual_obj = execute_obj(state,found_obj,block,exe_parameters,True);
+                      actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False);
                     }
                     index++;
                   }
@@ -1443,7 +1456,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
           if(found_obj!=NULL)
           { 
-            actual_obj = execute_obj(state,found_obj,block,NULL,False);
+            actual_obj = execute_obj(state,found_obj,block,NULL,False,False);
           }
           free(preop_prefixed);
           free(use_preop);
@@ -1484,7 +1497,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             node_AddItem(parameters,sub_obj);
           }
           actual_obj = found_obj;
-          actual_obj = execute_obj(state,actual_obj,block,parameters,False);
+          actual_obj = execute_obj(state,actual_obj,block,parameters,False,False);
           //printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
           dec_execution_level(state);
           return(actual_obj);
@@ -1498,7 +1511,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     prev_token = token;
     index++;    
   }
-  actual_obj = execute_obj(state,actual_obj,block,parameters,False);
+  actual_obj = execute_obj(state,actual_obj,block,parameters,False,False);
   //printf("evaluate obj in ret:[%s]\n",get_obj_name(actual_obj));
   dec_execution_level(state);
   return(actual_obj);
@@ -1658,11 +1671,11 @@ node *call_function(node *state,char *name,node *parameters)//TODO only searches
   }
   if(!strcmp(get_obj_type(found_obj),"function"))
   {
-    ret = execute_obj(state,found_obj,block,parameters,False);
+    ret = execute_obj(state,found_obj,block,parameters,False,False);
   }
   else
   {
-    ret = execute_obj(state,found_obj,block,NULL,True);
+    ret = execute_obj(state,found_obj,block,NULL,True,False);
   }
   return(ret);
 }

@@ -42,30 +42,17 @@ Execute nyx script Files.\n\
 
 
 /*TODO
-
-x sparse arrays (kind of)
-x return empty array values
-x test array handling
-x support floats
-//support byte chunks as value 
 add binary typing of strings (intepreted as byte stream)(to read c structs etc)
-
-test class inheritance
-and reduce amount of members in classes instanced from the default base class
-
 dump/load state via control object
-x writeall
-x open files in different modes
-xseeking
-xread write (num bytes)
-x add evaluate_string function
-
 catch ctrl-D
 x interpret each received line via stdin seperately
 
+man page
+deb packages
 
-x function call ptr mechanism and seperation from execute_object
-x add_handler etc
+better handling of preops regarding ++ and like (check if last token in statement)
+better string handling(single char setting)
+better json export (tuples dont work now)
 
 */
 
@@ -129,30 +116,10 @@ int main(int argc, char** argv)
   int use_input_as_script_string=0;
 
   int ret = 0;
-  //printf("checking pars\n");
-  
-  //while ((c = getopt (argc, argv, "if:ohv")) != -1)
   while ((c = getopt (argc, argv, "iashvp")) != -1)
   {
     switch (c)
     {
-      /*case 'f':
-        if(strcasecmp(optarg,"RPYC")==0)
-        {
-          format_pyc = 0;
-          format_rpyc = 1;
-          format_rpyc_plus = 0;
-        } else
-        if(strcasecmp(optarg,"RPYC+")==0)
-        {
-          format_pyc = 0;
-          format_rpyc = 0;
-          format_rpyc_plus = 1;
-        }
-        //fprintf (stderr,"\n");
-        //id=atoi(optarg);
-        break;
-        */
       case 's':
         use_input_as_script_string = 1;
         break;
@@ -169,7 +136,6 @@ int main(int argc, char** argv)
         printf(nyxi_helpmsg);
         return(0);
       case 'v':
-        //printf("Version : %d.%d-%d\n",MAJOR_VERSION,MINOR_VERSION,BUILD+1);
         printf("nyx interpreter %d.%d (build %d)\n",MAJOR_VERSION,MINOR_VERSION,BUILD+1);
         return(0);
       case '?':
@@ -181,21 +147,17 @@ int main(int argc, char** argv)
           fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
         return(1);
       default:
-        //printf("aborting.\n");
         abort();
     }
   }
   char *filename = argv[optind];
   node *nyx_stream = NULL;
-  //printf("filename:[%s]\n",filename);
   if(filename != NULL && strlen(filename)>0 && !use_input_as_script_string && strcmp(filename,"-")) //use filename to load a script file
   {
-    //printf("reading file\n");
     nyx_stream = nyx_LoadFile(filename);
   }
   else if(filename != NULL && strcmp(filename,"-") && use_input_as_script_string)//) //string input //!(strlen(filename)==1 &&
   {
-    //printf("reading string\n");
     nyx_stream = nyx_LoadString(filename);
   }
   /*else if(interactive_mode) //interactive 
@@ -212,32 +174,21 @@ int main(int argc, char** argv)
     node *ret_obj=NULL;
     set_obj_string(state,"script_filename","STDIN");
     set_obj_string(state,"interpreter_filename",argv[0]);
-    //printf("reading standard input\n");
     while((tmp_get=fgets(buf,100,stdin))!=NULL && !done && ((long)(tmp_get)!=EOF))
     {
-      //printf("interpreting:[%s]\n",buf);
       nyx_stream = nyx_LoadString(buf);
       if(nyx_stream!=NULL)
       {
-        //node_PrintTree(nyx_stream);
         node *nyx_block = node_GetItemByKey(nyx_stream,"nyx_block");
         if(nyx_block!=NULL)
         {
-          //node *master_block = node_GetItemByKey(,"nyx_block");
           node *master_block = node_GetItem(blocks,0);
           node_RemoveItem(nyx_stream,nyx_block);
           node_FreeTree(nyx_stream);
           if(master_block!=NULL)
-          {
             ret_obj = evaluate_block_in(state,nyx_block,master_block);  
-          }
           else
-          {
-            //add_obj_kv(state,nyx_block);
             ret_obj = evaluate_block(state,nyx_block);  
-          }
-
-          //free_garbage(state);
           node *real_value = node_GetItemByKey(ret_obj,"value");
           if(print_return_value)
           {
@@ -248,9 +199,7 @@ int main(int argc, char** argv)
             ret = node_GetSint32(real_value);
           else if(node_GetType(real_value)==NODE_TYPE_STRING)
             ret = atoi(node_GetString(real_value));
-          //advance_garbage(state);
           free_garbage(state,0,NULL);
-
           node *block_flag=node_GetItemByKey(state,"block_flag");
           if(block_flag!=NULL) 
           {
@@ -261,19 +210,15 @@ int main(int argc, char** argv)
               ret = (int)node_GetSint32(nexit_code);
             }
           }
-
-          //node_FreeTree(ret_obj);
-          //fflush(stdout);
         }
         else
           node_FreeTree(nyx_stream);
       }
     }
-    close_terminal();//(old_term);
+    close_terminal();
     close_nyx(state);
     return(0);
   }
-  //printf("before interpret stream\n");
   if(print_ast)
   {
     if(nyx_stream!=NULL)
@@ -285,11 +230,9 @@ int main(int argc, char** argv)
   }
   else // interpret stream
   { 
-    //printf("interpret stream\n");
     node *state = init_nyx();
     set_obj_string(state,"script_filename",filename);
     set_obj_string(state,"interpreter_filename",argv[0]);
-
     if(nyx_stream!=NULL)
     {
       node *nyx_block = node_GetItemByKey(nyx_stream,"nyx_block");
@@ -303,20 +246,16 @@ int main(int argc, char** argv)
         //node *parameters = create_obj("parameters");
         //printf("calling defined script function\n");
         //node *ret_call_obj = call_function(nyx_state,"external_call",parameters);//,nyx_block);
-        //free_garbage(state);
         node *real_value = node_GetItemByKey(ret_obj,"value");
-
         if(print_return_value)
         {
           node_Print(real_value,False,False);
           printf("\n");
         }
-
         if(node_GetType(real_value)==NODE_TYPE_SINT32)
           ret = node_GetSint32(real_value);
         else if(node_GetType(real_value)==NODE_TYPE_STRING)
           ret = atoi(node_GetString(real_value));
-        //advance_garbage(state);
         free_garbage(state,0,NULL);
         node *block_flag=node_GetItemByKey(state,"block_flag");
         if(block_flag!=NULL) 
@@ -328,9 +267,6 @@ int main(int argc, char** argv)
             ret = (int)node_GetSint32(nexit_code);
           }
         }
-
-        //node_FreeTree(ret_obj);
-        //fflush(stdout);
       }
       else
         node_FreeTree(nyx_stream);

@@ -125,7 +125,7 @@ long get_execution_level(node *state);
 void inc_execution_level(node *state);
 void dec_execution_level(node *state);
 
-node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block);
+node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block);
 
 node *search_block_path_for_member(node *block,char *key);
 
@@ -135,7 +135,7 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
 node *evaluate_block(node *state,node *block);
 node *evaluate_block_in(node *state,node *block,node *master_block);
 
-node *call_function(node *state,char *name,node *parameters);//,node *block);
+node *call_function(node *state,char *name,node *parameters);
 
 char *convert_to_json(node *state,node *obj);
 void convert_from_json(node *state,node *output,char *json);
