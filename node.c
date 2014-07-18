@@ -766,6 +766,11 @@ unsigned long long node_GetUint64(node *n)
     return(*(unsigned long long*)n->value);
 }
 
+node *node_GetNode(node *n)
+{
+    return((node*)n->value);
+}
+
 char node_GetSint8(node *n)
 {
     return(*(char*)n->value);
@@ -803,7 +808,9 @@ void *node_GetUser(node *n)
 
 void node_SetUser(node *n,void *user)
 {
-  if(!node_IsType(n,NODE_TYPE_USER))
+  if(node_IsType(n,NODE_TYPE_USER))
+     n->value = user;
+  else
   {
      node_FreeValue(n->type,n->value);
      n->value = node_CreateValue(NODE_TYPE_USER,user);
@@ -1026,7 +1033,6 @@ int node_HasItem(node *n,node *s)
   if(node_GetItemIndex(n,s)!=-1)
     return(True);
   return(False);
-
 }
 
 void *node_GetItem(node *n,long index)

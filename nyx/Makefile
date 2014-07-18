@@ -1,24 +1,69 @@
+
+USE_SOCKETS = True
+USE_CURL = True
+USE_WEBSOCKETS = True
+USE_HTTP = True
+USE_MICROHTTPD = True
+USE_CURSES = True
+
+
 USER := $(shell whoami)
 UNAME := $(shell uname)
+
 ifeq ($(UNAME), Linux)
-PLATFORM_EXT = 
-PLATFORM_NAME = Linux
-PLATFORM_LIBS = -lm -lcurl.dll
-PLATFORM_CFLAGS =
-PLATFORM_DEBUG_CFLAGS =
+	PLATFORM_EXT = 
+	PLATFORM_NAME = Linux
+	PLATFORM_LIBS = -lm
+	PLATFORM_CFLAGS =
+	PLATFORM_DEBUG_CFLAGS =
+	ifeq ($(USE_CURL),True)
+		PLATFORM_LIBS += -lcurl
+		PLATFORM_CFLAGS += -DUSE_CURL
+		PLATFORM_DEBUG_CFLAGS += -DUSE_CURL 
+	endif
 endif
+
 ifeq ($(UNAME), MINGW32_NT-6.2)
-PLATFORM_NAME = Win32
-PLATFORM_EXT = .exe
-PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll
-PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
-PLATFORM_DEBUG_CFLAGS = -DWIN32
+	PLATFORM_NAME = Win32
+	PLATFORM_EXT = .exe
+	PLATFORM_LIBS = -lm
+	PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
+	PLATFORM_DEBUG_CFLAGS = -DWIN32
+	ifeq ($(USE_CURL),True)
+		PLATFORM_LIBS += -lcurl.dll
+		PLATFORM_CFLAGS += -DUSE_CURL
+		PLATFORM_DEBUG_CFLAGS += -DUSE_CURL 
+	endif
+	ifeq ($(USE_MICROHTTPD),True)
+		PLATFORM_LIBS += -lmicrohttpd.dll
+		PLATFORM_CFLAGS += -DUSE_MICROHTTPD
+		PLATFORM_DEBUG_CFLAGS += -DUSE_MICROHTTPD 
+	endif
+	ifeq ($(USE_SOCKETS),True)
+		PLATFORM_LIBS += -lwsock32 -lws2_32
+		PLATFORM_CFLAGS += -DUSE_SOCKETS
+		PLATFORM_DEBUG_CFLAGS += -DUSE_SOCKETS 
+	endif
+	ifeq ($(USE_WEBSOCKETS),True)
+		PLATFORM_LIBS += -lwebsockets.dll
+		PLATFORM_CFLAGS += -DUSE_WEBSOCKETS
+		PLATFORM_DEBUG_CFLAGS += -DUSE_WEBSOCKETS 
+	endif
+	ifeq ($(USE_CURSES),True)
+		PLATFORM_LIBS += -lcurses
+		PLATFORM_CFLAGS += -DUSE_CURSES
+		PLATFORM_DEBUG_CFLAGS += -DUSE_CURSES 
+	endif
+	ifeq ($(USE_HTTP),True)
+		PLATFORM_CFLAGS += -DUSE_HTTP
+		PLATFORM_DEBUG_CFLAGS += -DUSE_HTTP
+	endif
 else
-PLATFORM_NAME = Win32
-PLATFORM_EXT = 
-PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll
-PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
-PLATFORM_DEBUG_CFLAGS = -DWIN32
+	PLATFORM_NAME = Win32
+	PLATFORM_EXT = 
+	PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll
+	PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
+	PLATFORM_DEBUG_CFLAGS = -DWIN32
 endif
 
 
@@ -33,8 +78,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 4
-BUILD = 76
-DEBUG_BUILD = 154
+BUILD = 158
+DEBUG_BUILD = 320
 
 CSTD = c99
 
@@ -44,18 +89,19 @@ CSTD = c99
 CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)
 DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
 #DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
-LDFLAGS= $(PLATFORM_LIBS) -static -static-libgcc -static-libstdc++
+LDFLAGS= $(PLATFORM_LIBS) -static -static-libgcc
+# -static-libstdc++
 DEBUG_LDFLAGS = $(LDFLAGS)
 
 CC=gcc
 AR=ar
 LD=ld
 
-NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c
-NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o
+NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c
+NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o
 NYX_BINS = nyx$(PLATFORM_EXT)
-NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do
-NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h
+NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do
+NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
@@ -120,7 +166,7 @@ nyx_dynamic: $(NYX_OBJ)
 
 clean:
 	$(BEGIN_NOTIFY)
-	rm -f nyx.dll *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
+	rm -f nyx.dll *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/microhttpd/*.o bindings/microhttpd/*.do
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

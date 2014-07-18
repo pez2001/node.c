@@ -1,0 +1,8 @@
+?("microhttpd".in(sys.modules),{println("microhttpd supported")},{println("microhttpd not supported");sys.exit(1)},0);
+println("starting daemon");
+daemon=microhttpd.start(8080,{println("serving request:",arguments["url"]);ret="Hallo Welt!:"+arguments["url"]});
+println("Press Enter to stop");
+r=input();
+println("stopping daemon");
+microhttpd.stop(daemon);
+r=0;

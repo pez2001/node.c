@@ -203,6 +203,7 @@ long long node_GetSint64(node *n);
 char *node_GetString(node *n);
 int node_GetBool(node *n);
 void *node_GetUser(node *n);
+node *node_GetNode(node *n);
 
 void node_SetNull(node *n);
 void node_SetBool(node *n, int b);

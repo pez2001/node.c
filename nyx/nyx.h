@@ -1,4 +1,4 @@
-	/* 
+/* 
  * node.c - c based data tree with various imports & exports
  * (c) 2013 by Tim Theede aka Pez2001 <pez2001@voyagerproject.de> / vp
  *
@@ -24,7 +24,7 @@
 #define NYX_H
 
 #ifdef USE_MEMORY_DEBUGGING
-#include "memory.h"
+	#include "memory.h"
 #endif
 
 
@@ -32,8 +32,10 @@
 #include "../imports/json.h"
 #include "../imports/nyx.h"
 
-#include "bindings/curl/curl.h"
 
+#ifdef USE_CURL
+#include "bindings/curl/curl.h"
+#endif
 
 #include "nyx_handler.h"
 
@@ -44,14 +46,17 @@
 #include "unistd.h"
 #include "getopt.h"
 #include "signal.h"
-#ifdef WIN32
-#define _WIN32_WINNT  0x501 
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#else
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+
+#ifdef USE_SOCKETS
+	#ifdef WIN32
+		#define _WIN32_WINNT  0x501 
+		#include <winsock2.h>
+		#include <ws2tcpip.h>
+	#else
+		#include <sys/types.h>
+		#include <sys/socket.h>
+		#include <netdb.h>
+	#endif
 #endif
 
 //#include "termios.h"
@@ -76,6 +81,7 @@ typedef node *(*nyx_function_handler)(node*,node*,node*,node*);
 /*basic object handling*/
 node *create_obj(char *name);
 void add_obj_kv(node *obj,node *kv);
+void remove_obj_kv(node *obj,node *kv);
 void add_obj_string(node *obj,char *key,char *string);
 void add_obj_int(node *obj,char *key,long i);
 void add_obj_float(node *obj,char *key,double d);
@@ -92,7 +98,7 @@ void set_obj_ptr(node *obj,char *key,void *n);
 /*class handling internal*/
 void add_class_object_function(node *class,char *method_name,node*(*handler)(node*,node*,node*,node*));
 
-node *create_sys_class_object(void);
+node *create_sys_class_object(node *base_class);
 node *create_file_class_object(void);
 
 char *state_to_json(node *state);
@@ -103,16 +109,22 @@ void free_garbage(node *state,long min_level,node *skip_this);
 
 /*class handling*/
 void add_member(node *obj,node *member);
+void remove_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
-node *get_item(node *state,node *obj,node *key);
+node *get_item(node *state,node *obj,node *key,BOOL append_new_item);
 
 node *create_class_instance(node *class_obj);
 node *create_base_obj_layout(char *obj_name);
 node *create_class_object(void);
 
 
+#ifdef USE_SOCKETS
 node *create_socket_class_object(void);
+#endif
+#ifdef USE_HTTP
 node *create_http_class_object(void);
+#endif
+
 node *create_file_class_object(void);
 
 node *create_block_class_object(node *base_class,node *block);

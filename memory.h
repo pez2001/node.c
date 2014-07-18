@@ -51,6 +51,8 @@ int mem_Close(void);
 
 void mem_Dump(void *mem);
 
+void mem_SetVerbosity(int verbose);
+
 int mem_DebugHeapWalk(int show_leaked);
 
 void *mem_malloc(unsigned long size);

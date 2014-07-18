@@ -38,7 +38,7 @@ unsigned long mem_max_chunk_size = 0;
 unsigned long mem_max_allocated_size = 0;
 unsigned long mem_allocated_size = 0;
 mem_chunk **mem_chunk_items;
-
+int mem_verbosity = 0;
 
 void mem_Init(void)
 {
@@ -47,7 +47,14 @@ void mem_Init(void)
 	mem_max_chunk_size = 0;
 	mem_max_allocated_size = 0;
 	mem_allocated_size = 0;
+	mem_verbosity=0;
 }
+
+void mem_SetVerbosity(int verbose)
+{
+	mem_verbosity=verbose;
+}
+
 
 long mem_get_chunk(void *ptr)
 {
@@ -64,7 +71,8 @@ long mem_get_chunk(void *ptr)
 long mem_AddChunk(void *ptr,char *description,unsigned long size)
 {
 	mem_chunk *chunk = (mem_chunk*)malloc_ptr(sizeof(mem_chunk));
-
+	if(mem_verbosity>=1)
+		printf("adding chunk:%x (size:%d)\n",ptr,size);
 	chunk->ptr = ptr;
 	chunk->description = description;
 	chunk->size = size;
@@ -195,6 +203,10 @@ void mem_free(void *ptr)
 		{
 
 		}*/
+		if(mem_verbosity>=2)
+		{
+			mem_Dump(ptr);
+		}
 		memset(ptr,0,mem_chunk_items[index]->size);
 		free_ptr(ptr);
 		mem_chunk_items[index]->is_freed = 1;

@@ -53,6 +53,10 @@
 #include "unistd.h"
 #include "time.h"
 
+#ifdef WIN32
+FILE *popen(const char *command, const char *type);
+#endif
+
 //bunch of default functions
 
 
@@ -132,6 +136,8 @@ node *nyxh_return(node *state,node *obj,node *block,node *parameters);
 node *nyxh_name(node *state,node *obj,node *block,node *parameters);
 
 node *nyxh_item_at(node *state,node *obj,node *block,node *parameters);
+node *nyxh_in(node *state,node *obj,node *block,node *parameters);
+node *nyxh_in_keys(node *state,node *obj,node *block,node *parameters);
 
 
 node *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters);

@@ -20,20 +20,23 @@
  *
  */
 
-#ifndef BINDING_CURL_H
-#define BINDING_CURL_H
+#ifndef BINDING_MICROHTTPD_H
+#define BINDING_MICROHTTPD_H
 
 #include "../../nyx.h"
 
 
-#ifdef USE_CURL
+#ifdef USE_MICROHTTPD
 
 #include <stdio.h>
-#include <curl/curl.h>
+//#include <platform.h>
+#include <microhttpd.h>
 
-void curl_bind(node *class);
-node *curl_create_class_object(void);
-node *curl_get(node *state,node *obj,node *block,node *parameters);
+void microhttpd_bind(node *class);
+node *microhttpd_create_class_object(void);
+node *microhttpd_start(node *state,node *obj,node *block,node *parameters);
+node *microhttpd_stop(node *state,node *obj,node *block,node *parameters);
+
 #endif
 
 #endif

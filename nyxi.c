@@ -45,7 +45,6 @@ Execute nyx script Files.\n\
 add binary typing of strings (intepreted as byte stream)(to read c structs etc)
 dump/load state via control object
 catch ctrl-D
-x interpret each received line via stdin seperately
 
 man page
 deb packages
@@ -53,6 +52,27 @@ deb packages
 better handling of preops regarding ++ and like (check if last token in statement)
 better string handling(single char setting)
 better json export (tuples dont work now)
+
+make sockets,curl,micro httpd,libwebsockets optional
+linux socket support
+
+code seperation, function renaming,more kerneldoc comments
+
+remove array_add_item redundancy (easier item_index setting)
+socket blocking mode
+socket bind listen select handling
+
+in function for arrays and strings
+b="a".in("Hallo"); => b=1
+
+if("curl".in(sys.modules),{println("curl is supported")});
+
+index function too
+
+sys.modules function to return an array with supported modules
+
+
+update readme
 
 */
 

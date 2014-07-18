@@ -1,0 +1,7 @@
+println("module[0]:",sys.modules[0]);
+?("curl".in(sys.modules),{println("curl supported")},{println("curl not supported")},0);
+println("test:","test_not_found".in(sys.modules));
+println("curl:","curl".in(sys.modules));
+println("module:","module".in_keys(sys.modules));
+println("notmodule:","notmodule".in_keys(sys.modules));
+?("test_not_found".in(sys.modules),{println("Error: test found")},{println("Success: test not found")},0);

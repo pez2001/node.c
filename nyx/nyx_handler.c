@@ -674,7 +674,7 @@ node *nyxh_cmp(node *state,node *obj,node *block,node *parameters)
     {
       execute_obj(state,true_block,block,NULL,True,False);
       char *block_flag=check_block_flag(state);
-      if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit"))
+      if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit")||!strcmp(block_flag,"return"))
         break;
       free(block_flag);
       exp_obj = execute_obj(state,expression_block,block,NULL,True,False);
@@ -732,7 +732,7 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
     {
       execute_obj(state,true_block,block,NULL,True,False);
       char *block_flag=check_block_flag(state);
-      if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit"))
+      if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit")||!strcmp(block_flag,"return"))
         break;
       else if(!strcmp(block_flag,"restart"))
         execute_obj(state,init_block,block,NULL,True,False);
@@ -761,9 +761,6 @@ node *nyxh_init_cmp(node *state,node *obj,node *block,node *parameters)
   add_garbage(state,false_block);
 
   add_garbage(state,value);
-  //printf("returning :%x\n",value);
-  //node_PrintTree(value);
-  //fflush(stdout);
   return(value);
 }
 
@@ -789,10 +786,21 @@ node *nyxh_break(node *state,node *obj,node *block,node *parameters)
 
 node *nyxh_return(node *state,node *obj,node *block,node *parameters)
 {
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
+  node *value = NULL;
+  set_obj_string(state,"block_flag","return");
+  set_obj_int(state,"block_break_count",0);
+
+  if(node_GetItemsNum(parameters)>0)
+  {
+    value = node_GetItem(parameters,0);
+  }
+  else
+  {
+    node *base_class = node_GetItemByKey(state,"nyx_object");
+    node *value = create_class_instance(base_class);
+    reset_obj_refcount(value);
+    add_garbage(state,value);
+  }
   return(value);
 }
 
@@ -806,13 +814,79 @@ node *nyxh_item_at(node *state,node *obj,node *block,node *parameters)
     node *real_nindex_value = node_GetItemByKey(nindex,"value");
     long index = node_GetSint32(real_nindex_value);
     node *value = node_GetItem(items,index);
-    //if(value==NULL)
-    //  printf("no item found at:%d\n",index);
     return(value);
   }
   node *value = create_class_instance(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
+  return(value);
+}
+
+node *nyxh_in(node *state,node *obj,node *block,node *parameters)
+{
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  set_obj_int(value,"value",0);
+  node *obj_value = node_GetItemByKey(obj,"value");
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *array = node_GetItem(parameters,0);
+    node *items = node_GetItemByKey(array,"items");
+    node_ItemIterationReset(items);
+    while(node_ItemIterationUnfinished(items))
+    {
+      node *item = node_ItemIterate(items);
+      node *item_value = node_GetItemByKey(item,"value");
+      node *nitem_index = node_GetItemByKey(item,"item_index");
+      long item_index = node_GetSint32(nitem_index);
+      if(node_GetType(obj_value)==NODE_TYPE_STRING && node_GetType(item_value)==NODE_TYPE_STRING)
+      {
+        if(!strcmp(node_GetString(item_value),node_GetString(obj_value)))
+        {
+          set_obj_int(value,"value",1);
+          return(value);
+        }
+      } 
+      else if(node_GetType(obj_value)==NODE_TYPE_SINT32 && node_GetType(item_value)==NODE_TYPE_SINT32)
+      {
+        if(node_GetSint32(item_value)==node_GetSint32(obj_value))
+        {
+          set_obj_int(value,"value",1);
+          return(value);
+        }
+      }  
+      else if(node_GetType(obj_value)==NODE_TYPE_DOUBLE && node_GetType(item_value)==NODE_TYPE_DOUBLE)
+      {
+        if(node_GetDouble(item_value)==node_GetDouble(obj_value))
+        {
+          set_obj_int(value,"value",1);
+          return(value);
+        }
+      }  
+
+    }
+  }
+  return(value);
+}
+
+node *nyxh_in_keys(node *state,node *obj,node *block,node *parameters)
+{
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  set_obj_int(value,"value",0);
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *array = node_GetItem(parameters,0);
+    node *found = get_item(state,array,obj,False);
+    if(found!=NULL)
+    {
+      set_obj_int(value,"value",1);
+    }
+  }
   return(value);
 }
 
@@ -1697,7 +1771,8 @@ node *nyxh_sys_name(node *state,node *obj,node *block,node *parameters)
 
 node *nyxh_sys(node *state,node *obj,node *block,node *parameters)
 {
-  node *value = create_sys_class_object();
+  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *value = create_sys_class_object(base_class);
   reset_obj_refcount(value);
   add_garbage(state,value);
   return(value);

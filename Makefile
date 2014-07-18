@@ -1,5 +1,7 @@
+
 USER := $(shell whoami)
 UNAME := $(shell uname)
+
 ifeq ($(UNAME), Linux)
 PLATFORM_EXT = 
 PLATFORM_NAME = Linux
@@ -10,7 +12,7 @@ endif
 ifeq ($(UNAME), MINGW32_NT-6.2)
 PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
-PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll
+PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll -lmicrohttpd.dll
 PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 PLATFORM_DEBUG_CFLAGS = -DWIN32
 else
@@ -34,8 +36,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 4
-BUILD = 2587
-DEBUG_BUILD = 2926
+BUILD = 2668
+DEBUG_BUILD = 3007
 
 CSTD = c99
 
