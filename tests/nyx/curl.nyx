@@ -1,5 +1,6 @@
 ?("curl".in(sys.modules),{println("curl supported")},{println("curl not supported");sys.exit(1)},0);
 content="";
-curl.get("http://openstrike.de/aluria/client/clients.json",{content=content+arguments["data"]});
+callback={content=content+arguments["data"]};
+curl.get("http://openstrike.de/aluria/client/clients.json",callback);
 j=http.parse_answer(content)["body"].from_json();
 println("bootloader[0].file:",j.bootloader[0].file);

@@ -24,15 +24,12 @@ e=(b--)+d;
 println("e:",e," d:",d," b:",b);
 
 
-*/
 /*single char setting in strings*/
 /*
 s="434";
 s[0]="5";
-s[2]="76";/*multi char with increase*/
-
+s[2]="76"; multi char with increase
 return(109);
-
 try({},{println("exception:",sys.exception)})
 */
 

@@ -26,7 +26,9 @@
 
 void microhttpd_bind(node *class)
 {
-  add_member(class,microhttpd_create_class_object());
+  node *httpd = microhttpd_create_class_object();
+  add_member(class,httpd);
+  inc_obj_refcount(httpd);
 }
 
 node *microhttpd_create_class_object(void)
@@ -47,14 +49,44 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node *read_block = node_GetItem(mhd_state,1);
   node *block = node_GetItem(mhd_state,2);
   node *base_class = node_GetItemByKey(state,"nyx_object");
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
-  node_SetString(real_value,url);
-  set_obj_string(value,"name","url");
+
   node *parameters = create_obj("parameters");
-  node_AddItem(parameters,value);
+
+  node *url_value = create_class_instance(base_class);
+  reset_obj_refcount(url_value);
+  add_garbage(state,url_value);
+  set_obj_string(url_value,"name","url");
+  set_obj_string(url_value,"value",(char*)url);
+  set_obj_int(url_value,"item_index",0);
+  node_AddItem(parameters,url_value);
+
+  node *method_value = create_class_instance(base_class);
+  reset_obj_refcount(method_value);
+  add_garbage(state,method_value);
+  set_obj_string(method_value,"value",(char*)method);
+  set_obj_string(method_value,"name","method");
+  set_obj_int(method_value,"item_index",1);
+  node_AddItem(parameters,method_value);
+
+  node *version_value = create_class_instance(base_class);
+  reset_obj_refcount(version_value);
+  add_garbage(state,version_value);
+  set_obj_string(version_value,"name","version");
+  set_obj_string(version_value,"value",(char*)version);
+  set_obj_int(version_value,"item_index",2);
+  node_AddItem(parameters,version_value);
+
+  node *upload_value = create_class_instance(base_class);
+  reset_obj_refcount(upload_value);
+  add_garbage(state,upload_value);
+  char *uploads = (char*)malloc(*upload_data_size+1);
+  memset(uploads+*upload_data_size + 0, 0, 1);
+  memcpy(uploads,upload_data,*upload_data_size);
+  set_obj_string(upload_value,"name","upload");
+  set_obj_string(upload_value,"value",uploads);
+  set_obj_int(upload_value,"item_index",3);
+  node_AddItem(parameters,upload_value);
+
   node *ret_obj = execute_obj(state,read_block,block,parameters,True,False);
   node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
   char *me = node_GetString(ret_obj_value);

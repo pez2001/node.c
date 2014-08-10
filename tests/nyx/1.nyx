@@ -20,13 +20,13 @@ a[0]=10;
 /*a[1]=12;*/
 println("array:",a[0]);
 
-a=open("tests/output.json","rb").readall().close().from_json();
+a=file.open("tests/output.json","rb").readall().close().from_json();
 println("c:float:",a.float_val);
 
-/*a=open("tests/test_yeti.json","rb").readall().close().from_json();*/
-println(a.float_val);
-println(a.phoneNumbers[0].type);
-println(a.phoneNumbers[1].type);
+ab=file.open("tests/test_yeti.json","rb").readall().close().from_json();
+println(ab.float_val);
+println(ab.phoneNumbers[0].type);
+println(ab.phoneNumbers[1].type);
 
 a.float_val=a.float_val+0.85;
 a.floats=14;
@@ -35,20 +35,21 @@ o=to_json(a);
 /*println("output json:");
 println(o);*/
 
-out=open("tests/output.json","wb+");
+out=file.open("tests/output.json","wb+");
 out.writeall(o);
 out.close();
 
 
-c=open("tests/output.json","rb").readall().close().from_json();
+c=file.open("tests/output.json","rb").readall().close().from_json();
 println("c:float:",c.float_val);
 
-files=sys().execute("ls -a");
-sp=split()
+/*files=sys.execute("ls -a");*/
+/*sp=split()*/
 
+println("sys working directory:",sys.working_directory()["path"]);
 
 /*
-a=open("tests/test_yeti.json","rb+");
+a=file.open("tests/test_yeti.json","rb+");
 content=a.readall();
 a.close();
 println("file content:",content);
@@ -73,7 +74,7 @@ o=to_json(r);
 println("output json:");
 println(o);
 
-out=open("tests/output.json","wb+");
+out=file.open("tests/output.json","wb+");
 out.writeall(o);
 out.close();
 
@@ -85,7 +86,6 @@ println("0: ",ar2[0]," 3: ",ar2[3]," k:",ar2["k"]);
 
 println("name:",sys.name());
 
-println("sys working directory:",sys.working_directory()["path"]);
 
 
 
@@ -93,6 +93,7 @@ println("ls:",sys.execute("ls -a"));
 
 return_value=55;
 */
+
 
 /*sys.change_working_directory("..");
 println("space_race:",sys.execute("space_race"));*/

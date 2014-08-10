@@ -5,6 +5,11 @@ USE_WEBSOCKETS = True
 USE_HTTP = True
 USE_MICROHTTPD = True
 USE_CURSES = True
+USE_SYS = True
+USE_FILE = True
+
+USE_MEMORY_DEBUG = True
+
 
 
 USER := $(shell whoami)
@@ -46,7 +51,7 @@ ifeq ($(UNAME), MINGW32_NT-6.2)
 	endif
 	ifeq ($(USE_WEBSOCKETS),True)
 		PLATFORM_LIBS += -lwebsockets.dll
-		PLATFORM_CFLAGS += -DUSE_WEBSOCKETS
+		PLATFORM_CFLAGS += -DUSE_WEBSOCKETS 
 		PLATFORM_DEBUG_CFLAGS += -DUSE_WEBSOCKETS 
 	endif
 	ifeq ($(USE_CURSES),True)
@@ -58,6 +63,19 @@ ifeq ($(UNAME), MINGW32_NT-6.2)
 		PLATFORM_CFLAGS += -DUSE_HTTP
 		PLATFORM_DEBUG_CFLAGS += -DUSE_HTTP
 	endif
+	ifeq ($(USE_SYS),True)
+		PLATFORM_CFLAGS += -DUSE_SYS
+		PLATFORM_DEBUG_CFLAGS += -DUSE_SYS
+	endif
+	ifeq ($(USE_FILE),True)
+		PLATFORM_CFLAGS += -DUSE_FILE
+		PLATFORM_DEBUG_CFLAGS += -DUSE_FILE
+	endif
+	ifeq ($(USE_MEMORY_DEBUG),True)
+		#PLATFORM_CFLAGS += -DUSE_MEMORY_DEBUGGING
+		PLATFORM_DEBUG_CFLAGS += -DUSE_MEMORY_DEBUGGING
+	endif
+
 else
 	PLATFORM_NAME = Win32
 	PLATFORM_EXT = 
@@ -77,9 +95,9 @@ SUCCESS_NOTIFY =
 
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 4
-BUILD = 158
-DEBUG_BUILD = 320
+MINOR_VERSION = 5
+BUILD = 335
+DEBUG_BUILD = 680
 
 CSTD = c99
 
@@ -87,7 +105,7 @@ CSTD = c99
 #CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS) -lm
 #DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
 CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)
-DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
+DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
 #DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
 LDFLAGS= $(PLATFORM_LIBS) -static -static-libgcc
 # -static-libstdc++
@@ -97,11 +115,11 @@ CC=gcc
 AR=ar
 LD=ld
 
-NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c
-NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o
+NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c bindings/websockets/websockets.c bindings/sockets/sockets.c bindings/http/http.c bindings/sys/sys.c bindings/file/file.c
+NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o bindings/websockets/websockets.o bindings/sockets/sockets.o bindings/http/http.o bindings/sys/sys.o bindings/file/file.o
 NYX_BINS = nyx$(PLATFORM_EXT)
-NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do
-NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h
+NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do bindings/websockets/websockets.do bindings/sockets/sockets.do bindings/http/http.do bindings/sys/sys.do bindings/file/file.do
+NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h bindings/websockets/websockets.h  bindings/sockets/sockets.h bindings/http/http.h bindings/sys/sys.h bindings/file/file.h
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
@@ -166,7 +184,7 @@ nyx_dynamic: $(NYX_OBJ)
 
 clean:
 	$(BEGIN_NOTIFY)
-	rm -f nyx.dll *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/microhttpd/*.o bindings/microhttpd/*.do
+	rm -f nyx.dll *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/micohttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

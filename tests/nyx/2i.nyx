@@ -1,0 +1,6 @@
+b=1;
+func()={b=2;c=23};
+a=func();
+func(c)={ret=c+1};
+d=func(33);
+println("a:",a," b:",b," c:",c," d:",d);

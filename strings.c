@@ -172,10 +172,10 @@ char *str_AddChar(char *string,char letter)
 { 
   if(string==NULL)
   {
-	string = (char*)malloc(2);
-  	string[0] = letter;
-	string[1] = 0;
-  	return(string);
+    string = (char*)malloc(2);
+    string[0] = letter;
+    string[1] = 0;
+    return(string);
   }
   int len=strlen(string);
   string = (char*)realloc(string,len+2);
@@ -183,6 +183,23 @@ char *str_AddChar(char *string,char letter)
   string[len] = letter;
   return(string);
 }
+
+char *str_AddChars(char *string,char *append,long len)
+{
+  if(string==NULL)
+  {
+    string = (char*)malloc(len+1);
+    memcpy(string,append,len);
+    string[len] = 0;
+    return(string);
+  }
+  int slen=strlen(string);
+  string = (char*)realloc(string,slen+len+1);
+  string[slen+len] = 0;
+  memcpy(string+slen,append,len);
+  return(string);
+}
+
 
 char *str_CreateEmpty(void)
 {

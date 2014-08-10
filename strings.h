@@ -161,6 +161,22 @@ char *str_Sub(char *a,long start,long len);
  */
 char *str_AddChar(char *string,char letter);
 
+
+/**
+ * str_AddChars() - Adds multiple characters to a string
+ * @string: Input string
+ * @append: Characters to append
+ * @len: Number of Characters to append
+ *
+ * Appends the characters to the string and returns it
+ * Note: the returned string pointer may differ from  
+ * the input string pointer due to usage of realloc()
+ * string can be NULL
+ *
+ * Return: String with appended characters
+ */
+char *str_AddChars(char *string,char *append,long len);
+
 /**
  * str_CreateEmpty() - Create an empty String
  *

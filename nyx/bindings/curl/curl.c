@@ -26,7 +26,9 @@
 
 void curl_bind(node *class)
 {
-  add_member(class,curl_create_class_object());
+  node *curl = curl_create_class_object();
+  add_member(class,curl);
+  inc_obj_refcount(curl);
 }
 
 node *curl_create_class_object(void)
