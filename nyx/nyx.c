@@ -1107,10 +1107,24 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
           {
             node *tmp_parent = node_GetParent(obj);
             node_SetParent(obj,NULL);
+            node *abp = node_GetItemByKey(obj,"anonymous_block_parent");
+            node *tmp_abp_value = NULL;
+            if(abp!=NULL)
+              tmp_abp_value = node_GetValue(abp);
+            node_SetNode(abp,NULL);
+
+
+            //printf("eval obj:%x ,parent:%x\n",obj,node_GetParent(obj));
+            //node_PrintTree(obj);
             node *sub = evaluate_statement(state,token,obj,0,NULL);
+
+            if(abp!=NULL)
+              node_SetNode(abp,tmp_abp_value);
+
             node_SetParent(obj,tmp_parent);
             node *obj_name = node_GetItemByKey(sub,"name");
             node *parent = node_GetParent(node_GetParent(sub));
+            
             //printf("sub:%x,%s\n",sub,get_obj_name(sub));
             //fflush(stdout);
             //printf("parent:%x,%s\n",parent,get_obj_name(parent));
@@ -1237,11 +1251,13 @@ node *search_block_path_for_member(node *block,char *key)
   if(node_GetItemByKey(block,"anonymous_block_parent")!=NULL)
   {
     node *abp=node_GetItemByKey(block,"anonymous_block_parent");
-    //printf("searching in anon parent:%x\n",node_GetValue(abp));
-    found_obj = get_member(node_GetValue(abp),key);
-    if(found_obj==NULL)
-    {
-      found_obj = search_block_path_for_member(node_GetValue(abp),key);
+    if(node_GetValue(abp))
+    {//printf("searching in anon parent:%x\n",node_GetValue(abp));
+      found_obj = get_member(node_GetValue(abp),key);
+      if(found_obj==NULL)
+      {
+        found_obj = search_block_path_for_member(node_GetValue(abp),key);
+      }
     }
   }
   return(found_obj);
@@ -1262,7 +1278,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   while(node_ItemIterationUnfinished(statement))
   {
     node *token = node_ItemIterate(statement);
-    /*printf("------\nevaluating next token\n");
+    /*printf("------\nevaluating next token in %x\n",block);
     node_PrintTree(token);
     printf("------\n");
     fflush(stdout);*/
@@ -1408,8 +1424,14 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         if(strcmp(node_GetValue(token),"@"))
         {
           node *found_obj = get_member(actual_obj,node_GetValue(token));
+          //if(found_obj)
+          //  printf("found in members\n");
           if(found_obj==NULL)
+          {
             found_obj = search_block_path_for_member(actual_obj,node_GetValue(token));
+            //if(found_obj)
+            //  printf("found in block path\n");
+          }
           if(found_obj==NULL)
           {
             node *child = create_class_instance(base_class);
@@ -1417,7 +1439,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             add_member(actual_obj,child);
             inc_obj_refcount(child);
             actual_obj = child;
-            //printf("created obj in %x: %x,%s\n",block,actual_obj,get_obj_name(actual_obj));
+            //printf("created obj %x in %x: %x,%s\n",child,block,actual_obj,get_obj_name(actual_obj));
             //fflush(stdout);
             //node_PrintTree(actual_obj);
             node *peek = node_ItemPeek(statement);
@@ -1431,6 +1453,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           }
           else
           {
+            //printf("found obj %x,%s in %x: %x,%s\n",found_obj,get_obj_name(found_obj),block,actual_obj,get_obj_name(actual_obj));
+            //fflush(stdout);
             //node_ItemPeek(statement)!=NULL && 
             if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && !strcmp(get_obj_type(found_obj),"function"))
             {

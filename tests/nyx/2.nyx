@@ -2,7 +2,7 @@ b=1;
 func=1;
 println("func:",func);
 func(a)={println("b:",b," a:",a);b=a+1;println("b:",b," a:",a);b=b};
-println("defined func:a:",a);
+/*println("defined func:a:",a);*/
 a=func(1);
 println("a:",a," b:",b);
 

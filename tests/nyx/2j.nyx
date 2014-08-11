@@ -1,0 +1,4 @@
+b=1;
+func(a)={b=a+1};
+a=func(1);
+println("a:",a," b:",b);

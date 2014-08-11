@@ -451,7 +451,7 @@ node *nyxh_neq(node *state,node *obj,node *block,node *parameters)
 node *nyxh_assign(node *state,node *obj,node *block,node *parameters)
 {
   node *obj_name = node_GetItemByKey(obj,"name");
-  //printf("assigning:%s with: %s\n",get_obj_name(obj),get_obj_name(node_GetItem(parameters,0)));
+  //printf("assigning:%s,%x with: %s,%x\n",get_obj_name(obj),obj,get_obj_name(node_GetItem(parameters,0)),node_GetItem(parameters,0));
   //fflush(stdout);
   node *parent = node_GetParent(obj);
   //if(parent)
