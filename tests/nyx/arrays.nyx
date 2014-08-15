@@ -1,3 +1,7 @@
+wk =["test":"hello","key2":12];
+println("test:"+wk["test"]+" key2:"+wk["key2"]);
+
+
 a=[1,2,3,alpha="test"];
 a[0] = "hi";
 a[0] = beta = "hi2";
@@ -20,6 +24,7 @@ n[]="test";
 println("n2:",n.to_json());
 i=0;
 ?({println("i:",i);i<len(a)},{print("a[",i," of ",len(a),"]:");println(a.item_at(i));i=i+1},{},1);
+
 
 
 

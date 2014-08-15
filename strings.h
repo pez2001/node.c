@@ -139,9 +139,10 @@ long str_MatchCount(char *a,char *b);
  * @len: Max Length of final Substring
  *
  * Creates a Substring of the source string
- * Note:May return less characters if the source String is not long enough
+ * Note:May return less characters if the source string is not long enough
  * - (start+len>strlen(a))
  * or start is larger than the length of the source string
+ * len can be -1 to copy the remaining string
  *
  * Return: Substring of a
  */

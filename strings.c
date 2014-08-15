@@ -158,10 +158,18 @@ char *str_Sub(char *a,long start,long len)
   {
   	return(str_CreateEmpty());
   }
-  long e = start + len;
-  long l=len;
-  if(e>strlen(a))
+  long l=0;
+  if(len>0)
+  {
+    long e = start + len;
+    l=len;
+    if(e>strlen(a))
+      l = strlen(a) - start;
+  }
+  else
+  {
     l = strlen(a) - start;
+  }
   char *tmp = (char*)malloc(l + 1);
   memset(tmp+l, 0, 1);
   memcpy(tmp, a+start, l);

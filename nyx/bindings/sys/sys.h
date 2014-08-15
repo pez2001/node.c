@@ -40,8 +40,8 @@ FILE *popen(const char *command, const char *type);
 #endif
 
 
-void sys_bind(node *state,node *class);
-node *sys_create_class_object(node *state);
+void sys_bind(node *base_class,node *class);
+node *sys_create_class_object(node *base_class);
 
 node *sys(node *state,node *obj,node *block,node *parameters);
 

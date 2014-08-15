@@ -1,0 +1,10 @@
+echo_call2=
+{
+	ret="Hallo";
+};
+
+
+daemon=websockets.start(8080,["echo":echo_call2]);
+daemon.stop();
+
+

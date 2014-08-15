@@ -367,13 +367,15 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("%d",*(int*)n->value);
          break;
     case NODE_TYPE_FLOAT:
-         printf("%-7.7g",*(float*)n->value);
+         printf("%f",*(float*)n->value);
+         //printf("%-7.7g",*(float*)n->value);
          break;
     case NODE_TYPE_DOUBLE:
-         printf("%-7.7g",*(double*)n->value);
+         printf("%f",*(double*)n->value);
+         //printf("%-7.7g",*(double*)n->value);
          break;
     case NODE_TYPE_UINT8:
-         printf("%d",*(unsigned char*)n->value);
+         printf("%u",*(unsigned char*)n->value);
          break;
     case NODE_TYPE_SINT8:
          printf("%d",*(char*)n->value);
@@ -385,13 +387,13 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
           printf("False");
          break;
     case NODE_TYPE_UINT16:
-         printf("%d",*(unsigned short*)n->value);
+         printf("%u",*(unsigned short*)n->value);
          break;
     case NODE_TYPE_SINT16:
          printf("%d",*(short*)n->value);
          break;
     case NODE_TYPE_UINT32:
-         printf("%d",*(unsigned long*)n->value);
+         printf("%u",*(unsigned long*)n->value);
          break;
     case NODE_TYPE_SINT32:
          printf("%d",*(long*)n->value);
@@ -400,7 +402,7 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          printf("%I64d",*(long long*)n->value);
          break;
     case NODE_TYPE_UINT64:
-         printf("%I64d",*(unsigned long long*)n->value);
+         printf("%I64u",*(unsigned long long*)n->value);
          break;
     case NODE_TYPE_STRING:
          printf("\"%s\"",(char*)n->value);
@@ -494,13 +496,15 @@ void node_Print(node *n,int with_key,int include_items)
          printf("%d",*(int*)n->value);
          break;
     case NODE_TYPE_FLOAT:
-         printf("%13g",*(float*)n->value);
+         printf("%f",*(float*)n->value);
+         //printf("%13g",*(float*)n->value);
          break;
     case NODE_TYPE_DOUBLE:
-         printf("%13g",*(double*)n->value);
+         printf("%f",*(double*)n->value);
+         //printf("%13g",*(double*)n->value);
          break;
     case NODE_TYPE_UINT8:
-         printf("%d",*(unsigned char*)n->value);
+         printf("%u",*(unsigned char*)n->value);
          break;
     case NODE_TYPE_SINT8:
          printf("%d",*(char*)n->value);
@@ -512,22 +516,22 @@ void node_Print(node *n,int with_key,int include_items)
           printf("False");
          break;
     case NODE_TYPE_UINT16:
-         printf("%d",*(unsigned short*)n->value);
+         printf("%u",*(unsigned short*)n->value);
          break;
     case NODE_TYPE_SINT16:
-         printf("%d",*(short*)n->value);
+         printf("%u",*(short*)n->value);
          break;
     case NODE_TYPE_UINT32:
-         printf("%d",*(unsigned long*)n->value);
+         printf("%u",*(unsigned long*)n->value);
          break;
     case NODE_TYPE_SINT32:
          printf("%d",*(long*)n->value);
          break;
     case NODE_TYPE_SINT64:
-         printf("%d",*(long long*)n->value);
+         printf("%I64d",*(long long*)n->value);
          break;
     case NODE_TYPE_UINT64:
-         printf("%d",*(unsigned long long*)n->value);
+         printf("%I64u",*(long long*)n->value);
          break;
     case NODE_TYPE_STRING:
          //SetConsoleOutputCP(CP_UTF8);
@@ -699,6 +703,19 @@ int node_IsType(node *n, unsigned char type)
 node *node_GetParent(node *n)
 {
   return(n->parent);
+}
+
+node *node_GetRoot(node *n)
+{
+  node *s = n;
+  node *ret=n;
+  //printf("getting root of: %x\n",n);
+  while(s=node_GetParent(s))
+  {
+    ret=s;
+    //printf("parent: %x\n",ret);
+  }
+  return(ret);
 }
 
 void *node_GetValue(node *n)

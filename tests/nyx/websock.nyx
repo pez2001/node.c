@@ -11,12 +11,51 @@ running = 1;
 
 /*sessions = [];*/
 
+echo_call2=
+{
+	ret="Hallo";
+};
+
+sessions = [];
+
 echo_call={
 	/*println("serving request:[",arguments["message"],"] : ",arguments["protocol"]);*/
-	running = 0;
-	println("timestamp:",sys.time);
-	ret="Hallo:"+sys.time+":"+arguments["protocol"]+" id:"+arguments["session_id"]+" time_stamp:"+sys.time;
+	/*running = 0;*/
+	/*println("timestamp:",sys.time);*/
+	/*ret="Hallo:"+sys.time+":"+arguments["protocol"]+" id:"+arguments["session_id"]+" time_stamp:"+sys.time;*/
+	/*d.broadcast(arguments["protocol"],arguments["message"]);*/
+	/*d=arguments["websockets.daemon"];*/
+	println("sending back:"+arguments["message"]+" to: "+arguments["session"].id);
+	message = arguments["message"];
+	/*println("message="+message);
+	println("ix:"+message.index_of("name:"));
+	println("top new name:["+message.sub(5)+"]");*/
+	
+	/*message.index_of("name:").else({println("new name:["+message.sub(5)+"]");arguments["session"].name=message.sub("name:".len())});*/
+
+	message.index_of("^^stop").else({println("stopping service");running=0;});
+	?({arguments["session"].id.str().in_keys(sessions)==0},{sessions[arguments["session"].id.str()]=arguments["session"];},{},0);
+	/*session = sessions[arguments["session"].id.str()];*/
+	/*println("session has name:"+session.has("name"));
+	message.index_of("name:").else({println("new name:["+message.sub(5)+"]");session.name=message.sub("name:".len())});*/
+	println("session has name:"+sessions[arguments["session"].id.str()].has("name"));
+	message.index_of("name:").else({println("new name:["+message.sub(5)+"]");sessions[arguments["session"].id.str()].name=message.sub("name:".len())});
+	/*d.broadcast(arguments["protocol"],arguments["session"].id+ " : "+arguments["message"]);*/
+	/*println("message has boom: :"+message.has("boom:"));
+	println("message has boom: :"+message.has("boom:"));*/
+	chat_name = sessions[arguments["session"].id.str()].id; 
+	/*println("session has name2:"+arguments["session"].has("name"));*/
+
+	/*arguments["session"].has("name").do({println("using name:"+arguments["session"].name);chat_name = arguments["session"].name});*/
+	/*session.has("name").do({println("using name:"+session.name);chat_name = session.name});*/
+	sessions[arguments["session"].id.str()].has("name").do({println("using name:"+sessions[arguments["session"].id.str()].name);chat_name = sessions[arguments["session"].id.str()].name});
+
+	/*daemon.broadcast_other(arguments["protocol"],arguments["session"].id + " : "+arguments["message"],arguments["session"].id);*/
+	daemon.broadcast_other(arguments["protocol"],chat_name+ " : "+arguments["message"],arguments["session"].id);
+	/*d.broadcast_other(arguments["protocol"],chat_name+ " : "+arguments["message"],arguments["session"].id);*/
+	/*ret=arguments["message"];*/
 	/*ret="timestamp:"+sys.time;*/
+	/*ret="";*/
 };
 
 println("starting daemon");

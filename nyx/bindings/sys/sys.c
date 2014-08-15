@@ -24,9 +24,9 @@
 
 #ifdef USE_SYS
 
-void sys_bind(node *state,node *class)
+void sys_bind(node *base_class,node *class)
 {
-  node *sys = sys_create_class_object(state);
+  node *sys = sys_create_class_object(base_class);
   add_member(class,sys);
   inc_obj_refcount(sys);
 }
@@ -42,12 +42,29 @@ void add_module(node *base_class,node *items,char *module_name)
   //set_obj_int(module,"item_index",get_items_new_index(items));
   
   node_AddItem(items,module);
+  node_SetParent(module,items);
+}
+
+void sys_add_parameter(node *state,node *parameter)
+{
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *sys = get_member(block_class,"sys");
+  node *parameters = get_member(sys,"parameters");
+  node *items = node_GetItemByKey(parameters,"items");
+  reset_obj_refcount(parameter);
+  inc_obj_refcount(parameter);
+  set_obj_int(parameter,"item_index",get_last_index(items)+1);
+  
+  node_AddItem(items,parameter);
+  node_SetParent(parameter,items);
 }
 
 
-node *sys_create_class_object(node *state)
+
+node *sys_create_class_object(node *base_class)
 {
-  node *base_class = get_base_class(state);
+  //node *base_class = get_base_class(state);
   node *base = create_base_obj_layout("sys");
   add_class_object_function(base,"=",nyxh_assign);
 
@@ -64,31 +81,40 @@ node *sys_create_class_object(node *state)
   add_class_object_function(base,"interpreter_version",sys_interpreter_version);//returns array with major/minor/build
 
 
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  inc_obj_refcount(value);
-  set_obj_string(value,"name","modules");
-  add_member(base,value);
-  node *items = create_obj("items");
-  add_obj_kv(value,items);
+  node *parameters = create_class_instance(base_class);
+  reset_obj_refcount(parameters);
+  inc_obj_refcount(parameters);
+  set_obj_string(parameters,"name","parameters");
+  add_member(base,parameters);
+  node *parameters_items = create_obj("items");
+  add_obj_kv(parameters,parameters_items);
+
+
+  node *modules = create_class_instance(base_class);
+  reset_obj_refcount(modules);
+  inc_obj_refcount(modules);
+  set_obj_string(modules,"name","modules");
+  add_member(base,modules);
+  node *modules_items = create_obj("items");
+  add_obj_kv(modules,modules_items);
   //long items_index = 0;
   #ifdef USE_SOCKETS
-  add_module(base_class,items,"sockets");
+  add_module(base_class,modules_items,"sockets");
   #endif
   #ifdef USE_HTTP
-  add_module(base_class,items,"http");
+  add_module(base_class,modules_items,"http");
   #endif
   #ifdef USE_CURL
-  add_module(base_class,items,"curl");
+  add_module(base_class,modules_items,"curl");
   #endif
   #ifdef USE_WEBSOCKETS
-  add_module(base_class,items,"websockets");
+  add_module(base_class,modules_items,"websockets");
   #endif
   #ifdef USE_MICROHTTPD
-  add_module(base_class,items,"microhttpd");
+  add_module(base_class,modules_items,"microhttpd");
   #endif
   #ifdef USE_CURSES
-  add_module(base_class,items,"curses");
+  add_module(base_class,modules_items,"curses");
   #endif
   //add_class_object_function(base,"load",nyxh_load);
   //add_class_object_function(base,"reset",nyxh_reset);

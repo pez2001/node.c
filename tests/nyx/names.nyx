@@ -1,0 +1,26 @@
+a="key";
+println("a:"+a);
+println("a has id:"+a.has("id"));
+println("a has id2:"+a.has("id"));
+a.id="turbo";
+println("a has id3:"+a.has("id"));
+println("a.id:"+a.id); 
+println("id:"+id); 
+m="hallo";
+println("m:"+m);
+m=a;
+println("m:"+m);
+?({m==a},{println("m==a");m="world"},{},0);
+println("new m:"+m);
+
+func()={o=o+10;sub_c.e="hallo:"+o;/*println("no:"+o);*/};
+
+o=2;
+/*println("oc:"+o);*/
+func();
+println("func_c:"+func.sub_c.e);
+func();
+println("func_c:"+func.sub_c.e);
+
+println("o:"+o);
+/*??(o=0,{println("oc:"+o);o<2},{println("o:"+o);o=o+1;},{},1);*/

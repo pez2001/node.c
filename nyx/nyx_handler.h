@@ -78,6 +78,10 @@ node *nyxh_sub(node *state,node *obj,node *block,node *parameters);
 node *nyxh_add(node *state,node *obj,node *block,node *parameters);
 node *nyxh_split(node *state,node *obj,node *block,node *parameters);
 
+node *nyxh_index_of(node *state,node *obj,node *block,node *parameters);
+node *nyxh_substr(node *state,node *obj,node *block,node *parameters);
+
+
 
 node *nyxh_else(node *state,node *obj,node *block,node *parameters);
 node *nyxh_do(node *state,node *obj,node *block,node *parameters);
@@ -94,6 +98,11 @@ node *nyxh_pre_immediate_sub(node *state,node *obj,node *block,node *parameters)
 
 node *nyxh_and(node *state,node *obj,node *block,node *parameters);
 node *nyxh_or(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_binary_and(node *state,node *obj,node *block,node *parameters);
+node *nyxh_binary_or(node *state,node *obj,node *block,node *parameters);
+node *nyxh_binary_xor(node *state,node *obj,node *block,node *parameters);
+node *nyxh_pre_binary_not(node *state,node *obj,node *block,node *parameters);
 node *nyxh_pre_not(node *state,node *obj,node *block,node *parameters);
 
 
@@ -108,6 +117,8 @@ node *nyxh_name(node *state,node *obj,node *block,node *parameters);
 node *nyxh_item_at(node *state,node *obj,node *block,node *parameters);
 node *nyxh_in(node *state,node *obj,node *block,node *parameters);
 node *nyxh_in_keys(node *state,node *obj,node *block,node *parameters);
+
+node *nyxh_has(node *state,node *obj,node *block,node *parameters);
 
 
 node *nyxh_pre_sub(node *state,node *obj,node *block,node *parameters);

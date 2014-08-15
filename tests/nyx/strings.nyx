@@ -1,0 +1,4 @@
+a="key_world";
+println("a:"+a);
+b=a.sub(2);
+println("b:"+b);

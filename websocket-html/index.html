@@ -1,0 +1,196 @@
+<html>
+<head><title>Websockets Chat Example</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+ 	html, body 
+ 	{
+  		height: 100%;
+    	margin: 0;
+    	padding: 0;
+    	overflow:hidden;
+    }
+   	#fs_window 
+   	{
+   		min-height: 100%; 
+   	}
+   	#fs_chat
+   	{
+   		background: #f8fdf8;
+		padding: 0px;
+		margin: 0px;
+		width: 100%;
+		height: 100%;
+		-webkit-box-sizing: border-box;
+     	-moz-box-sizing: border-box;
+     	box-sizing: border-box;
+
+  		height: -moz-calc(100% - 24px);
+    	height: -webkit-calc(100% - 24px);
+    	height: calc(100% - 24px);
+
+		background: rgb(122,188,255); 
+		background: -moz-linear-gradient(top,  rgba(122,188,255,1) 0%, rgba(96,171,248,1) 44%, rgba(64,150,238,1) 100%); 
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(122,188,255,1)), color-stop(44%,rgba(96,171,248,1)), color-stop(100%,rgba(64,150,238,1)));  Chrome,Safari4+ 
+		background: -webkit-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(96,171,248,1) 44%,rgba(64,150,238,1) 100%); 
+		background: -o-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(96,171,248,1) 44%,rgba(64,150,238,1) 100%); 
+		background: -ms-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(96,171,248,1) 44%,rgba(64,150,238,1) 100%); 
+		background: linear-gradient(to bottom,  rgba(122,188,255,1) 0%,rgba(96,171,248,1) 44%,rgba(64,150,238,1) 100%); 
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7abcff', endColorstr='#4096ee',GradientType=0 ); 
+  /*background: -webkit-gradient(linear, center top, center bottom, color-stop(0%, #ccc), color-stop(100%, #efefef));
+  background: -moz-linear-gradient(top, #ccc, #efefef);*/
+   	}
+   	#fs_input
+   	{
+   		clear:left;
+   		float:left;
+   		position: absolute;
+  		min-width: 100%; 
+  		padding: 0;
+  		height:24px;
+  		bottom:0px;
+  		left:0px;
+  		padding-left:4px;
+		background: rgb(122,188,255);
+		background: -moz-linear-gradient(top,  rgba(122,188,255,1) 0%, rgba(49,148,247,1) 16%, rgba(96,171,248,1) 70%, rgba(64,150,238,1) 100%); 
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(122,188,255,1)), color-stop(16%,rgba(49,148,247,1)), color-stop(70%,rgba(96,171,248,1)), color-stop(100%,rgba(64,150,238,1)));
+		background: -webkit-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%); 
+		background: -o-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%); 
+		background: -ms-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%); 
+		background: linear-gradient(to bottom,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7abcff', endColorstr='#4096ee',GradientType=0 ); /* IE6-9 */
+   	}
+   	#chat_text
+   	{
+   		width: 100%;
+   		height: 100%;
+		/*background: rgb(122,188,255); */
+		background: rgb(122,188,255);
+		background: -moz-linear-gradient(top,  rgba(122,188,255,1) 0%, rgba(49,148,247,1) 16%, rgba(96,171,248,1) 70%, rgba(64,150,238,1) 100%); 
+		background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,rgba(122,188,255,1)), color-stop(16%,rgba(49,148,247,1)), color-stop(70%,rgba(96,171,248,1)), color-stop(100%,rgba(64,150,238,1)));
+		background: -webkit-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%); 
+		background: -o-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%); 
+		background: -ms-linear-gradient(top,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%); 
+		background: linear-gradient(to bottom,  rgba(122,188,255,1) 0%,rgba(49,148,247,1) 16%,rgba(96,171,248,1) 70%,rgba(64,150,238,1) 100%);
+		filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#7abcff', endColorstr='#4096ee',GradientType=0 ); /* IE6-9 */
+   	}
+
+	textarea 
+	{
+		resize: none;
+    }
+
+	input:focus
+	{
+    	outline: 0;
+    	border: 0;
+    	border-color: inherit;
+  		-webkit-box-shadow: none;
+  		box-shadow: none;
+	}
+
+</style>
+<!--[if lte IE 6]>
+    <style type="text/css">
+    	#container 
+    	{
+    		height: 100%;
+    	}
+    </style>
+<![endif]-->
+
+<script type="text/javascript">
+var connection;
+var host="tron";
+host="192.168.0.2";
+
+function connect()
+{
+	connection = new WebSocket("ws://"+host+":8080/", ["echo"]);
+	connection.onopen = function () 
+	{
+		connection.send("Hi there...");
+	};
+	connection.onerror = function(error) 
+	{
+		add_message("Error occured!");
+		add_message("Trying to reconnect in 10 seconds")
+ 		setTimeout(function() { reconnect(); }, 10000);	
+	};
+	connection.onclosed = function(error) 
+	{
+		add_message("Connection Closed: "+error)
+		add_message("Trying to reconnect in 10 seconds")
+ 		setTimeout(function() { reconnect(); }, 10000);	
+	};
+	connection.onmessage = function(e) 
+	{
+		console.log('Server: ' + e.data);
+		add_message(e.data);
+
+		var msg = new SpeechSynthesisUtterance(e.data);
+		window.speechSynthesis.speak(msg);
+	};
+}
+
+function reconnect()
+{
+	add_message("Reconnecting...")
+	connect();
+}
+
+
+function add_message(message)
+{
+	document.getElementById("fs_chat").innerHTML = document.getElementById("fs_chat").innerHTML+"\n"+message;
+	var textarea = document.getElementById("fs_chat");
+	textarea.scrollTop = textarea.scrollHeight;
+}
+
+
+function send_message()
+{
+	var message = document.getElementById("chat_text").value;
+	connection.send(message);
+	add_message("You: "+message);
+	document.getElementById("chat_text").value="";
+
+	
+}
+
+function fix_focus()
+{
+	document.getElementById("chat_text").focus();
+}
+
+function setup()
+{
+
+	fix_focus();
+	document.addEventListener("keypress",function(e)
+	{
+    	if(e.keyCode==13)
+    	{
+        	/*document.getElementById("send_button").click();*/
+    	    send_message();
+	    }
+	});
+	connect();
+}
+
+
+/*		<input id="send_button" type="submit" value="Send Message" onclick="send_message()">
+    	<div id="fs_chat" onfocus="fix_focus()" tabindex="-1">Welcome to our Chat-Example Page</div>
+
+
+*/
+</script>
+</head>
+<body onload="setup()">
+    <div id="fs_window" onfocus="fix_focus()" tabindex="-1">
+    	<textarea id="fs_chat" onfocus="fix_focus()" tabindex="-1">Welcome to our Chat-Example Page</textarea>
+		<div id="fs_input" onfocus="fix_focus()" tabindex="-1">
+			<input id="chat_text" type="text" name="message" size="160" x-webkit-speech>
+		</div>
+	</div>
+</body>
+</html>

@@ -22,7 +22,7 @@
 
 #include "nyxi.h"
 
-const char *nyxi_helpmsg = "Usage: nyxi [OPTION]... [INPUT FILE]\n\
+const char *nyxi_helpmsg = "Usage: nyxi [OPTION]... [INPUT FILE] [...]\n\
 Execute nyx script Files.\n\
 \n\
   -i    interactive mode\n\
@@ -33,6 +33,8 @@ Execute nyx script Files.\n\
   -p    print the return value\n\
 \n\
   Use - as input file or leave empty to use STDIN\n\
+  Every Parameter after the input file will be\n\
+  interpreted and put into the sys.parameters array\n\
   CTRL-D to exit\n\
 \n\
   Return value of script will be used as the exit code.\n\
@@ -53,7 +55,6 @@ better handling of preops regarding ++ and like (check if last token in statemen
 better string handling(single char setting)
 better json export (tuples dont work now)
 
-make sockets,curl,micro httpd,libwebsockets optional
 linux socket support
 
 code seperation, function renaming,more kerneldoc comments
@@ -64,12 +65,6 @@ socket bind listen select handling
 
 in function for arrays and strings
 b="a".in("Hallo"); => b=1
-
-if("curl".in(sys.modules),{println("curl is supported")});
-
-index function too
-
-sys.modules function to return an array with supported modules
 
 
 update readme
@@ -171,6 +166,19 @@ int main(int argc, char** argv)
     }
   }
   char *filename = argv[optind];
+  
+  node *state = init_nyx();
+
+  while(optind < argc)
+  {
+    optind++;
+    if(argv[optind])
+    {
+      //printf("optional arg:%s\n",argv[optind]);
+      nyx_add_parameter(state,argv[optind]);
+    }
+  }
+
   node *nyx_stream = NULL;
   if(filename != NULL && strlen(filename)>0 && !use_input_as_script_string && strcmp(filename,"-")) //use filename to load a script file
   {
@@ -180,6 +188,7 @@ int main(int argc, char** argv)
   {
     nyx_stream = nyx_LoadString(filename);
   }
+
   /*else if(interactive_mode) //interactive 
   { 
     printf("interactive\n");
@@ -187,7 +196,7 @@ int main(int argc, char** argv)
   else //read from stdin
   {
     setup_terminal();
-    node *state = init_nyx();
+    //node *state = init_nyx();
     node *blocks=node_GetItemByKey(state,"blocks");
     char *buf =(char*)malloc(100);
     char *tmp_get=NULL;
@@ -246,11 +255,12 @@ int main(int argc, char** argv)
       node_PrintTree(nyx_stream);
       node_FreeTree(nyx_stream);
     }
+    close_nyx(state);
     return(0);
   }
   else // interpret stream
   { 
-    node *state = init_nyx();
+    //node *state = init_nyx();
     set_obj_string(state,"script_filename",filename);
     set_obj_string(state,"interpreter_filename",argv[0]);
     if(nyx_stream!=NULL)
@@ -291,9 +301,9 @@ int main(int argc, char** argv)
       else
         node_FreeTree(nyx_stream);
     }
-    close_nyx(state);
   }
-  #ifdef WIN32
+  close_nyx(state);
+  #ifdef WIN32 //TODO move to close_bindings -> sockets_close
   WSACleanup();
   #endif
   #ifdef USE_MEMORY_DEBUGGING

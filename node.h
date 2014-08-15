@@ -150,6 +150,8 @@ list *node_GetItems(node *n);
 int node_HasKey(node *n);
 int node_HasValue(node *n);
 
+node *node_GetRoot(node *n);
+
 
 void node_Print(node *n,int with_key,int include_items);
 void node_PrintWithTabs(node *n,int with_key,int tabs_num);

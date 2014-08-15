@@ -1,0 +1,8 @@
+func()={o=o+10;sub_c.e="hallo:"+o;};
+o=2;
+func();
+println("func_c:"+func.sub_c.e);
+func();
+println("func_c:"+func.sub_c.e);
+println("o:"+o);
+

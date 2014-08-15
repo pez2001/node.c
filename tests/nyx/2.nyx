@@ -57,9 +57,9 @@ h= 1+-1;
 
 if(exp,_do)={?(exp,_do,{},0)};
 
-b=open("tests/test_yeti.json","rb").close();
+b=file.open("tests/test_yeti.json","rb").close();
 
-/*a=open("tests/test_yeti.json","rb").readall().close();
+/*a=file.open("tests/test_yeti.json","rb").readall().close();
 println(a);
 */
 
@@ -70,7 +70,7 @@ println(a);
 ??(o=1,{println("checking o:",o);o<3},{println("o:",o);o=o+1},{},1);
 
 
-a=open("tests/test_yeti.json","rb").readall().close();
+a=file.open("tests/test_yeti.json","rb").readall().close();
 println(a);
 
 println("deep check");

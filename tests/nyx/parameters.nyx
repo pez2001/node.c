@@ -1,0 +1,3 @@
+println("parameter[0]: "+sys.parameters[0]);
+println("parameter[turbo]: "+sys.parameters["turbo"]);
+/*?("test_not_found".in(sys.modules),{println("Error: test found")},{println("Success: test not found")},0);*/

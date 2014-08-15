@@ -61,6 +61,10 @@
 #include "bindings/file/file.h"
 #endif
 
+#ifdef USE_HTTP
+#include "bindings/http/http.h"
+#endif
+
 
 #include "nyx_handler.h"
 
@@ -112,6 +116,7 @@ void remove_obj_kv(node *obj,node *kv);
 void add_obj_string(node *obj,char *key,char *string);
 void add_obj_int(node *obj,char *key,long i);
 void add_obj_float(node *obj,char *key,double d);
+void add_obj_ptr(node *obj,char *key,void *n);
 void set_obj_string(node *obj,char *key,char *string);
 void set_obj_int(node *obj,char *key,long i);
 void set_obj_node(node *obj,char *key,node *n);
@@ -140,9 +145,15 @@ void remove_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
 node *get_item(node *state,node *obj,node *key,BOOL append_new_item);
 
-node *create_class_instance(node *class_obj);
 node *create_base_obj_layout(char *obj_name);
 node *create_class_object(void);
+node *create_block_class_object(node *base_class);
+
+
+node *create_class_instance(node *class_obj);
+node *create_block_class_instance(node *state,node *block);
+
+node *copy_class(node *class_obj);
 
 
 //#ifdef USE_SOCKETS
@@ -156,9 +167,9 @@ node *create_class_object(void);
 
 long get_last_index(node *items);
 
-node *create_block_class_object(node *state,node *block);
 
-node *create_nyx_state(node *base_class);
+
+node *create_nyx_state(node *base_class,node *block_class);
 
 char *check_block_flag(node *state);
 
@@ -170,7 +181,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
 
 node *search_block_path_for_member(node *block,char *key);
 
-node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop);
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop);//,long auto_add_new);
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);
@@ -186,8 +197,10 @@ void dec_obj_refcount(node *obj);
 long get_obj_refcount(node *obj);
 
 node *get_base_class(node *state);
+node *get_block_class(node *state);
 node *get_true_class(node *state);
 node *get_false_class(node *state);
+node *get_garbage(node *state);
 
 node *init_nyx(void);
 void close_nyx(node *state);

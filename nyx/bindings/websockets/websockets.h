@@ -42,6 +42,10 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters);
 node *websockets_stop(node *state,node *obj,node *block,node *parameters);
 node *websockets_service(node *state,node *obj,node *block,node *parameters);
 
+node *websockets_broadcast(node *state,node *obj,node *block,node *parameters);
+node *websockets_broadcast_other(node *state,node *obj,node *block,node *parameters);
+node *websockets_send(node *state,node *obj,node *block,node *parameters);
+
 #endif
 
 #endif
