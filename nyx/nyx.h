@@ -155,6 +155,8 @@ node *create_block_class_instance(node *state,node *block);
 
 node *copy_class(node *class_obj);
 
+node *create_proxy_object(node *target,char *name);
+
 
 //#ifdef USE_SOCKETS
 //node *create_socket_class_object(void);

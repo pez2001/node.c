@@ -106,6 +106,7 @@ node *nyxh_pre_binary_not(node *state,node *obj,node *block,node *parameters);
 node *nyxh_pre_not(node *state,node *obj,node *block,node *parameters);
 
 
+node *nyxh_copy(node *state,node *obj,node *block,node *parameters);
 
 node *nyxh_parent(node *state,node *obj,node *block,node *parameters);
 node *nyxh_get_block(node *state,node *obj,node *block,node *parameters);

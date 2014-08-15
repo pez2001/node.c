@@ -1,0 +1,15 @@
+a=12;
+b=a.copy();
+println(b);
+func(delta)=
+{
+println("delta:"+delta);
+delta=123;
+};
+
+func(a);
+println("a:"+a);
+func(b);
+println("b:"+b);
+b=66;
+println("a:"+a);

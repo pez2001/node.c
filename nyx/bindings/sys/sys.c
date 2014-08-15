@@ -34,7 +34,6 @@ void sys_bind(node *base_class,node *class)
 void add_module(node *base_class,node *items,char *module_name)
 {
   node *module = create_class_instance(base_class);
-  reset_obj_refcount(module);
   inc_obj_refcount(module);
   set_obj_string(module,"name","module");
   set_obj_string(module,"value",module_name);
@@ -82,7 +81,6 @@ node *sys_create_class_object(node *base_class)
 
 
   node *parameters = create_class_instance(base_class);
-  reset_obj_refcount(parameters);
   inc_obj_refcount(parameters);
   set_obj_string(parameters,"name","parameters");
   add_member(base,parameters);
@@ -91,7 +89,6 @@ node *sys_create_class_object(node *base_class)
 
 
   node *modules = create_class_instance(base_class);
-  reset_obj_refcount(modules);
   inc_obj_refcount(modules);
   set_obj_string(modules,"name","modules");
   add_member(base,modules);
@@ -129,7 +126,6 @@ node *sys_time(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   node_SetSint32(real_value,(long)time(NULL));
@@ -140,7 +136,6 @@ node *sys_name(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   //struct utsname uname_data;
@@ -153,7 +148,6 @@ node *sys_name(node *state,node *obj,node *block,node *parameters)
 node *sys(node *state,node *obj,node *block,node *parameters)
 {
   node *value = sys_create_class_object(state);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   return(value);
 }
@@ -163,7 +157,6 @@ node *sys_execute(node *state,node *obj,node *block,node *parameters)
   //execute an external program and returns the output
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   if(node_GetItemsNum(parameters))
@@ -214,12 +207,10 @@ node *sys_working_directory(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *items = create_obj("items");
   add_obj_kv(value,items);
   node *path = create_class_instance(base_class);
-  reset_obj_refcount(path);
   inc_obj_refcount(path);
   set_obj_string(path,"name","path");
   set_obj_int(path,"item_index",0);
@@ -235,27 +226,23 @@ node *sys_interpreter_version(node *state,node *obj,node *block,node *parameters
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   set_obj_string(value,"name","nyx_version");
   node *items = create_obj("items");
   add_obj_kv(value,items);
   node *major = create_class_instance(base_class);
-  reset_obj_refcount(major);
   inc_obj_refcount(major);
   set_obj_string(major,"name","major");
   set_obj_int(major,"value",(long) MAJOR_VERSION);
   set_obj_int(major,"item_index",0);
   node_AddItem(items,major);
   node *minor = create_class_instance(base_class);
-  reset_obj_refcount(minor);
   inc_obj_refcount(minor);
   set_obj_string(minor,"name","minor");
   set_obj_int(minor,"value",(long) MINOR_VERSION);
   set_obj_int(minor,"item_index",1);
   node_AddItem(items,minor);
   node *build = create_class_instance(base_class);
-  reset_obj_refcount(build);
   inc_obj_refcount(build);
   set_obj_string(build,"name","build");
   set_obj_int(build,"value",(long) BUILD+1);
@@ -269,7 +256,6 @@ node *sys_interpreter_filename(node *state,node *obj,node *block,node *parameter
   node *base_class = get_base_class(state);
   node *interpreter_filename = node_GetItemByKey(state,"interpreter_filename");
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   if(interpreter_filename!=NULL)
@@ -286,7 +272,6 @@ node *sys_script_filename(node *state,node *obj,node *block,node *parameters)
   node *base_class = get_base_class(state);
   node *script_filename = node_GetItemByKey(state,"script_filename");
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   if(script_filename!=NULL)
@@ -332,7 +317,6 @@ node *sys_dump(node *state,node *obj,node *block,node *parameters)
   else
   { 
     value = create_class_instance(base_class);
-    reset_obj_refcount(value);
     add_garbage(state,value);
   }
   node *real_value = node_GetItemByKey(value,"value");

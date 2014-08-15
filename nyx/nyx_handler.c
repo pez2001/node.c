@@ -663,6 +663,15 @@ node *nyxh_neq(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+
+node *nyxh_copy(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = copy_class(obj);
+  add_garbage(state,value);
+  return(value);
+}
+
+
 /*
 // = handler
 node *nyxh_assign(node *state,node *obj,node *block,node *parameters)

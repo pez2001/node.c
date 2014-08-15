@@ -848,6 +848,15 @@ node *create_sys_class_object(node *base_class)
 }
 */
 
+node *create_proxy_object(node *target,char *name)
+{
+  node *proxy = create_base_obj_layout(method_name);
+  set_obj_string(proxy,"type","proxy");
+  set_obj_string(proxy,"name",name);
+  set_obj_ptr(proxy,"target",(void*)target);
+  return(proxy);
+}
+
 node *create_class_object(void)
 {
   node *base = create_base_obj_layout("object");
@@ -885,6 +894,7 @@ node *create_class_object(void)
   add_class_object_function(base,"print",nyxh_print);
   add_class_object_function(base,"println",nyxh_println);
   add_class_object_function(base,"input",nyxh_input);
+  add_class_object_function(base,"copy",nyxh_copy);
   //add_class_object_function(base,"http_query",nyxh_http_query);
   add_class_object_function(base,"str",nyxh_str);
   add_class_object_function(base,"int",nyxh_int);
@@ -1272,6 +1282,11 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
     //{
     //  value = obj;
     //}
+  }
+  else if(!strcmp(get_obj_type(obj),"proxy"))
+  {
+    println("resolving proxy obj:%x\n",obj);
+    value=obj;
   }
   else if(!strcmp(node_GetKey(obj),"nyx_object"))
   {
