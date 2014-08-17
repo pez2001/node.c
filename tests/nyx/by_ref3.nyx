@@ -1,0 +1,10 @@
+a=12;
+func(delta)=
+{
+delta=123;
+};
+
+func(a);
+println("a:"+a);
+func(12);
+println("a:"+a);

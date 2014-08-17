@@ -46,9 +46,8 @@ node *http_create_request(node *state,node *obj,node *block,node *parameters)
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   set_obj_string(value,"name","http.request");
-  reset_obj_refcount(value);
   add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value = get_value(value);
   node_SetString(real_value,"not supported");
   return(value);
 }
@@ -75,11 +74,10 @@ node *http_parse_answer(node *state,node *obj,node *block,node *parameters)
   else
   {
     value2 = create_class_instance(base_class);
-    reset_obj_refcount(value2);
     add_garbage(state,value2);
     set_obj_string(value2,"value","");
   }
-  node *real_value2 = node_GetItemByKey(value2,"value");
+  node *real_value2 = get_value(value2);
   char *answer = node_GetString(real_value2);
   long answer_len = strlen(answer);
   if(!answer_len)
@@ -127,7 +125,6 @@ node *http_parse_answer(node *state,node *obj,node *block,node *parameters)
   */
   char *header = str_Sub(answer,0,i);
   node *nheader = create_class_instance(base_class);
-  reset_obj_refcount(nheader);
   inc_obj_refcount(nheader);
   set_obj_string(nheader,"name","header");
   set_obj_string(nheader,"value",header);
@@ -137,7 +134,6 @@ node *http_parse_answer(node *state,node *obj,node *block,node *parameters)
 
 
   node *nbody = create_class_instance(base_class);
-  reset_obj_refcount(nbody);
   inc_obj_refcount(nbody);
   set_obj_string(nbody,"name","body");
   set_obj_string(nbody,"value",body);
@@ -154,7 +150,7 @@ void http_append_query_array_item(node *state,node *array,char *value)
   char *val=str_CreateEmpty();
   char *key=str_CreateEmpty();
   int in_key=1;
-  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *base_class = get_base_class(state);
   while(offset<value_len)
   {
     char vc=value[offset];
@@ -173,7 +169,6 @@ void http_append_query_array_item(node *state,node *array,char *value)
     offset++;
   }
   node *item = create_class_instance(base_class);
-  reset_obj_refcount(item);
   node_AddItem(array,item);
   node_SetParent(item,array);
   inc_obj_refcount(item);
@@ -227,8 +222,6 @@ node *http_query(node *state,node *obj,node *block,node *parameters)
   else
   {
     value = create_class_instance(base_class);
-    node_SetParent(value,NULL);
-    reset_obj_refcount(value);
     add_garbage(state,value);
   }
   http_append_query_array(state,value);

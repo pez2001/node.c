@@ -47,7 +47,6 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
 
   node *base_class = node_GetItemByKey(state,"nyx_object");
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   char *ret = (char*)malloc((size*nmemb)+1);
@@ -58,23 +57,22 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   set_obj_string(value,"name","data");
   node *parameters = create_obj("parameters");
   node_AddItem(parameters,value);
-  node *read_obj = execute_obj(state,read_block,block,parameters,True,False);
+  node *read_obj = execute_obj(state,read_block,block,parameters,True,False,True);
   return((size*nmemb));
 }
 
 node *curl_get(node *state,node *obj,node *block,node *parameters)
 {
-  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   set_obj_string(value,"name","http.answer");
-  reset_obj_refcount(value);
   add_garbage(state,value);
   if(node_GetItemsNum(parameters))
   {
     node *nurl = node_GetItem(parameters,0);
     node *read_block = node_GetItem(parameters,1);
 
-    node *url_value=node_GetItemByKey(nurl,"value");
+    node *url_value=get_value(nurl);
     CURL *curl_handle;
     node *curl_state = create_obj("curl_state");
     node_AddItem(curl_state,state);

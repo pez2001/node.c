@@ -547,7 +547,7 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
       //add_garbage(state,prot_value);
       set_obj_string(prot_value,"name","protocol");
       set_obj_string(prot_value,"value",get_obj_name(found_prot));
-      set_obj_int(prot_value,"item_index",0);
+      //set_obj_int(prot_value,"item_index",0);
       node_AddItem(parameters,prot_value);
       inc_obj_refcount(prot_value);
       //node_SetParent(prot_value,para)
@@ -559,7 +559,7 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
       //add_garbage(state,msg_value);//TODO check if "just survives"
       set_obj_string(msg_value,"name","message");
       set_obj_string(msg_value,"value",msg);
-      set_obj_int(msg_value,"item_index",1);
+      //set_obj_int(msg_value,"item_index",1);
       node_AddItem(parameters,msg_value);
       inc_obj_refcount(msg_value);
       free(msg);
@@ -577,7 +577,7 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
       //inc_obj_refcount(daemon);
 
 
-      node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False);
+      node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
 
       dec_obj_refcount(msg_value);
       dec_obj_refcount(prot_value);

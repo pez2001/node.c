@@ -121,6 +121,7 @@ void set_obj_string(node *obj,char *key,char *string);
 void set_obj_int(node *obj,char *key,long i);
 void set_obj_node(node *obj,char *key,node *n);
 void set_obj_float(node *obj,char *key,double d);
+char *get_obj_str(node *obj,char *key);
 char *get_obj_name(node *obj);
 char *get_obj_type(node *obj);
 void add_obj_double(node *obj,char *key,double d);
@@ -140,6 +141,9 @@ void add_garbage(node *state,node *obj);
 void free_garbage(node *state,long min_level,node *skip_this);
 
 /*class handling*/
+void add_private(node *obj,node *private);
+void remove_private(node *obj,node *private);
+
 void add_member(node *obj,node *member);
 void remove_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
@@ -156,6 +160,10 @@ node *create_block_class_instance(node *state,node *block);
 node *copy_class(node *class_obj);
 
 node *create_proxy_object(node *target,char *name);
+node *get_proxy_target(node *proxy);
+
+void clean_move(node *state,node *dst,node *src);
+
 
 
 //#ifdef USE_SOCKETS
@@ -179,11 +187,11 @@ long get_execution_level(node *state);
 void inc_execution_level(node *state);
 void dec_execution_level(node *state);
 
-node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block);
+node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block,BOOL resolve_obj);
 
 node *search_block_path_for_member(node *block,char *key);
 
-node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop);//,long auto_add_new);
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop,BOOL resolv_obj);//,long auto_add_new);
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);

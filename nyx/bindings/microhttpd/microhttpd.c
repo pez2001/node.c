@@ -48,12 +48,11 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node *state = node_GetItem(mhd_state,0);
   node *read_block = node_GetItem(mhd_state,1);
   node *block = node_GetItem(mhd_state,2);
-  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *base_class = get_base_class(state);
 
   node *parameters = create_obj("parameters");
 
   node *url_value = create_class_instance(base_class);
-  reset_obj_refcount(url_value);
   add_garbage(state,url_value);
   set_obj_string(url_value,"name","url");
   set_obj_string(url_value,"value",(char*)url);
@@ -61,7 +60,6 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node_AddItem(parameters,url_value);
 
   node *method_value = create_class_instance(base_class);
-  reset_obj_refcount(method_value);
   add_garbage(state,method_value);
   set_obj_string(method_value,"value",(char*)method);
   set_obj_string(method_value,"name","method");
@@ -69,7 +67,6 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node_AddItem(parameters,method_value);
 
   node *version_value = create_class_instance(base_class);
-  reset_obj_refcount(version_value);
   add_garbage(state,version_value);
   set_obj_string(version_value,"name","version");
   set_obj_string(version_value,"value",(char*)version);
@@ -77,7 +74,6 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node_AddItem(parameters,version_value);
 
   node *upload_value = create_class_instance(base_class);
-  reset_obj_refcount(upload_value);
   add_garbage(state,upload_value);
   char *uploads = (char*)malloc(*upload_data_size+1);
   memset(uploads+*upload_data_size + 0, 0, 1);
@@ -87,8 +83,8 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   set_obj_int(upload_value,"item_index",3);
   node_AddItem(parameters,upload_value);
 
-  node *ret_obj = execute_obj(state,read_block,block,parameters,True,False);
-  node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
+  node *ret_obj = execute_obj(state,read_block,block,parameters,True,False,True);
+  node *ret_obj_value = get_value(ret_obj);
   char *me = node_GetString(ret_obj_value);
 
   response = MHD_create_response_from_buffer(strlen(me),(void *)me,MHD_RESPMEM_PERSISTENT);
@@ -100,25 +96,25 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
 
 node *microhttpd_start(node *state,node *obj,node *block,node *parameters)
 {
-  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   set_obj_string(value,"name","microhttpd.daemon");
-  reset_obj_refcount(value);
   add_garbage(state,value);
   if(node_GetItemsNum(parameters))
   {
     node *port = node_GetItem(parameters,0);
-    node *port_value=node_GetItemByKey(port,"value");
+    node *port_value = get_value(port);
     node *read_block = node_GetItem(parameters,1);
     node *mhd_state = node_Create();
     inc_obj_refcount(read_block);
     node_AddItem(mhd_state,state);
     node_AddItem(mhd_state,read_block);
     node_AddItem(mhd_state,block);
-    set_obj_node(value,"microhttpd.state",mhd_state);
+    node *value_privates = node_GetItemByKey(value,"privates");
+
+    set_obj_node(value_privates,"microhttpd.state",mhd_state);
     struct MHD_Daemon *d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY,node_GetSint32(port_value),NULL,NULL,&microhttpd_answer,mhd_state,MHD_OPTION_CONNECTION_TIMEOUT,(unsigned int)120,MHD_OPTION_END);
     node *daemon = create_class_instance(base_class);
-    reset_obj_refcount(daemon);
     set_obj_string(daemon,"name","daemon_instance");
     set_obj_ptr(daemon,"value",(void*)d);
     node_AddItem(mhd_state,daemon);
@@ -129,18 +125,16 @@ node *microhttpd_start(node *state,node *obj,node *block,node *parameters)
 
 node *microhttpd_stop(node *state,node *obj,node *block,node *parameters)
 {
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
+  node *value = get_false_class(state);
   if(node_GetItemsNum(parameters))
   {
     node *pstate = node_GetItem(parameters,0);
-    node *nmhd_state = node_GetItemByKey(pstate,"microhttpd.state");
+    node *privates = node_GetItemByKey(pstate,"privates");
+    node *nmhd_state = node_GetItemByKey(privates,"microhttpd.state");
     node *mhd_state = node_GetNode(nmhd_state);
     node *read_block = node_GetItem(mhd_state,1);
     node *daemon = node_GetItem(mhd_state,3);
-    node *daemon_value = node_GetItemByKey(daemon,"value");
+    node *daemon_value = get_value(daemon);
     struct MHD_Daemon *d = (struct MHD_Daemon*)node_GetValue(daemon_value);
     MHD_stop_daemon(d);
 
@@ -150,7 +144,7 @@ node *microhttpd_stop(node *state,node *obj,node *block,node *parameters)
     add_garbage(state,read_block);
     node_ClearItems(mhd_state);
     node_FreeTree(mhd_state);
-    set_obj_string(value,"name","success");
+    value = get_true_class(state);
   }
   return(value);
 }

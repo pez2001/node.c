@@ -369,8 +369,43 @@ void mem_tests(void)
   #ifdef USE_MEMORY_DEBUGGING
   printf("memory test\n");
   mem_Init();
+  //mem_SetVerbosity(1);
   char *test = malloc(66);
   free(test);
+  /*free(test);*/
+
+  char *test2 = malloc(99);
+  char *test3 = malloc(120);
+  free(test3);
+  free(test2);
+
+
+  test = malloc(66);
+  test2 = malloc(99);
+  test3 = malloc(120);
+  free(test3);
+  free(test2);
+  free(test);
+
+  test = malloc(66);
+  test2 = malloc(99);
+  test3 = malloc(120);
+  free(test2);
+  free(test3);
+  free(test);
+
+
+  test = malloc(66);
+  test2 = malloc(99);
+  test3 = malloc(120);
+  free(test);
+  free(test2);
+  free(test3);
+
+
+
+
+  
   node *n = node_Create();
   node_SetKey(n,"root");
   node_SetString(n,"Hello World!");
@@ -402,6 +437,7 @@ void mem_tests(void)
 
   node_PrintTree(copy);
   node_FreeTree(copy);
+
   mem_Close();
   printf("memory test thru\n");
   #endif
@@ -615,11 +651,11 @@ void nyx_tests2(void)
 
 int main(int argc, char *argv[])
 {
+  mem_tests();
+  fflush(stdout);
   ptr_tests();
   ptr_tests2();
   node_tests();
-  mem_tests();
-  fflush(stdout);
   json_tests();
   fbx_tests();
   nyx_tests();

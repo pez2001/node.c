@@ -55,8 +55,8 @@ node *sockets_open(node *state,node *obj,node *block,node *parameters)
   //returns socket stream object
   //node *base_class = node_GetItemByKey(state,"nyx_object");
   node *value = sockets_create_class_object();
-  node_SetParent(value,NULL);
-  reset_obj_refcount(value);
+  //node_SetParent(value,NULL);
+  //reset_obj_refcount(value);
   add_garbage(state,value);
   set_obj_int(value,"value",0);
   if(node_GetItemsNum(parameters))
@@ -85,8 +85,12 @@ node *sockets_open(node *state,node *obj,node *block,node *parameters)
       if(!strcmp(stype,"SOCK_DGRAM"))
         type = SOCK_DGRAM;
       int sock = socket(domain,type,protocol);
-      set_obj_int(value,"socket_handle",(long)sock);
-      set_obj_int(value,"socket_type",(long)type);
+      node *privates = node_GetItemByKey(value,"privates");
+      //set_obj_int(value,"socket_handle",(long)sock);
+      //set_obj_int(value,"socket_type",(long)type);
+      set_obj_int(privates,"socket_handle",(long)sock);
+      set_obj_int(privates,"socket_type",(long)type);
+
       //printf("socket_handle opened:%d\n",sock);
     }
   }
@@ -97,19 +101,24 @@ node *sockets_close(node *state,node *obj,node *block,node *parameters)
 {
   //close a socket
   node *value = get_false_class(state);
-  node *handle = node_GetItemByKey(obj,"socket_handle");
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *handle = node_GetItemByKey(privates,"socket_handle");
   if(handle!=NULL)
   {
     int socket_handle = (int)node_GetSint32(handle);
-    int ret = close(socket_handle);
+    //printf("socket_handle to close:%d\n",socket_handle);
+    #ifdef WIN32 
+      int ret = closesocket(socket_handle);
+    #else  
+      int ret = close(socket_handle);
+    #endif
     if(ret>0)
     	value=get_true_class(state);
   }
-  if(strcmp(get_obj_name(obj),"socket"))
+  /*if(strcmp(get_obj_name(obj),"socket"))
   {
-  	set_obj_int(obj,"value",0);
     return(obj);
-  }
+  }*/
   return(value);
 }
 
@@ -117,7 +126,8 @@ node *sockets_set_address(node *state,node *obj,node *block,node *parameters)
 {
   //set address of stream object
   node *value = get_false_class(state);
-  node *socket_handle = node_GetItemByKey(obj,"socket_handle");
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *socket_handle = node_GetItemByKey(privates,"socket_handle");
 
   if(socket_handle!=NULL)
   {
@@ -137,7 +147,7 @@ node *sockets_set_address(node *state,node *obj,node *block,node *parameters)
         addr.sin_port = port;
         addr.sin_addr.s_addr = inet_addr(host);
         //addr.sin_zero = 0;
-        set_obj_ptr(obj,"socket_addr",&addr);
+        set_obj_ptr(privates,"socket_addr",&addr);
         value = get_true_class(state);
       }
     }
@@ -150,8 +160,9 @@ node *sockets_connect(node *state,node *obj,node *block,node *parameters)
   //connect stream object to some host and port
   node *value = get_false_class(state);
 
-  node *socket_handle = node_GetItemByKey(obj,"socket_handle");
-  node *socket_type = node_GetItemByKey(obj,"socket_type");
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *socket_handle = node_GetItemByKey(privates,"socket_handle");
+  node *socket_type = node_GetItemByKey(privates,"socket_type");
   set_obj_int(obj,"value",0);
   if(socket_handle!=NULL && socket_type != NULL)
   {
@@ -251,10 +262,10 @@ node *sockets_read(node *state,node *obj,node *block,node *parameters)
   //returns string with data received
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
   add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
-  node *nsocket_handle = node_GetItemByKey(obj,"socket_handle");
+  node *real_value = get_value(value);
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *nsocket_handle = node_GetItemByKey(privates,"socket_handle");
   //node *ntype = node_GetItemByKey(fvalue,"socket_type");
   char *ret = str_CreateEmpty();
   if(nsocket_handle!=NULL)
@@ -290,7 +301,8 @@ node *sockets_read(node *state,node *obj,node *block,node *parameters)
       if(len)
         ret=str_CatFree(ret,buf);
     }
-    set_obj_int(value,"socket_handle",(long)socket_handle);
+    node *value_privates = node_GetItemByKey(value,"privates");
+    set_obj_int(value_privates,"socket_handle",(long)socket_handle);
   }
   node_SetString(real_value,ret);
   free(ret);
@@ -311,7 +323,8 @@ node *sockets_write(node *state,node *obj,node *block,node *parameters)
   if(obj != block && value2 != NULL)
   { 
     node *real_value = node_GetItemByKey(value2,"value");
-    node *nsocket_handle = node_GetItemByKey(obj,"socket_handle");
+    node *privates = node_GetItemByKey(obj,"privates");
+    node *nsocket_handle = node_GetItemByKey(privates,"socket_handle");
     if(nsocket_handle!=NULL)
     {
       int socket_handle = (int)node_GetSint32(nsocket_handle);

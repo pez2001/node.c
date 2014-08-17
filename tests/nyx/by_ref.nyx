@@ -1,6 +1,11 @@
 a=12;
 b=a.copy();
-println(b);
+c=a;
+println("b copy:"+b);
+println("c:"+c);
+a=13;
+println("b after change to a:"+b);
+println("c after change to a:"+c);
 func(delta)=
 {
 println("delta:"+delta);

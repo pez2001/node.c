@@ -1,0 +1,10 @@
+while(ex,_do)={?(ex,_do,{},1)};
+
+repeat(times)={
+	ret=1;
+	i=0;
+	while({i<times},{ret=ret+1;i=i+1;});
+	r=ret;
+};
+
+println("repeat:",repeat(2));

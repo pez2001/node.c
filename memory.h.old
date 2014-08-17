@@ -33,14 +33,12 @@
 #define realloc mem_realloc
 #define free mem_free
  
-typedef struct _mem_chunk
+typedef struct
 {
 	void *ptr;
 	char *description;
 	unsigned long size;
 	int is_freed;
-	struct _mem_chunk *next;
-	struct _mem_chunk *prev;
 } mem_chunk;
 
 #ifdef __cplusplus

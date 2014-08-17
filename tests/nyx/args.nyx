@@ -1,0 +1,12 @@
+func()={println("arg:"+arguments[0]);};
+func("hallo");
+func("hallo");
+/*func(12);*/
+/*
+func2()={println("arg:"+arguments["b"]);};
+func2(b="hallo");
+
+func3()={r=arguments[0];};
+ret=func3("local");
+println("ret:"+ret);
+*/

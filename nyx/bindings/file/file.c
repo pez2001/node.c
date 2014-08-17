@@ -48,8 +48,6 @@ node *file_open(node *state,node *obj,node *block,node *parameters)
   node *filename = NULL;
   node *mode = NULL;
   node *value = file_create_class_object();
-  node_SetParent(value,NULL);
-  reset_obj_refcount(value);
   add_garbage(state,value);
   if(node_GetItemsNum(parameters))
   {
@@ -59,10 +57,11 @@ node *file_open(node *state,node *obj,node *block,node *parameters)
     node *real_mode = node_GetItemByKey(mode,"value");
     if(node_GetType(real_filename)==NODE_TYPE_STRING)
     {
+      node *privates = node_GetItemByKey(value,"privates");
       char *fname = node_GetString(real_filename);
       char *m = node_GetString(real_mode);
       FILE *f = fopen(fname,m);
-      set_obj_ptr(value,"file_handle",f);
+      set_obj_ptr(privates,"file_handle",f);
     }
   }
   return(value);
@@ -74,7 +73,8 @@ node *file_close(node *state,node *obj,node *block,node *parameters)
   node *value = get_false_class(state);
   //printf("closing file\n");
   //node_PrintTree(obj);
-  node *handle = node_GetItemByKey(obj,"file_handle");
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *handle = node_GetItemByKey(privates,"file_handle");
   if(handle!=NULL)
   {
     FILE *fhandle = node_GetValue(handle);
@@ -100,7 +100,8 @@ node *file_readall(node *state,node *obj,node *block,node *parameters)
   reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
-  node *handle = node_GetItemByKey(obj,"file_handle");
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *handle = node_GetItemByKey(privates,"file_handle");
   if(handle!=NULL)
   {
     char *ret = NULL;
@@ -112,7 +113,8 @@ node *file_readall(node *state,node *obj,node *block,node *parameters)
     memset(ret+len + 0, 0, 1);
     fread(ret,len,1,fhandle);
     node_SetString(real_value,ret);
-    set_obj_ptr(value,"file_handle",fhandle);
+    node *value_privates = node_GetItemByKey(value,"privates");
+    set_obj_ptr(value_privates,"file_handle",fhandle);
     add_class_object_function(value,"close",file_close);
     free(ret);
   }
@@ -130,14 +132,16 @@ node *file_writeall(node *state,node *obj,node *block,node *parameters)
     //if(obj != block)
     //{ 
     node *real_value = node_GetItemByKey(value2,"value");
-    node *handle = node_GetItemByKey(obj,"file_handle");
+    node *privates = node_GetItemByKey(obj,"privates");
+    node *handle = node_GetItemByKey(privates,"file_handle");
     if(handle!=NULL)
     {
       FILE *fhandle = node_GetValue(handle);
       char *content = node_GetString(real_value);
       long len = strlen(content);
       fwrite(content,len,1,fhandle);
-      set_obj_ptr(value,"file_handle",fhandle);
+      node *value_privates = node_GetItemByKey(value,"privates");
+      set_obj_ptr(value_privates,"file_handle",fhandle);
       value = get_true_class(state);
     }
     //}

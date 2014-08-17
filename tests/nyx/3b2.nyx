@@ -1,6 +1,6 @@
 read_players()=
 {
-j=open("tests/web/clients.json","rb+").readall().close().from_json();
+j=file.open("tests/web/clients.json","rb+").readall().close().from_json();
 println("bootloader[0].file:",j.bootloader[0].file);
 };
 

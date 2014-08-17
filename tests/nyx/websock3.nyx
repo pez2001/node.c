@@ -1,0 +1,25 @@
+
+running = 1;
+
+
+echo_call2=
+{
+	ret="Hallo";
+};
+
+
+echo_call={
+	println("sending back:"+arguments["message"]+" to: "+arguments["session"].id);
+	daemon.broadcast_other(arguments["protocol"]," : "+arguments["message"],arguments["session"].id);
+};
+
+println("starting daemon");
+/*cbs=["echo":echo_call];
+daemon=websockets.start(8080,cbs);*/
+timeout=10;
+daemon=websockets.start(8080,["echo":echo_call]);
+println("servicing");
+?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
+/*??({daemon=websockets.start(8080,["echo":echo_call])},{running},{daemon.service(10)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);*/
+println("stopped daemon");
+

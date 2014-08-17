@@ -317,18 +317,21 @@ void node_ParseNumber(node *n,char *number_string)
   if(node_NumberIsFloat(number_string))
   {
     double d = atof(number_string);
+    //printf("parsed float:%f\n",d);
     node_SetDouble(n,d);
   }
   else
   {
     long long ll = atoll(number_string);
     long l = atol(number_string);
+    //printf("parsed long:%d\n",l);
     if(l!=ll)
       node_SetSint64(n,ll);
     else
       node_SetSint32(n,l);
   }
 }
+
 
 void node_print_tabs(int num)
 {
@@ -653,6 +656,7 @@ node *node_Copy(node *n,BOOL copy_value)
 node *node_CopySub(node *n,BOOL copy_value)
 {
   void *v = node_CreateValue(n->type,n->value); 
+  //list *l = list_Copy(n->items);
   list *l = list_Create(0,0);
   node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
   return(r);
@@ -662,6 +666,8 @@ node *node_CopySub(node *n,BOOL copy_value)
 void node_CopySubTree(node *n,node *parent,BOOL copy_values,BOOL update_parents)
 {
   node *new = node_CopySub(n,copy_values);
+  //printf("copied node:\n");
+  //node_Print(new,True);
   if(update_parents)
   {
     node_SetParent(new,parent);
@@ -678,6 +684,8 @@ void node_CopySubTree(node *n,node *parent,BOOL copy_values,BOOL update_parents)
 node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents)
 {
   node *new = node_CopySub(n,copy_values);
+  //printf("copied tree node:\n");
+  //node_Print(new,True);
   node_ItemIterationReset(n);
   while(node_ItemIterationUnfinished(n))
   {
@@ -701,9 +709,11 @@ node *node_GetRoot(node *n)
 {
   node *s = n;
   node *ret = n;
+  //printf("getting root of: %x\n",n);
   while(s=node_GetParent(s))
   {
     ret=s;
+    //printf("parent: %x\n",ret);
   }
   return(ret);
 }
@@ -893,11 +903,12 @@ void node_SetString(node *n,char *s)
 void node_SetNode(node *n,node *dst)
 {
   if(node_IsType(n,NODE_TYPE_NODE))
+     //*(void*)n->value = c;
     n->value = dst;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = dst;
+     n->value = dst; //node_CreateValue(NODE_TYPE_UINT8,&c);
      node_SetType(n,NODE_TYPE_NODE);
   }
 }
@@ -1015,6 +1026,11 @@ int node_RemoveItem(node *n,node *s)
 
 node *node_RemoveItemByIndex(node *n,long index)
 {
+  /*if(index<0)
+  {
+    printf("called removeitembyindex with <0\n");
+    int x=1/0;
+  }*/
   return(list_Remove(n->items,index));
 }
 
@@ -1038,6 +1054,11 @@ int node_HasItem(node *n,node *s)
 
 void *node_GetItem(node *n,long index)
 {
+  /*if(index<0)
+  {
+    printf("called getitem with <0\n");
+    int x=1/0;
+  }*/
   return(list_Get(n->items,index));
 }
 
@@ -1059,6 +1080,7 @@ void *node_GetItemByKey(node *n,char *key)
   while(node_ItemIterationUnfinished(n))
   {
     node *i = node_ItemIterate(n);
+    //printf("checking:%s,%d\n",i->key,n->items->num);
     if(i->key!=NULL && !strcmp(i->key,key))
     {
        item = i;
@@ -1160,6 +1182,7 @@ void node_FreeArray(node_array *array,BOOL free_nodes)
   while(list_IterationUnfinished(array->nodes))
   { 
     node *i = (node*)list_Iterate(array->nodes);
+    //printf("freeing node:%s\n",i->key);
     node_Free(i,free_nodes);
   }
   list_Close(array->nodes);
