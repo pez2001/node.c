@@ -58,8 +58,6 @@ void *node_GetItemByKeyHash(node *n,unsigned long key_hash)
   while(node_ItemIterationUnfinished(n))
   {
     node *i = node_ItemIterate(n);
-    //printf("checking:%s,%d\n",i->key,n->items->num);
-    //if(i->key_hash!=0 && !strcmp(i->key,key))
     if(i->key_hash!=0 && i->key_hash == key_hash)
     {
        item = i;
@@ -76,7 +74,7 @@ node *node_Create(void)
 {
   node *n = (node*)malloc(sizeof(node));
   n->type = 0;
-  n->value = NULL;
+  n->value = 0;
   n->parent = NULL;
   n->key = NULL;
   #ifdef USE_FNV_HASHES
@@ -86,7 +84,7 @@ node *node_Create(void)
   return(n);
 }
 
-node *node_CreateFilled(node *parent,char *key,void *value,unsigned char type,list *items)
+node *node_CreateFilled(node *parent,char *key,unsigned long long value,unsigned char type,list *items)
 {
   node *n = (node*)malloc(sizeof(node));
   n->key = str_Copy(key);
@@ -100,63 +98,49 @@ node *node_CreateFilled(node *parent,char *key,void *value,unsigned char type,li
   return(n);
 }
 
-void *node_CreateValue(unsigned char type,void *value)
+unsigned long node_CopyValue(node *n)
 {
-  void *r = NULL;
-  switch(type)
+  unsigned long long r = 0;
+  switch(n->type)
   {
     case NODE_TYPE_NULL:
-         break;
     case NODE_TYPE_INT:
-         r = malloc(sizeof(int));
-         memcpy(r, value, sizeof(int));
-         break;
     case NODE_TYPE_FLOAT:
-         r = malloc(sizeof(float));
-         memcpy(r, value, sizeof(float));
     case NODE_TYPE_DOUBLE:
-         r = malloc(sizeof(double));
-         memcpy(r, value, sizeof(double));
-         break;
     case NODE_TYPE_UINT8:
     case NODE_TYPE_SINT8:
     case NODE_TYPE_BOOL:
-         r = malloc(sizeof(unsigned char));
-         memcpy(r, value, sizeof(unsigned char));
-         break;
     case NODE_TYPE_UINT16:
     case NODE_TYPE_SINT16:
-         r = malloc(sizeof(unsigned short));
-         memcpy(r, value, sizeof(unsigned short));
-         break;
     case NODE_TYPE_UINT32:
     case NODE_TYPE_SINT32:
-         r = malloc(sizeof(unsigned long));
-         memcpy(r, value, sizeof(unsigned long));
-         break;
     case NODE_TYPE_SINT64:
     case NODE_TYPE_UINT64:
-         r = malloc(sizeof(unsigned long long));
-         memcpy(r, value, sizeof(unsigned long long));
+    case NODE_TYPE_NODE:
+    case NODE_TYPE_USER:
+         r = n->value;
          break;
     case NODE_TYPE_STRING:
-         r = (void*)str_Copy(value);
+         {
+            char *tmp = str_Copy((char*)(unsigned long)n->value);
+            r = (unsigned long long)(unsigned long)tmp;
+            //printf("setting value string:[%s]\n",tmp);
+            //fflush(stdout);
+            //printf("conv value string:[%s]\n",(char*)r);
+            //fflush(stdout);
+         }
          break;
     case NODE_TYPE_ARRAY:
-         r = (void*)node_CopyArray(value,True);
-         break;
-    case NODE_TYPE_NODE:
-         //r = malloc(sizeof(void*));
-         //memcpy(r, value, sizeof(void*));
-         r = value;
-         break;
-    case NODE_TYPE_STUB:
-         break;
-    case NODE_TYPE_USER:
-         r = value;
+         {
+            node_array *tmp = node_CopyArray((node_array*)(unsigned long)n->value,True);
+            r = (unsigned long long)(unsigned long)tmp;
+         }
          break;
     case NODE_TYPE_BINARY:
-         r = (void*)node_CreateBinary(((node_binary*)value)->value,((node_binary*)value)->len);
+         {
+           node_binary *tmp = node_CreateBinary(((node_binary*)(unsigned long)n->value)->value,((node_binary*)(unsigned long)n->value)->len);
+            r = (unsigned long long)(unsigned long)tmp;
+         }
          break;
     default:
          break;
@@ -164,10 +148,86 @@ void *node_CreateValue(unsigned char type,void *value)
   return(r);
 }
 
+/*
+unsigned long long node_CreateValue(unsigned char type,void *value)
+{
+  unsigned long long r = 0;
+  switch(type)
+  {
+    case NODE_TYPE_NULL:
+         break;
+    case NODE_TYPE_INT:
+         memcpy(&r, value, sizeof(int));
+         break;
+    case NODE_TYPE_FLOAT:
+         memcpy(&r, value, sizeof(float));
+    case NODE_TYPE_DOUBLE:
+         memcpy(&r, value, sizeof(double));
+         break;
+    case NODE_TYPE_UINT8:
+    case NODE_TYPE_SINT8:
+    case NODE_TYPE_BOOL:
+         memcpy(&r, value, sizeof(unsigned char));
+         break;
+    case NODE_TYPE_UINT16:
+    case NODE_TYPE_SINT16:
+         memcpy(&r, value, sizeof(unsigned short));
+         break;
+    case NODE_TYPE_UINT32:
+    case NODE_TYPE_SINT32:
+         memcpy(&r, value, sizeof(unsigned long));
+         break;
+    case NODE_TYPE_SINT64:
+    case NODE_TYPE_UINT64:
+         memcpy(&r, value, sizeof(unsigned long long));
+         //r = (unsigned long long)*value;
+         break;
+    case NODE_TYPE_STRING:
+         {
+            char *tmp = str_Copy((char*)value);
+            memcpy(&r, &tmp, sizeof(char*));
+            //printf("setting value string:[%s]\n",tmp);
+            //fflush(stdout);
+            //printf("conv value string:[%s]\n",(char*)r);
+            //fflush(stdout);
+            //r = (unsigned long long)tmp;
+         }
+         break;
+    case NODE_TYPE_ARRAY:
+         {
+            //r = (unsigned long long)node_CopyArray(value,True);
+            node_array *tmp = node_CopyArray((node_array*)value,True);
+            memcpy(&r, &tmp, sizeof(node_array*));
+         }
+         break;
+    case NODE_TYPE_NODE:
+         //r = (unsigned long long)value;
+         memcpy(&r, &value, sizeof(node*));
+         break;
+    case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_USER:
+         //r = (unsigned long long)value;
+         memcpy(&r, value, sizeof(void*));
+         break;
+    case NODE_TYPE_BINARY:
+         {
+           node_binary *tmp = node_CreateBinary(((node_binary*)value)->value,((node_binary*)value)->len);
+           memcpy(&r, &tmp, sizeof(unsigned long long));
+         }
+         break;
+    default:
+         break;
+  }
+  return(r);
+}
+*/
+
 void node_Free(node *n,BOOL free_value)
 {
   //printf("freeing node:%x\n",n);
   //node_PrintTree(n);
+  //fflush(stdout);
   //node_Print(n,True,True);
   if(free_value)
   {
@@ -180,7 +240,7 @@ void node_Free(node *n,BOOL free_value)
   free(n);
 }
 
-void node_FreeValue(unsigned char type,void *value)
+void node_FreeValue(unsigned char type,unsigned long long value)
 {
   switch(type)
   {
@@ -198,12 +258,16 @@ void node_FreeValue(unsigned char type,void *value)
     case NODE_TYPE_SINT32:
     case NODE_TYPE_SINT64:
     case NODE_TYPE_UINT64:
+         //if(value!=NULL)
+         //  free(value);
+         break;
     case NODE_TYPE_STRING:
-         if(value!=NULL)
-           free(value);
+         if(((char*)(unsigned long)value)!=NULL)
+           free((char*)(unsigned long)value);
          break;
     case NODE_TYPE_ARRAY:
-         node_FreeArray(value,True);
+         if(((node_array*)(unsigned long)value)!=NULL)
+           node_FreeArray((node_array*)(unsigned long)value,True);
          break;
     case NODE_TYPE_NODE:
 
@@ -218,7 +282,8 @@ void node_FreeValue(unsigned char type,void *value)
     case NODE_TYPE_USER:
          break;
     case NODE_TYPE_BINARY:
-         node_FreeBinary((node_binary*)value,False); //TODO recheck freeing style
+         if(((node_binary*)(unsigned long)value)!=NULL)
+           node_FreeBinary((node_binary*)(unsigned long)value,False); //TODO recheck freeing style
          break;
     default:
          break;
@@ -361,48 +426,54 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          //} 
          break;
     case NODE_TYPE_INT:
-         printf("%d",*(int*)n->value);
+         printf("%d",(int)n->value);
          break;
     case NODE_TYPE_FLOAT:
-         printf("%f",*(float*)n->value);
-         //printf("%-7.7g",*(float*)n->value);
+         {
+            float *fp = (float*)&(n->value);
+            printf("%f",*fp);
+         //printf("%-7.7g",*(float*)n->value)
+         }
          break;
     case NODE_TYPE_DOUBLE:
-         printf("%f",*(double*)n->value);
+         {
+            double *dp = (double*)&(n->value);  
+            printf("%f",*dp);
+         }
          //printf("%-7.7g",*(double*)n->value);
          break;
     case NODE_TYPE_UINT8:
-         printf("%u",*(unsigned char*)n->value);
+         printf("%u",(unsigned char)n->value);
          break;
     case NODE_TYPE_SINT8:
-         printf("%d",*(char*)n->value);
+         printf("%d",(char)n->value);
          break;
     case NODE_TYPE_BOOL:
-         if(*(unsigned char*)n->value)
+         if((unsigned char)n->value)
            printf("True");
          else
           printf("False");
          break;
     case NODE_TYPE_UINT16:
-         printf("%u",*(unsigned short*)n->value);
+         printf("%u",(unsigned short)n->value);
          break;
     case NODE_TYPE_SINT16:
-         printf("%d",*(short*)n->value);
+         printf("%d",(short)n->value);
          break;
     case NODE_TYPE_UINT32:
-         printf("%u",*(unsigned long*)n->value);
+         printf("%u",(unsigned long)n->value);
          break;
     case NODE_TYPE_SINT32:
-         printf("%d",*(long*)n->value);
+         printf("%d",(long)n->value);
          break;
     case NODE_TYPE_SINT64:
-         printf("%I64d",*(long long*)n->value);
+         printf("%I64d",(long long)n->value);
          break;
     case NODE_TYPE_UINT64:
-         printf("%I64u",*(unsigned long long*)n->value);
+         printf("%I64u",(unsigned long long)n->value);
          break;
     case NODE_TYPE_STRING:
-         printf("\"%s\"",(char*)n->value);
+         printf("\"%s\"",(char*)(unsigned long)n->value);
          break;
     case NODE_TYPE_ARRAY:
          {
@@ -414,7 +485,6 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          while(node_array_IterationUnfinished(n))
          { 
             node *i = node_array_Iterate(n);
-            //node_PrintWithTabs(i,False,tabs_num+1);
             node_PrintWithTabs(i,True,tabs_num+1);
             if(node_array_IterationUnfinished(n))
             {
@@ -428,17 +498,13 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
          break;
          }
     case NODE_TYPE_NODE:
-         //node_print_tabs(tabs_num+1);
-         //printf("");
-         if(n->value != NULL)
+         if(n->value != 0)
          {
            printf("(@%x)",n->value);
            //node_PrintWithTabs(n->value,True,tabs_num+1);
          }
          else 
           printf("{NULL}");
-         //node_print_tabs(tabs_num);
-         //printf("\n");
          break;
     case NODE_TYPE_STUB:
          break;
@@ -490,49 +556,55 @@ void node_Print(node *n,int with_key,int include_items)
     case NODE_TYPE_NULL:
          break;
     case NODE_TYPE_INT:
-         printf("%d",*(int*)n->value);
+         printf("%d",(int)n->value);
          break;
     case NODE_TYPE_FLOAT:
-         printf("%f",*(float*)n->value);
-         //printf("%13g",*(float*)n->value);
+         {
+            float *fp = (float*)&(n->value);
+            printf("%f",*fp);
+            //printf("%13g",*(float*)n->value);
+         }
          break;
     case NODE_TYPE_DOUBLE:
-         printf("%f",*(double*)n->value);
-         //printf("%13g",*(double*)n->value);
+         {
+            double *dp = (double*)&(n->value);
+            printf("%f",*dp);
+            //printf("%13g",*(double*)n->value);
+         }
          break;
     case NODE_TYPE_UINT8:
-         printf("%u",*(unsigned char*)n->value);
+         printf("%u",(unsigned char)n->value);
          break;
     case NODE_TYPE_SINT8:
-         printf("%d",*(char*)n->value);
+         printf("%d",(char)n->value);
          break;
     case NODE_TYPE_BOOL:
-         if(*(unsigned char*)n->value)
+         if((unsigned char)n->value)
            printf("True");
          else
           printf("False");
          break;
     case NODE_TYPE_UINT16:
-         printf("%u",*(unsigned short*)n->value);
+         printf("%u",(unsigned short)n->value);
          break;
     case NODE_TYPE_SINT16:
-         printf("%u",*(short*)n->value);
+         printf("%u",(short)n->value);
          break;
     case NODE_TYPE_UINT32:
-         printf("%u",*(unsigned long*)n->value);
+         printf("%u",(unsigned long)n->value);
          break;
     case NODE_TYPE_SINT32:
-         printf("%d",*(long*)n->value);
+         printf("%d",(long)n->value);
          break;
     case NODE_TYPE_SINT64:
-         printf("%I64d",*(long long*)n->value);
+         printf("%I64d",(long long)n->value);
          break;
     case NODE_TYPE_UINT64:
-         printf("%I64u",*(long long*)n->value);
+         printf("%I64u",(long long)n->value);
          break;
     case NODE_TYPE_STRING:
          //SetConsoleOutputCP(CP_UTF8);
-         printf("%s",(char*)n->value);
+         printf("%s",(char*)(unsigned long)n->value);
          break;
     case NODE_TYPE_ARRAY:
          {
@@ -598,13 +670,14 @@ void node_SetKey(node *n,char *key)
   #endif
 }
 
-void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value)
+void node_SetValue(node *n,unsigned long long value,BOOL copy_value,BOOL free_old_value)
 {
   if(free_old_value)
     node_FreeValue(n->type,n->value);
   if(copy_value)
   {
-    n->value = node_CreateValue(n->type,value);
+    unsigned long long v = node_CopyValue(n); 
+    n->value = v;
   }
   else
     n->value = value;
@@ -615,7 +688,7 @@ void node_SetType(node *n,unsigned char type)
   n->type = type;
 }
 
-void node_SetValueType(node *n,unsigned char type,void *value,BOOL copy_value,BOOL free_old_value)
+void node_SetValueType(node *n,unsigned char type,unsigned long long value,BOOL copy_value,BOOL free_old_value)
 {
   node_SetType(n,type);
   node_SetValue(n,value,copy_value,free_old_value);
@@ -644,7 +717,7 @@ void node_SetParent(node *n,node *p)
 
 node *node_Copy(node *n,BOOL copy_value)
 {
-  void *v = node_CreateValue(n->type,n->value); 
+  unsigned long long v = node_CopyValue(n); 
   list *l = list_Copy(n->items);
   node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
   return(r);
@@ -652,7 +725,7 @@ node *node_Copy(node *n,BOOL copy_value)
 
 node *node_CopySub(node *n,BOOL copy_value)
 {
-  void *v = node_CreateValue(n->type,n->value); 
+  unsigned long long v = node_CopyValue(n); 
   list *l = list_Create(0,0);
   node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
   return(r);
@@ -701,14 +774,14 @@ node *node_GetRoot(node *n)
 {
   node *s = n;
   node *ret = n;
-  while(s=node_GetParent(s))
+  while((s=node_GetParent(s)))
   {
     ret=s;
   }
   return(ret);
 }
 
-void *node_GetValue(node *n)
+unsigned long long node_GetValue(node *n)
 {
   return(n->value);
 }
@@ -733,94 +806,98 @@ int node_HasKey(node *n)
   return(n->key!=NULL);
 }
 
-int node_HasValue(node *n)
+/*int node_HasValue(node *n)
 {
-  return(n->value!=NULL);
-}
+  return(n->value!=0);
+}*/
 
 int node_GetInt(node *n)
 {
-  return(*(int*)n->value);
+  return((int)n->value);
 }
 
 float node_GetFloat(node *n)
 {
-    return(*(float*)n->value);
+    //return((float)n->value);
+    float *fp = (float*)&(n->value);
+    return(*fp);
 }
 
 double node_GetDouble(node *n)
 {
-    return(*(double*)n->value);
+    double *dp = (double*)&(n->value);
+    return(*dp);
 }
 
 unsigned char node_GetUint8(node *n)
 {
-    return(*(unsigned char*)n->value);
+    return((unsigned char)n->value);
 }
 
 unsigned short node_GetUint16(node *n)
 {
-    return(*(unsigned short*)n->value);
+    return((unsigned short)n->value);
 }
 
 unsigned long node_GetUint32(node *n)
 {
-    return(*(unsigned long*)n->value);
+    return((unsigned long)n->value);
 }
 
 unsigned long long node_GetUint64(node *n)
 {
-    return(*(unsigned long long*)n->value);
+    return((unsigned long long)n->value);
 }
 
 node *node_GetNode(node *n)
 {
-    return((node*)n->value);
+    return((node*)(unsigned long)n->value);
 }
 
 char node_GetSint8(node *n)
 {
-    return(*(char*)n->value);
+    return((char)n->value);
 }
 
 short node_GetSint16(node *n)
 {
-    return(*(short*)n->value);
+    return((short)n->value);
 }
 
 long node_GetSint32(node *n)
 {
-    return(*(long*)n->value);
+    return((long)n->value);
 }
 
 long long node_GetSint64(node *n)
 {
-    return(*(long long*)n->value);
+    return((long long)n->value);
 }
 
 char *node_GetString(node *n)
 {
-    return((char*)n->value);
+    return((char*)(unsigned long)n->value);
 }
 
 int node_GetBool(node *n)
 {
-    return(*(unsigned char*)n->value);
+    return((unsigned char)n->value);
 }
 
 void *node_GetUser(node *n)
 {
-    return(n->value);
+    return((void*)(unsigned long)n->value);
 }
 
 void node_SetUser(node *n,void *user)
 {
   if(node_IsType(n,NODE_TYPE_USER))
-     n->value = user;
+     n->value = (unsigned long long)(unsigned long)user;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_USER,user);
+     //n->value = node_CreateValue(NODE_TYPE_USER,&user);
+     n->value = (unsigned long long)(unsigned long)user;
      node_SetType(n,NODE_TYPE_USER);
   }
 }
@@ -830,7 +907,8 @@ void node_SetNull(node *n)
   if(!node_IsType(n,NODE_TYPE_NULL))
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_NULL,NULL);
+     //n->value = node_CreateValue(NODE_TYPE_NULL,NULL);
+     n->value = 0;
      node_SetType(n,NODE_TYPE_NULL);
   }
 }
@@ -838,11 +916,12 @@ void node_SetNull(node *n)
 void node_SetBool(node *n, int b)
 {
   if(node_IsType(n,NODE_TYPE_BOOL))
-     *(int*)n->value = b;
+     n->value = (unsigned long long)b;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_BOOL,&b);
+     //n->value = node_CreateValue(NODE_TYPE_BOOL,&b);
+     n->value = (unsigned long long)b;
      node_SetType(n,NODE_TYPE_BOOL);
   }
 }
@@ -850,11 +929,12 @@ void node_SetBool(node *n, int b)
 void node_SetInt(node *n, int i)
 {
   if(node_IsType(n,NODE_TYPE_INT))
-     *(int*)n->value = i;
+     n->value = (unsigned long long)i;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_INT,&i);
+     //n->value = node_CreateValue(NODE_TYPE_INT,&i);
+     n->value = (unsigned long long)i;
      node_SetType(n,NODE_TYPE_INT);
   }
 }
@@ -862,42 +942,65 @@ void node_SetInt(node *n, int i)
 void node_SetFloat(node *n,float f)
 {
   if(node_IsType(n,NODE_TYPE_FLOAT))
-     *(float*)n->value = f;
+  {
+    //n->value = (unsigned long long)f;
+    //memcpy(&n->value,&f,sizeof(float));
+    //n->value = f;
+    float *fp = (float*)&(n->value);
+    *fp = f;
+  }
   else
   {
-     node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_FLOAT,&f);
-     node_SetType(n,NODE_TYPE_FLOAT);
+    node_FreeValue(n->type,n->value);
+    //n->value = node_CreateValue(NODE_TYPE_FLOAT,&f);
+    //n->value = (unsigned long long)f;
+    //memcpy(&n->value,&f,sizeof(float));
+    //n->value = f;
+    float *fp = (float*)&(n->value);
+    *fp = f;
+    node_SetType(n,NODE_TYPE_FLOAT);
   }
 }
 
 void node_SetDouble(node *n,double d)
 {
   if(node_IsType(n,NODE_TYPE_DOUBLE))
-     *(double*)n->value = d;
+  {
+    //n->value = (unsigned long long)d;
+    //memcpy(&n->value,&d,sizeof(double));
+    //n->value = d;
+    double *dp = (double*)&(n->value);
+    *dp = d;
+  }
   else
   {
-     node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_DOUBLE,&d);
-     node_SetType(n,NODE_TYPE_DOUBLE);
+    node_FreeValue(n->type,n->value);
+    //n->value = node_CreateValue(NODE_TYPE_DOUBLE,&d);
+    //n->value = (unsigned long long)d;
+    //memcpy(&n->value,&d,sizeof(double));
+    //n->value = d;
+    double *dp = (double*)&(n->value);
+    *dp = d;
+    node_SetType(n,NODE_TYPE_DOUBLE);
   }
 }
 
 void node_SetString(node *n,char *s)
 {
   node_FreeValue(n->type,n->value);
-  n->value = node_CreateValue(NODE_TYPE_STRING,s);
+  //n->value = node_CreateValue(NODE_TYPE_STRING,s);
+  n->value = (unsigned long long)(unsigned long)str_Copy(s);
   node_SetType(n,NODE_TYPE_STRING);
 }
 
 void node_SetNode(node *n,node *dst)
 {
   if(node_IsType(n,NODE_TYPE_NODE))
-    n->value = dst;
+    n->value = (unsigned long long)(unsigned long)dst;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = dst;
+     n->value = (unsigned long long)(unsigned long)dst;
      node_SetType(n,NODE_TYPE_NODE);
   }
 }
@@ -905,11 +1008,12 @@ void node_SetNode(node *n,node *dst)
 void node_SetUint8(node *n,unsigned char c)
 {
   if(node_IsType(n,NODE_TYPE_UINT8))
-     *(unsigned char*)n->value = c;
+     n->value = (unsigned long long)c;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_UINT8,&c);
+     //n->value = node_CreateValue(NODE_TYPE_UINT8,&c);
+     n->value = (unsigned long long)c;
      node_SetType(n,NODE_TYPE_UINT8);
   }
 }
@@ -917,11 +1021,12 @@ void node_SetUint8(node *n,unsigned char c)
 void node_SetUint16(node *n,unsigned short s)
 {
   if(node_IsType(n,NODE_TYPE_UINT16))
-     *(unsigned short*)n->value = s;
+     n->value = (unsigned long long)s;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_UINT16,&s);
+     //n->value = node_CreateValue(NODE_TYPE_UINT16,&s);
+     n->value = (unsigned long long)s;
      node_SetType(n,NODE_TYPE_UINT16);
   }
 }
@@ -929,11 +1034,12 @@ void node_SetUint16(node *n,unsigned short s)
 void node_SetUint32(node *n,unsigned long l)
 {
   if(node_IsType(n,NODE_TYPE_UINT32))
-     *(unsigned long*)n->value = l;
+     n->value = (unsigned long long)l;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_UINT32,&l);
+     //n->value = node_CreateValue(NODE_TYPE_UINT32,&l);
+     n->value = (unsigned long long)l;
      node_SetType(n,NODE_TYPE_UINT32);
   }
 }
@@ -941,11 +1047,12 @@ void node_SetUint32(node *n,unsigned long l)
 void node_SetUint64(node *n,unsigned long long ll)
 {
   if(node_IsType(n,NODE_TYPE_UINT64))
-     *(unsigned long long*)n->value = ll;
+     n->value = ll;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_UINT64,&ll);
+     //n->value = node_CreateValue(NODE_TYPE_UINT64,&ll);
+     n->value = ll;
      node_SetType(n,NODE_TYPE_UINT64);
   }
 }
@@ -953,11 +1060,12 @@ void node_SetUint64(node *n,unsigned long long ll)
 void node_SetSint8(node *n,char c)
 {
   if(node_IsType(n,NODE_TYPE_SINT8))
-     *(char*)n->value = c;
+     n->value = (unsigned long long)c;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_SINT8,&c);
+     //n->value = node_CreateValue(NODE_TYPE_SINT8,&c);
+     n->value = (unsigned long long)c;
      node_SetType(n,NODE_TYPE_SINT8);
   }
 }
@@ -965,11 +1073,12 @@ void node_SetSint8(node *n,char c)
 void node_SetSint16(node *n,short s)
 {
   if(node_IsType(n,NODE_TYPE_SINT16))
-     *(short*)n->value = s;
+     n->value = (unsigned long long)s;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_SINT16,&s);
+     //n->value = node_CreateValue(NODE_TYPE_SINT16,&s);
+     n->value = (unsigned long long)s;
      node_SetType(n,NODE_TYPE_SINT16);
   }
 }
@@ -977,11 +1086,12 @@ void node_SetSint16(node *n,short s)
 void node_SetSint32(node *n,long l)
 {
   if(node_IsType(n,NODE_TYPE_SINT32))
-     *(long*)n->value = l;
+     n->value = (unsigned long long)l;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_SINT32,&l);
+     //n->value = node_CreateValue(NODE_TYPE_SINT32,&l);
+     n->value = (unsigned long long)l;
      node_SetType(n,NODE_TYPE_SINT32);
   }
 }
@@ -989,11 +1099,12 @@ void node_SetSint32(node *n,long l)
 void node_SetSint64(node *n,long long ll)
 {
   if(node_IsType(n,NODE_TYPE_SINT64))
-     *(long long*)n->value = ll;
+     n->value = (unsigned long long)ll;
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateValue(NODE_TYPE_SINT64,&ll);
+     //n->value = node_CreateValue(NODE_TYPE_SINT64,&ll);
+     n->value = (unsigned long long)ll;
      node_SetType(n,NODE_TYPE_SINT64);
   }
 }
@@ -1051,7 +1162,7 @@ int node_HasItems(node *n)
   return(list_GetLen(n->items));
 }
 
-void *node_GetItemByKey(node *n,char *key)
+node *node_GetItemByKey(node *n,char *key)
 {
   void *item = NULL;
   long old_index = node_GetItemIterationIndex(n);
@@ -1151,11 +1262,15 @@ node_array *node_CreateArray(long num)
 {
   node_array *r = (node_array*)malloc(sizeof(node_array));
   r->nodes = list_Create(num,0);
+  //printf("created array: %x\n",r);
+  //fflush(stdout);
   return(r);
 }
 
 void node_FreeArray(node_array *array,BOOL free_nodes)
 {
+  //printf("freeing array: %x\n",array);
+  //fflush(stdout);
   list_IterationReset(array->nodes);
   while(list_IterationUnfinished(array->nodes))
   { 
@@ -1189,59 +1304,61 @@ void node_SetArray(node *n,long num)
   else
   {*/
   node_FreeValue(n->type,n->value);
-  n->value = node_CreateArray(num);
+  //node_array *array = node_CreateArray(num);
+  //memcpy(&(n->value), &array, sizeof(node_array*));
+  n->value = (unsigned long long)(unsigned long)node_CreateArray(num);
   node_SetType(n,NODE_TYPE_ARRAY);
   //}
 }
 
 long node_array_Add(node *n,node *s)
 {
-  return(list_Push(((node_array*)n->value)->nodes,s));
+  return(list_Push(((node_array*)(unsigned long)n->value)->nodes,s));
 }
 
 node *node_array_Remove(node *n,long index)
 {
-  return((node*)list_Remove(((node_array*)n->value)->nodes,index));
+  return((node*)list_Remove(((node_array*)(unsigned long)n->value)->nodes,index));
 }
 
 node *node_array_Get(node *n,long index)
 {
-  return((node*)list_Get(((node_array*)n->value)->nodes,index));
+  return((node*)list_Get(((node_array*)(unsigned long)n->value)->nodes,index));
 }
 
 long node_array_GetNum(node *n)
 {
-  return(list_GetLen(((node_array*)n->value)->nodes));
+  return(list_GetLen(((node_array*)(unsigned long)n->value)->nodes));
 }
 
 void node_array_Clear(node *n)
 {
-   list_Clear(((node_array*)n->value)->nodes);
+   list_Clear(((node_array*)(unsigned long)n->value)->nodes);
 }
 
 node *node_array_Iterate(node *n)
 {
-  return((node*)list_Iterate(((node_array*)n->value)->nodes)); 
+  return((node*)list_Iterate(((node_array*)(unsigned long)n->value)->nodes)); 
 }
 
 int node_array_IterationUnfinished(node *n)
 {
-  return(list_IterationUnfinished(((node_array*)n->value)->nodes));
+  return(list_IterationUnfinished(((node_array*)(unsigned long)n->value)->nodes));
 }
 
 void node_array_IterationReset(node *n)
 {
-  list_IterationReset(((node_array*)n->value)->nodes);
+  list_IterationReset(((node_array*)(unsigned long)n->value)->nodes);
 }
 
 long node_array_GetIterationIndex(node *n)
 {
-  return(list_GetIterationIndex(((node_array*)n->value)->nodes));
+  return(list_GetIterationIndex(((node_array*)(unsigned long)n->value)->nodes));
 }
 
 void node_array_SetIterationIndex(node *n,long iteration_index)
 {
-  list_SetIterationIndex(((node_array*)n->value)->nodes,iteration_index);
+  list_SetIterationIndex(((node_array*)(unsigned long)n->value)->nodes,iteration_index);
 }
 
 node_binary *node_CreateBinary(void *binary,unsigned long len)
@@ -1263,25 +1380,25 @@ void node_SetBinary(node *n,void *binary,unsigned long len)
 {
   if(node_IsType(n,NODE_TYPE_BINARY))
   {
-     ((node_binary*)n->value)->value = binary;
-     ((node_binary*)n->value)->len = len;
+     ((node_binary*)(unsigned long)n->value)->value = binary;
+     ((node_binary*)(unsigned long)n->value)->len = len;
   }
   else
   {
      node_FreeValue(n->type,n->value);
-     n->value = node_CreateBinary(binary,len);
+     n->value = (unsigned long long)(unsigned long)node_CreateBinary(binary,len);
      node_SetType(n,NODE_TYPE_BINARY);
   }
 }
 
 void *node_GetBinary(node *n)
 {
-    return(((node_binary*)n->value)->value);
+    return(((node_binary*)(unsigned long)n->value)->value);
 }
 
 unsigned long node_GetBinaryLength(node *n)
 {
-    return(((node_binary*)n->value)->len);
+    return(((node_binary*)(unsigned long)n->value)->len);
 }
 
 

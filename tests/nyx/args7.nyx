@@ -1,0 +1,3 @@
+a.id="welt";
+c=[a.id];
+println(c[0]);

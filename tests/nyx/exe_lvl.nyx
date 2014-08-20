@@ -1,0 +1,21 @@
+/*super()=
+{
+	println("super");
+};
+
+top()=
+{
+	println("top");
+	super();
+};
+
+call()=
+{
+	ret="Hallo";
+	top();
+	?({1},{println("cmp");},{},0);
+};
+
+call();*/
+/*?({1},{println("cmp");},{},0);*/
+?({1},{},{},0);

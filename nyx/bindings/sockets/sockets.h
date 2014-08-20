@@ -47,6 +47,7 @@ node *sockets_open(node *state,node *obj,node *block,node *parameters);
 node *sockets_connect(node *state,node *obj,node *block,node *parameters);
 node *sockets_close(node *state,node *obj,node *block,node *parameters);
 node *sockets_set_address(node *state,node *obj,node *block,node *parameters);
+//node *sockets_is_connected(node *state,node *obj,node *block,node *parameters);
 node *sockets_read(node *state,node *obj,node *block,node *parameters);
 node *sockets_write(node *state,node *obj,node *block,node *parameters);
 #endif

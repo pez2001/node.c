@@ -1,0 +1,42 @@
+subs()=
+{
+svar=20;
+println("rvar:"+rvar);
+println("tvar:"+tvar);
+println("svar:"+svar);
+?(tvar==10,{println("found tvar in subs");},{},0);
+tvar = 75;
+};
+
+top()=
+{
+
+top_subs()=
+{
+tsvar=40;
+println("tvar:"+tvar);
+println("rvar:"+rvar);
+println("svar:"+svar);
+println("tsvar:"+tsvar);
+?(tvar==10,{println("found tvar in top_subs");},{},0);
+tvar = 55;
+};
+
+
+tvar=10;
+println("rvar:"+rvar);
+println("tvar:"+tvar);
+subs();
+top_subs();
+?(tvar==10,{println("found tvar top");},{},0);
+};
+
+rvar=5;
+top();
+/*subs();*/
+
+println("finish");
+
+
+
+

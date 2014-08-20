@@ -29,7 +29,7 @@ void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array,long it
   if(node_GetKey(tree)!=NULL)
     set_obj_string(child,"name",node_GetKey(tree));
   if(node_GetType(tree)==NODE_TYPE_STRING)
-    set_obj_string(child,"value",node_GetValue(tree));
+    set_obj_string(child,"value",(char*)(unsigned long)node_GetValue(tree));
   else if(node_GetType(tree)==NODE_TYPE_UINT32)
     set_obj_int(child,"value",(long)node_GetUint32(tree));
   else if(node_GetType(tree)==NODE_TYPE_INT)
@@ -439,23 +439,27 @@ void set_obj_refcount(node *obj,long refcount)
 {
   node *_refcount = node_GetItemByKey(obj,"refcount");
   node_SetSint32(_refcount,refcount);
+  //printf("set refcount: %d of %x\n",refcount,obj);
 }
 
 void inc_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
+  //printf("inc refcount: %d of %x\n",node_GetSint32(refcount),obj);
   node_SetSint32(refcount,node_GetSint32(refcount)+1);
 }
 
 void reset_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
+  //printf("rst refcount: %d of %x\n",0,obj);
   node_SetSint32(refcount,0);
 }
 
 void dec_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
+  //printf("dec refcount: %d of %x\n",node_GetSint32(refcount),obj);
   node_SetSint32(refcount,node_GetSint32(refcount)-1);
 }
 
@@ -744,8 +748,6 @@ node *create_base_obj_layout(char *obj_name)
   node *base = create_obj("nyx_object");
   add_obj_string(base,"type","class");
   add_obj_string(base,"name",obj_name);
-  //add_obj_kv(base,create_obj("base_class_instance"));
-  //add_obj_kv(base,create_obj("base_class_type"));
   add_obj_kv(base,create_obj("members"));
   add_obj_kv(base,create_obj("privates"));
   set_obj_int(base,"value",0);
@@ -759,8 +761,6 @@ void add_class_object_function(node *class,char *method_name,node*(*handler)(nod
 {
   node *method = create_base_obj_layout(method_name);
   set_obj_string(method,"type","function");
-  //set_obj_node(base,"base_class_instance",class);
-  //set_obj_node(method,"base_class_type",base_class);
   set_obj_ptr(method,"handler",(void*)handler);
   inc_obj_refcount(method);
   add_member(class,method);
@@ -877,12 +877,14 @@ node *create_sys_class_object(node *base_class)
 }
 */
 
-node *create_proxy_object(node *target,char *name)
+node *create_proxy_object(node *state,node *target,char *name)
 {
   //node *proxy = create_base_obj_layout(method_name);
-  node *proxy = create_base_obj_layout(name);
+  //node *proxy = create_base_obj_layout(name);
+  node *base_class = get_base_class(state);
+  node *proxy = create_class_instance(base_class);
   set_obj_string(proxy,"type","proxy");
-  //set_obj_string(proxy,"name",name);
+  set_obj_string(proxy,"name",name);
   //printf("creating proxy:%x for %x,%s\n",proxy,target,name);
   set_obj_ptr(proxy,"target",(void*)target);
   return(proxy);
@@ -891,7 +893,7 @@ node *create_proxy_object(node *target,char *name)
 node *get_proxy_target(node *proxy)
 {
   node *target = node_GetItemByKey(proxy,"target");
-  node *value = (node*)node_GetValue(target);
+  node *value = (node*)(unsigned long)node_GetValue(target);
   return(value);
 }
 
@@ -910,6 +912,7 @@ node *create_class_object(void)
   add_class_object_function(base,"=",nyxh_assign);
   //add_class_object_function(base,":",nyxh_set_value_only);
   add_class_object_function(base,":",nyxh_switch_name_value);
+  add_class_object_function(base,":=",nyxh_assign_copy);
 
 
   add_class_object_function(base,"+",nyxh_add);
@@ -922,11 +925,11 @@ node *create_class_object(void)
   add_class_object_function(base,"<=",nyxh_lt_eq);
   add_class_object_function(base,">=",nyxh_gt_eq);
   add_class_object_function(base,"!=",nyxh_neq);
-  add_class_object_function(base,"&",nyxh_binary_and);
-  add_class_object_function(base,"|",nyxh_binary_or);
   add_class_object_function(base,"^",nyxh_binary_xor);
   add_class_object_function(base,"&&",nyxh_and);
   add_class_object_function(base,"||",nyxh_or);
+  add_class_object_function(base,"&",nyxh_binary_and);
+  add_class_object_function(base,"|",nyxh_binary_or);
   add_class_object_function(base,"PRE~",nyxh_pre_binary_not);
   add_class_object_function(base,"PRE!",nyxh_pre_not);
   add_class_object_function(base,"PRE-",nyxh_pre_sub);
@@ -938,22 +941,22 @@ node *create_class_object(void)
   add_class_object_function(base,"PRE++",nyxh_pre_immediate_add);
 
   
-  add_class_object_function(base,"print",nyxh_print);
   add_class_object_function(base,"println",nyxh_println);
-  add_class_object_function(base,"input",nyxh_input);
+  add_class_object_function(base,"print",nyxh_print);
   add_class_object_function(base,"copy",nyxh_copy);
   //add_class_object_function(base,"http_query",nyxh_http_query);
   add_class_object_function(base,"str",nyxh_str);
-  add_class_object_function(base,"int",nyxh_int);
   add_class_object_function(base,"float",nyxh_float);
   add_class_object_function(base,"len",nyxh_len);
+  add_class_object_function(base,"input",nyxh_input); //TODO check if search member part gets troubled by this -> add additional var/check if only full match possible
+  add_class_object_function(base,"int",nyxh_int);
   add_class_object_function(base,"index_of",nyxh_index_of);
+  add_class_object_function(base,"in_keys",nyxh_in_keys);
+  add_class_object_function(base,"in",nyxh_in);
   add_class_object_function(base,"sub",nyxh_substr);
   add_class_object_function(base,"else",nyxh_else);
   add_class_object_function(base,"do",nyxh_do);
-  add_class_object_function(base,"in",nyxh_in);
   add_class_object_function(base,"has",nyxh_has);
-  add_class_object_function(base,"in_keys",nyxh_in_keys);
   add_class_object_function(base,"_name_",nyxh_name);
   add_class_object_function(base,"from_json",nyxh_from_json);
   add_class_object_function(base,"to_json",nyxh_to_json);
@@ -1028,6 +1031,7 @@ node *create_block_class_instance(node *state,node *block)
 {
   node *block_class = get_block_class(state);
   node *base = create_class_instance(block_class);
+  //printf("creating block class instance: %x for %x\n",base,block);
   node *il_block = node_CopyTree(block,True,True);
   add_obj_kv(base,il_block); 
   reset_obj_refcount(base);
@@ -1069,9 +1073,8 @@ void add_garbage(node *state,node *obj)
   }
   if(node_GetItemByKey(obj,"no_gc")!=NULL)
   {
-    //printf("tried add gc obj with a parent:%x:%s\n",obj,get_obj_name(obj));
-    printf("skipping \"no_gc\" obj\n");
-    int x=1/0;
+    //printf("skipping \"no_gc\" obj: %x\n",obj);
+    //int x=1/0;
     return;
   }
   node_AddItem(garbage,obj);
@@ -1093,14 +1096,36 @@ void free_garbage(node *state,long min_level,node *skip_this)
     if(get_obj_refcount(gc)>0)
       printf("not freed: refcount>0 : %x (%d)\n",gc,get_obj_refcount(gc));
     if(gc_level < min_level)
-      printf("not freed: gc_level < min_level : %x (%d<%d)\n",gc,gc_level,min_level);
+      printf("not freed: gc_level < min_level : %x (%d<%d) (refs:%d)\n",gc,gc_level,min_level,get_obj_refcount(gc));
     */
 
-    if((skip_this==NULL || gc!=skip_this) && (get_obj_refcount(gc)<=0) && (gc_level >= min_level))
+    if(gc==skip_this)
+    {
+      //printf("removing non freed from gc list(skip): %x (%s)\n",gc,get_obj_name(gc));
+      //fflush(stdout);
+      node_RemoveItem(garbage,gc);
+      node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
+      continue;
+    }
+    if(get_obj_refcount(gc)>=1)
+    {
+      //printf("removing non freed from gc list(refs): %x (%s)\n",gc,get_obj_name(gc));
+      //fflush(stdout);
+      node_RemoveItem(garbage,gc);
+      node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
+      continue;
+    }
+    if(gc_level >= min_level)
     {
       //printf("removing:%x,%d (%s)\n",gc,gc_level,get_obj_name(gc));
-      //node_PrintTree(gc);
-      fflush(stdout);
+      //fflush(stdout);
+      if(!strcmp(get_obj_type(gc),"proxy"))
+      {
+        //printf("removing proxy:%x (%s)\n",gc,get_obj_name(gc));
+        node *ptarget = get_proxy_target(gc);
+        dec_obj_refcount(ptarget);
+        add_garbage(state,ptarget);
+      }
       node *gc_members = node_GetItemByKey(gc,"members");
       node_ItemIterationReset(gc_members);
       while(node_ItemIterationUnfinished(gc_members))
@@ -1112,7 +1137,6 @@ void free_garbage(node *state,long min_level,node *skip_this)
         add_garbage(state,gc_member);
       }
       node_ClearItems(gc_members);
-
       node *gc_items = node_GetItemByKey(gc,"items");
       if(gc_items)
       {
@@ -1127,16 +1151,19 @@ void free_garbage(node *state,long min_level,node *skip_this)
         }
         node_ClearItems(gc_items);
       }
-
       node_FreeTree(gc);
       node_RemoveItem(garbage,gc);
       node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
       //printf("removed:%x,%d\n",gc,gc_level);
       //fflush(stdout);
+      //continue;
     }
-    else
+    /*else
+    {
+      printf("removing non freed from gc list(gc_level): %x (%s)\n",gc,get_obj_name(gc));
       node_RemoveItem(garbage,gc);
-
+      node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
+    }*/
   }
   //printf("garbage collected\n");
   //fflush(stdout);
@@ -1185,9 +1212,10 @@ node *copy_class(node *class_obj)
 void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
 {
   //printf("clean_move:%x to %x\n",src,dst);
-//update base values
+  //update base values
   set_obj_string(dst,"type",get_obj_str(src,"type"));
   //set_obj_string(base,"name",obj_name);
+  
   node *src_value = node_CopyTree(get_value(src),True,True);
   set_obj_value(dst,src_value);
 
@@ -1272,6 +1300,8 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   if(src_items)
   {
     node *items = node_CopyTree(src_items,True,True);
+    //printf("copied items tree:\n");
+    //node_PrintTree(items);
     add_obj_kv(dst,items);
   }
 
@@ -1330,7 +1360,7 @@ node *create_nyx_state(node *base_class,node *block_class)
 
   add_obj_kv(state,garbage);
 
-  add_obj_int(state,"execution_level",1);
+  add_obj_int(state,"execution_level",0);
   add_obj_kv(state,class_types);
   add_obj_kv(state,blocks);
   return(state);
@@ -1534,9 +1564,10 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
     if(execute_block)
     {
       node *block_parameters = node_GetItemByKey(obj,"nyx_parameters");
-      if(block_parameters!=NULL)
+      if(block_parameters!=NULL && node_GetItemsNum(block_parameters))
       {
         //printf("preparing function environment\n");
+        //node_PrintTree(obj);
         node_ItemIterationReset(block_parameters);
         long p_index = 0;
         while(node_ItemIterationUnfinished(block_parameters))
@@ -1550,21 +1581,16 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
             node *tmp_abp_value = NULL;
             if(abp!=NULL)
             {
-              tmp_abp_value = node_GetValue(abp);
+              tmp_abp_value = (node*)(unsigned long)node_GetValue(abp);
               node_SetNode(abp,NULL);
             }
 
-            node *sub = evaluate_statement(state,token,obj,0,NULL,False);
+            node *sub = evaluate_statement(state,token,obj,0,NULL,False,NULL);
             //node_SetParent(sub,NULL);
 
-            if(abp!=NULL)
-              node_SetNode(abp,tmp_abp_value);
-
-            node_SetParent(obj,tmp_parent);
             //node *obj_name = node_GetItemByKey(sub,"name");
 
-
-            node *oldm = get_member(obj,get_obj_name(sub));
+            node *oldm = get_member_non_recursive(obj,get_obj_name(sub));
             if(oldm)
             {
               //printf("removing old function par:%s\n",get_obj_name(sub));
@@ -1572,7 +1598,12 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
               dec_obj_refcount(oldm);
               add_garbage(state,oldm);
             }
-            node *proxy = create_proxy_object(node_GetItem(pars,p_index),get_obj_name(sub));
+
+            if(abp!=NULL)
+              node_SetNode(abp,tmp_abp_value);
+            node_SetParent(obj,tmp_parent);
+
+            node *proxy = create_proxy_object(state,node_GetItem(pars,p_index),get_obj_name(sub));
             add_member(obj,proxy);
             inc_obj_refcount(proxy);
 
@@ -1593,6 +1624,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
         if(node_GetItemsNum(pars))
         {
           //printf("preparing arguments\n");
+          //TODO replace with proxies here too
           node *base_class = get_base_class(state);
           node *arguments = create_class_instance(base_class);
           set_obj_string(arguments,"name","arguments");
@@ -1610,8 +1642,9 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
             set_obj_int(item,"item_index",item_index);
             inc_obj_refcount(item);
             item_index++;
-          }    
-          node *old_arguments = get_member(obj,"arguments");
+          }
+          //node_PrintTree(arguments);    
+          node *old_arguments = get_member_non_recursive(obj,"arguments");
           if(old_arguments!=NULL)
           {
             remove_member(obj,old_arguments);
@@ -1620,6 +1653,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
             while(node_ItemIterationUnfinished(old_items))
             {
               node *arg = node_ItemIterate(old_items);
+              node_SetParent(arg,NULL);
               dec_obj_refcount(arg);
               add_garbage(state,arg);
             }   
@@ -1659,7 +1693,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
         //add a locking mechanism here - should be sufficient
         //to make the whole interpreter threadsafe without the need for locks in scripts
         //in eval check val find+add (lock there too i guess)
-        nyx_function_handler real_handler = (nyx_function_handler)node_GetValue(handler);
+        nyx_function_handler real_handler = (nyx_function_handler)(unsigned long)node_GetValue(handler);
         node *parent = node_GetParent(node_GetParent(obj));
         value = real_handler(state,parent,block,pars);
       }
@@ -1708,17 +1742,17 @@ node *search_block_path_for_member(node *block,char *key)
     node *abp=node_GetItemByKey(block,"anonymous_block_parent");
     if(node_GetValue(abp))
     {//printf("searching in anon parent:%x\n",node_GetValue(abp));
-      found_obj = get_member(node_GetValue(abp),key);
+      found_obj = get_member((node*)(unsigned long)node_GetValue(abp),key);
       if(found_obj==NULL)
       {
-        found_obj = search_block_path_for_member(node_GetValue(abp),key);
+        found_obj = search_block_path_for_member((node*)(unsigned long)node_GetValue(abp),key);
       }
     }
   }
   return(found_obj);
 }
 
-node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop,BOOL resolve_obj)//,long auto_add_new)
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop,BOOL resolve_obj,node *extra_search_block)//,long auto_add_new)
 {
   node_SetItemIterationIndex(statement,iteration_start_index);
   long index = iteration_start_index;
@@ -1727,7 +1761,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   node *prev_token = NULL;
   node *base_class = get_base_class(state);
   char *use_preop = preop;
-  inc_execution_level(state);
+  //inc_execution_level(state);
   long is_sub_id = 0;
 
 
@@ -1738,7 +1772,10 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     /*printf("------\nevaluating next token in %x\n",block);
     node_PrintTree(token);
     printf("------\n");
-    fflush(stdout);*/
+    printf("actual_obj: %x ,block: %x ,extra_search_block: %x exe_level: %d\n",actual_obj,block,extra_search_block,get_execution_level(state));
+    printf("------\n");
+    fflush(stdout);
+    */
 
     if(!strcmp(node_GetKey(token),"nyx_parameters"))
     {
@@ -1746,7 +1783,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       while(node_ItemIterationUnfinished(token))
       {
         node *parameter_token = node_ItemIterate(token);
-        actual_obj = evaluate_statement(state,parameter_token,block,0,NULL,True);
+        actual_obj = evaluate_statement(state,parameter_token,block,0,NULL,True,NULL);
       }
 
       if(use_preop!=NULL)
@@ -1788,33 +1825,32 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       }
       else
       {
-        //printf("searching for key in :%x\n",actual_obj);
-        node *key_obj = evaluate_statement(state,node_GetItem(token,0),block,0,NULL,True);
+        node *key_obj = evaluate_statement(state,node_GetItem(token,0),block,0,NULL,True,NULL);
+        //printf("searching for key in :%x, %s\n",actual_obj,get_obj_name(actual_obj));
+        //node_PrintTree(actual_obj);
         if(node_GetItemByKey(actual_obj,"items")!=NULL)
         {
-          //printf("searching in :\n");
-          //fflush(stdout);
           node *found_obj = get_item(state,actual_obj,key_obj,True);
-          //printf("found:%x\n",found_obj);
-          //node_PrintTree(found_obj);
+          //printf("found:%x (%s)\n",found_obj,get_obj_name(found_obj));
           //fflush(stdout);
+          //node_PrintTree(found_obj);
           actual_obj = found_obj;
         }
         else //check if string is used as array with a number as key - return a single char string
         {
-        node *real_value = node_GetItemByKey(actual_obj,"value");
-        node *real_key_value = node_GetItemByKey(key_obj,"value");
-        if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_key_value)==NODE_TYPE_SINT32)
-        {
-          char *tok = str_Sub(node_GetString(real_value),node_GetSint32(real_key_value),1);
-          actual_obj = create_class_instance(base_class);
-          reset_obj_refcount(actual_obj);
-          set_obj_string(actual_obj,"name","character");
-          set_obj_string(actual_obj,"value",tok);
-          free(tok);
-          reset_obj_refcount(actual_obj);
-          add_garbage(state,actual_obj);
-        }
+          node *real_value = node_GetItemByKey(actual_obj,"value");
+          node *real_key_value = node_GetItemByKey(key_obj,"value");
+          if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_key_value)==NODE_TYPE_SINT32)
+          {
+            char *tok = str_Sub(node_GetString(real_value),node_GetSint32(real_key_value),1);
+            actual_obj = create_class_instance(base_class);
+            reset_obj_refcount(actual_obj);
+            set_obj_string(actual_obj,"name","character");
+            set_obj_string(actual_obj,"value",tok);
+            free(tok);
+            reset_obj_refcount(actual_obj);
+            add_garbage(state,actual_obj);
+          }
         }
       }
     }
@@ -1831,7 +1867,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       while(node_ItemIterationUnfinished(token))
       {
         node *parameter_token = node_ItemIterate(token);
-        node *array_obj = evaluate_statement(state,parameter_token,block,0,NULL,True);
+        node *array_obj = evaluate_statement(state,parameter_token,block,0,NULL,True,NULL);
         node *item = node_CopyTree(array_obj,True,True);
         reset_obj_refcount(item);
         //printf("creating array item: %x\n",item);
@@ -1855,7 +1891,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         while(node_ItemIterationUnfinished(sub_parameters))
         {
           node *parameter_token = node_ItemIterate(sub_parameters);
-          node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL,True);
+          node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL,True,NULL);
           node_AddItem(exe_parameters,sub_obj);
         }
         index++;
@@ -1865,7 +1901,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       else
       {
         set_obj_node(block_class_instance,"anonymous_block_parent",block);
-        node_ClearItems(exe_parameters);
+        //node_ClearItems(exe_parameters);
         node_Free(exe_parameters,True);
         add_garbage(state,block_class_instance);
         actual_obj = block_class_instance;
@@ -1874,10 +1910,10 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     else if(!strcmp(node_GetKey(token),"str"))
     {
       node *child = create_class_instance(base_class);
-      set_obj_string(child,"value",node_GetValue(token));
+      set_obj_string(child,"value",(char*)(unsigned long)node_GetValue(token));
       add_garbage(state,child);
       actual_obj = child;
-
+      //printf("created string: %x (%s)\n",child,node_GetValue(token));
       if(use_preop!=NULL)// && (node_ItemPeek(statement)==NULL || (node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"ops") && !strcmp(node_GetString(node_ItemPeek(statement)),"."))) )
       {
         if( !(node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"ops") && !strcmp(node_GetString(node_ItemPeek(statement)),".")) )
@@ -1893,22 +1929,33 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           use_preop=NULL;
         }
       }
-
     }
     else if(!strcmp(node_GetKey(token),"val"))
     {
       if(node_GetType(token) == NODE_TYPE_STRING)
       {
-        if(strcmp(node_GetValue(token),"@"))
+        if(strcmp((char*)(unsigned long)node_GetValue(token),"@"))
         {
-          node *found_obj = get_member(actual_obj,node_GetValue(token));
+          node *found_obj = get_member(actual_obj,(char*)(unsigned long)node_GetValue(token));
           //if(found_obj)
           //  printf("found in members\n");
           if(found_obj==NULL && !is_sub_id)
           {
-            found_obj = search_block_path_for_member(actual_obj,node_GetValue(token));
-          //  if(found_obj)
-          //    printf("found in block path\n");
+            found_obj = search_block_path_for_member(actual_obj,(char*)(unsigned long)node_GetValue(token));
+            //if(found_obj)
+            //  printf("found in block path\n");
+          }
+          if(found_obj==NULL && !is_sub_id && extra_search_block)
+          {
+            found_obj = get_member(extra_search_block,(char*)(unsigned long)node_GetValue(token));
+            //if(found_obj)
+            //  printf("found in extra members\n");
+            if(found_obj==NULL)
+            {
+              found_obj = search_block_path_for_member(extra_search_block,(char*)(unsigned long)node_GetValue(token));
+              //if(found_obj)
+              //  printf("found in extra search block path\n");
+            }
           }
           if(found_obj==NULL)
           {
@@ -1919,7 +1966,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             
             if(is_sub_id)
             {
-              node *oldm=get_member(actual_obj,node_GetString(token));
+              node *oldm=get_member_non_recursive(actual_obj,node_GetString(token));
               if(oldm)
               {
                 //printf("replacing old sub\n");
@@ -1927,7 +1974,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 dec_obj_refcount(oldm);
                 add_garbage(state,oldm);
               }
-              //printf("adding sub id: %x to %x\n",child,actual_obj);
+              //printf("adding sub id: %x (%s) to %x (%s)\n",child,get_obj_name(child),actual_obj,get_obj_name(actual_obj));
+              //fflush(stdout);
               add_member(actual_obj,child); 
               inc_obj_refcount(child);
               is_sub_id = 0;
@@ -1950,20 +1998,23 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           }
           else
           {
-            //printf("found obj %x,%s in %x: %x,%s\n",found_obj,get_obj_name(found_obj),block,actual_obj,get_obj_name(actual_obj));
-            //printf("found obj %x,%s in %x,%s\n",found_obj,get_obj_name(found_obj),node_GetParent(node_GetParent(found_obj)),get_obj_name(node_GetParent(node_GetParent(found_obj))));
             //printf("found obj %x,%s\n",found_obj,get_obj_name(found_obj));
             //fflush(stdout);
             if(resolve_obj)
             {
-              found_obj = resolve_object(found_obj);
-              //printf("resolved found obj %x,%s\n",found_obj,get_obj_name(found_obj));
-              //fflush(stdout);
+              node *peek = node_ItemPeek(statement);
+              if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp((char*)(unsigned long)node_GetValue(peek),"="))
+              {
+              }
+              else
+              {
+                found_obj = resolve_object(found_obj);
+              }
             }
             //printf(" in %x,%s\n",node_GetParent(node_GetParent(found_obj)),get_obj_name(node_GetParent(node_GetParent(found_obj))));
             //fflush(stdout);
             //node_ItemPeek(statement)!=NULL && 
-            if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && !strcmp(get_obj_type(found_obj),"function"))
+            if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") || !strcmp(get_obj_type(found_obj),"nyx_il_block") ) )
             {
                 //printf("found function without brackets:%s\n",node_GetValue(token));
                 node *exe_parameters = create_obj("parameters");
@@ -1986,14 +2037,18 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                     while(node_ItemIterationUnfinished(sub_parameters))
                     {
                       node *parameter_token = node_ItemIterate(sub_parameters);
-                      //node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL,True);
-                      node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0,NULL,True);
+                      node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL,True,NULL);
+                      //node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0,NULL,True,block);
                       node_AddItem(exe_parameters,sub_obj);
                     }
                     index++;
                   }
                   //printf("executing function:%x\n",found_obj);
                   actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False,True);
+                  //if(extra_search_block)
+                  //  actual_obj = execute_obj(state,found_obj,extra_search_block,exe_parameters,False,False,True);
+                  //else
+                  //  actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False,True);
                 }
                 else
                 {
@@ -2002,7 +2057,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                   {
                     node *sub_parameters = node_ItemIterate(statement);
                     node *peek = node_ItemPeek(statement);
-                    if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp(node_GetValue(peek),"="))
+                    if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp((char*)(unsigned long)node_GetValue(peek),"="))
                     {
                       node *pars = node_CopyTree(sub_parameters,True,True);
                       node *old_pars = node_GetItemByKey(found_obj,"nyx_parameters");
@@ -2022,10 +2077,14 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                       {
                         node *parameter_token = node_ItemIterate(sub_parameters);
                         //node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL,True);
-                        node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0,NULL,True);
+                        node *sub_obj = evaluate_statement(state,parameter_token,found_obj,0,NULL,True,block);
                         node_AddItem(exe_parameters,sub_obj);
                       }
                       actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False,True);
+                      //if(extra_search_block)
+                      //  actual_obj = execute_obj(state,found_obj,extra_search_block,exe_parameters,True,True,True);
+                      //else
+                      //  actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False,True);
                     }
                     index++;
                   }
@@ -2072,6 +2131,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         }
         else
           set_obj_int(child,"value",node_GetSint32(token));
+        //printf("created int: %x (%d)\n",child,node_GetSint32(token));
         actual_obj = child;
         add_garbage(state,child);
       }
@@ -2121,7 +2181,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //printf("searching member part:[%s][%s][%s]\n",get_obj_name(actual_obj),node_GetValue(token),use_preop);
           //fflush(stdout);
           //node_PrintTree(actual_obj);
-          node *found_obj = get_member_part(actual_obj,node_GetValue(token));
+          node *found_obj = get_member_part(actual_obj,(char*)(unsigned long)node_GetValue(token));
           if(found_obj!=NULL && (use_preop == NULL || !strlen(use_preop)))
           {
             //printf("found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
@@ -2135,13 +2195,13 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
 
             if(index+1<node_GetItemsNum(statement))
             {
-              node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop,True);
+              node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preop,True,NULL);
               node_AddItem(parameters,sub_obj);
             }
             actual_obj = found_obj;
             actual_obj = execute_obj(state,actual_obj,block,parameters,False,False,True);
             //printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
-            dec_execution_level(state);
+            //dec_execution_level(state);
             return(actual_obj);
           }
         }
@@ -2156,7 +2216,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   }
   actual_obj = execute_obj(state,actual_obj,block,parameters,False,False,resolve_obj);
   //printf("evaluate obj in ret:[%s]\n",get_obj_name(actual_obj));
-  dec_execution_level(state);
+  //dec_execution_level(state);
   return(actual_obj);
 }
 
@@ -2236,7 +2296,7 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
     while(node_ItemIterationUnfinished(il_block))
     {
       node *nyx_statement = node_ItemIterate(il_block);
-      ret = evaluate_statement(state,nyx_statement,block,0,NULL,True);
+      ret = evaluate_statement(state,nyx_statement,block,0,NULL,True,NULL);
       char *block_flag=check_block_flag(state);
       if(block_flag)
       {
@@ -2270,8 +2330,10 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
   {
     printf("eval return NULL\n");
   }
+  //printf("block %x (%d) (exe block: %x) finished: ret_obj: %x\n",block_class_instance,get_execution_level(state),block,ret);
   free_garbage(state,get_execution_level(state)+gc_threshold,ret);
   dec_execution_level(state);
+  add_garbage(state,ret);
   return(ret);
 }
 
@@ -2302,11 +2364,9 @@ node *call_function(node *state,char *name,node *parameters)//TODO only searches
 void nyx_add_parameter(node *state,char *parameter)
 {
   #ifdef USE_SYS
-
   node *nyx_stream = nyx_LoadString(parameter);
   if(nyx_stream!=NULL)
   {
-    //node_PrintTree(nyx_stream);
     node *nyx_block = node_GetItemByKey(nyx_stream,"nyx_block");
     if(nyx_block!=NULL)
     {
@@ -2314,16 +2374,9 @@ void nyx_add_parameter(node *state,char *parameter)
       node_RemoveItem(nyx_stream,nyx_block);
       node_FreeTree(nyx_stream);
       node *ret_obj = evaluate_block(state,nyx_block);  
-      node *real_value = node_GetItemByKey(ret_obj,"value");
-      //node_PrintTree(ret_obj);
-      //node_Print(real_value,False,False);
-      //printf("\n");
       node_RemoveItem(state,nyx_block);
-
       sys_add_parameter(state,ret_obj);
-
       node_FreeTree(nyx_block);
-
     }
   }
   #endif
@@ -2333,7 +2386,6 @@ node *init_nyx(void)
 {
   node *base_class = create_class_object();
   node *block_class = create_block_class_object(base_class);
-  //node *nyx_state = create_nyx_state(nyx_block,base_class);
   node *nyx_state = create_nyx_state(base_class,block_class);
   return(nyx_state);
 }

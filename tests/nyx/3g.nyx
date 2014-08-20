@@ -1,0 +1,14 @@
+read()=
+{
+timeouts=10;
+?({timeouts},{c=timeouts;c=c-1;},{},1);
+};
+
+read();
+println("rt:"+read.timeouts);
+
+
+
+
+
+

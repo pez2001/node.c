@@ -1,0 +1,4 @@
+a=1;
+func(a)={println("a")};
+g=func(15);
+

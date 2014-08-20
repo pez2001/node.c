@@ -1,0 +1,18 @@
+
+running = 1;
+
+
+echo_call=
+{
+	ret="Hallo";
+};
+
+
+
+println("starting daemon");
+timeout=10;
+daemon=websockets.start(8080,["echo":echo_call]);
+println("servicing");
+?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
+println("stopped daemon");
+

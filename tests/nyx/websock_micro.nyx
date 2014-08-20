@@ -1,6 +1,6 @@
-/*
+?("microhttpd".in(sys.modules),{println("microhttpd supported")},{println("microhttpd not supported");sys.exit(1)},0);
 ?("websockets".in(sys.modules),{println("websockets supported")},{println("websockets not supported");sys.exit(1)},0);
-
+/*
 http_call={
 	println("serving request:[",arguments["message"],"] : ",arguments["protocol"]);
 	ret="Hallo Welt!:"+arguments["protocol"];
@@ -8,21 +8,10 @@ http_call={
 */
 
 running = 1;
-
-/*sessions = [];*/
-
-echo_call2=
-{
-	ret="Hallo";
-};
-
 sessions = [];
 
 echo_call={
-	/*println("serving request:[",arguments["message"],"] : ",arguments["protocol"]);*/
 	/*running = 0;*/
-	/*println("timestamp:",sys.time);*/
-	/*ret="Hallo:"+sys.time+":"+arguments["protocol"]+" id:"+arguments["session_id"]+" time_stamp:"+sys.time;*/
 	/*d.broadcast(arguments["protocol"],arguments["message"]);*/
 	/*d=arguments["websockets.daemon"];*/
 	println("sending back:"+arguments["message"]+" to: "+arguments["session"].id);
@@ -58,13 +47,18 @@ echo_call={
 	/*ret="";*/
 };
 
+
 println("starting daemon");
-/*cbs=["echo":echo_call];
-daemon=websockets.start(8080,cbs);*/
+callback={
+	println("serving request:",arguments["url"]);
+	ret="Hallo Welt!:"+arguments["url"]+"sessions:"+len(sessions);
+};
+micro=microhttpd.start(8090,callback);
+println("starting daemon");
 timeout=10;
 daemon=websockets.start(8080,["echo":echo_call]);
 println("servicing");
-?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
+?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop();microhttpd.stop(micro);},1);
 /*??({daemon=websockets.start(8080,["echo":echo_call])},{running},{daemon.service(10)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);*/
 println("stopped daemon");
 

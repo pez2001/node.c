@@ -1,0 +1,17 @@
+read()=
+{
+chars = ["|","\\","-","/"];
+char = chars[ch];
+ch=ch+1;
+print("\r");
+print("[",char,"]");
+print("[",char,"]");
+?({ch==len(chars)},{ch=0},{},0);
+};
+
+println("");
+?(1,{read()},{},1);
+
+
+
+

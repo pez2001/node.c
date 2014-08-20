@@ -169,6 +169,15 @@ void node_tests(void)
   node_Free(n,True);
 
 
+  n = node_Create();
+  node_SetKey(n,"double");
+  node_SetDouble(n,127.456f);
+  printf("node key:%s\n",node_GetKey(n));
+  printf("node value: %f\n",node_GetDouble(n));
+  node_PrintTree(n);  
+  node_Free(n,True);
+
+
   printf("node tests thru\n");
 }
 
@@ -260,13 +269,13 @@ void json_tests(void)
     printf("query:%d\n",query->type);
   query = node_GetItemByKey(root,"customer");
   if(query!= NULL)
-    printf("query customer:%d,%d\n",query->type,*(unsigned char*)query->value);
+    printf("query customer:%d,%d\n",query->type,*(unsigned char*)(unsigned long)query->value);
   query = node_GetItemByKey(root,"callback");
   if(query!= NULL)
-    printf("query callback:%d,%d\n",query->type,*(unsigned char*)query->value);
+    printf("query callback:%d,%d\n",query->type,*(unsigned char*)(unsigned long)query->value);
   query = node_GetItemByKey(root,"maker");
   if(query!= NULL)
-    printf("query maker:%d,%d\n",query->type,*(unsigned char*)query->value);
+    printf("query maker:%d,%d\n",query->type,*(unsigned char*)(unsigned long)query->value);
   query = node_GetItemByKey(root,"phone");
   //if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
   //  printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
@@ -420,8 +429,21 @@ void mem_tests(void)
   node_array_Add(n,sub);
   node_AddItem(n,sub2);
   node_SetParent(sub2,n);
+
+  /*node *copy2 = node_CopyTree(n,True,True);
+  printf("freeing originals\n");
+  fflush(stdout);
+  node_FreeTree(n);
+  printf("freeing copy\n");
+  fflush(stdout);
+  node_FreeTree(copy2);
+  mem_Close();
+  return;*/
+
   printf("copying tree\n");
   node_PrintTree(n);
+  fflush(stdout);
+
   node *n2=node_Create();
   node_SetKey(n2,"root2");
   node_SetString(n2,"Hello World!");
@@ -430,13 +452,41 @@ void mem_tests(void)
   node_SetString(sub3,"Test");
   node_AddItem(n2,sub3);
   node *copy = node_CopyTree(n,True,True);
-  //node *copy = node_CopyTree(n2,True,True);
+  node *copy2 = node_CopyTree(n,True,True);
+  printf("freeing originals\n");
+  fflush(stdout);
   node_FreeTree(n);
   node_FreeTree(n2);
   printf("copied tree\n");
 
   node_PrintTree(copy);
   node_FreeTree(copy);
+    
+  printf("copy2:\n");
+  node_PrintTree(copy2);
+  node_FreeTree(copy2);
+
+  node *nn=node_Create();
+  node_SetKey(nn,"root2");
+  node_SetString(nn,"Hello World!");
+  node *nn2=node_Create();
+  node_SetKey(nn2,"root3");
+  node_SetNode(nn2,nn);
+  printf("nn2:\n");
+  node_PrintTree(nn2);
+  printf("nn get: %x orig: %x\n",node_GetNode(nn2),nn);
+
+  node *nn3=node_Create();
+  node_SetKey(nn3,"root4");
+  node_SetUser(nn3,nn);
+  printf("nn user get: %x orig: %x\n",node_GetUser(nn3),nn);
+
+  node_FreeTree(nn);
+  node_FreeTree(nn2);
+  node_FreeTree(nn3);
+
+
+  
 
   mem_Close();
   printf("memory test thru\n");
@@ -652,14 +702,13 @@ void nyx_tests2(void)
 int main(int argc, char *argv[])
 {
   mem_tests();
-  fflush(stdout);
   ptr_tests();
   ptr_tests2();
   node_tests();
   json_tests();
-  fbx_tests();
-  nyx_tests();
-  nyx_tests2();
-  hashing_tests();
+  //fbx_tests();
+  //nyx_tests();
+  //nyx_tests2();
+  //hashing_tests();
   //json_speed_tests();
 }

@@ -1,0 +1,12 @@
+
+println("starting daemon");
+callback={
+	println("serving request:",arguments["url"]);
+	ret="Hallo Welt!:"+arguments["url"];
+};
+daemon=microhttpd.start(8080,callback);
+println("Press Enter to stop");
+r=input();
+println("stopping daemon");
+microhttpd.stop(daemon);
+r=0;

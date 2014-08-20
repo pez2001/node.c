@@ -76,36 +76,6 @@
 #include "getopt.h"
 #include "signal.h"
 
-/*
-#ifdef USE_SOCKETS
-	#ifdef WIN32
-		#define _WIN32_WINNT  0x501 
-		#include <winsock2.h>
-		#include <ws2tcpip.h>
-	#else
-		#include <sys/types.h>
-		#include <sys/socket.h>
-		#include <netdb.h>
-	#endif
-#endif
-*/
-
-//#include "termios.h"
-
-
-
-/*#include "sys/utsname.h"*/
-
-/*
-typedef struct _nyx_state 
-{
-	node *top_block_obj;
-	//node *base_class;
-	node *classes;
-	node *garbage;
-}nyx_state;
-*/
-
 
 typedef node *(*nyx_function_handler)(node*,node*,node*,node*);
 
@@ -131,11 +101,7 @@ void set_obj_ptr(node *obj,char *key,void *n);
 /*class handling internal*/
 void add_class_object_function(node *class,char *method_name,node*(*handler)(node*,node*,node*,node*));
 
-//node *create_sys_class_object(node *base_class);
-//node *create_file_class_object(void);
-
 char *state_to_json(node *state);
-//void append_http_query_array(node *state,node *value);
 
 void add_garbage(node *state,node *obj);
 void free_garbage(node *state,long min_level,node *skip_this);
@@ -147,6 +113,7 @@ void remove_private(node *obj,node *private);
 void add_member(node *obj,node *member);
 void remove_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
+node *get_member_non_recursive(node *obj,char *key);
 node *get_item(node *state,node *obj,node *key,BOOL append_new_item);
 
 node *create_base_obj_layout(char *obj_name);
@@ -159,25 +126,17 @@ node *create_block_class_instance(node *state,node *block);
 
 node *copy_class(node *class_obj);
 
-node *create_proxy_object(node *target,char *name);
+node *create_proxy_object(node *state,node *target,char *name);
 node *get_proxy_target(node *proxy);
 
 void clean_move(node *state,node *dst,node *src);
 
 
 
-//#ifdef USE_SOCKETS
-//node *create_socket_class_object(void);
-//#endif
-//#ifdef USE_HTTP
-//node *create_http_class_object(void);
-//#endif
-
-//node *create_file_class_object(void);
-
 long get_last_index(node *items);
 
 
+void nyx_add_parameter(node *state,char *parameter);
 
 node *create_nyx_state(node *base_class,node *block_class);
 
@@ -191,7 +150,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
 
 node *search_block_path_for_member(node *block,char *key);
 
-node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop,BOOL resolv_obj);//,long auto_add_new);
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop,BOOL resolv_obj,node *extra_search_block);//,long auto_add_new);
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);

@@ -43,6 +43,8 @@ FILE *popen(const char *command, const char *type);
 void sys_bind(node *base_class,node *class);
 node *sys_create_class_object(node *base_class);
 
+void sys_add_parameter(node *state,node *parameter);
+
 node *sys(node *state,node *obj,node *block,node *parameters);
 
 node *sys_name(node *state,node *obj,node *block,node *parameters);

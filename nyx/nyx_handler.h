@@ -65,6 +65,7 @@ node *nyxh_cmp(node *state,node *obj,node *block,node *parameters);
 node *nyxh_print(node *state,node *obj,node *block,node *parameters);
 node *nyxh_println(node *state,node *obj,node *block,node *parameters);
 node *nyxh_assign(node *state,node *obj,node *block,node *parameters);
+node *nyxh_assign_copy(node *state,node *obj,node *block,node *parameters);
 node *nyxh_set_value_only(node *state,node *obj,node *block,node *parameters);
 node *nyxh_neq(node *state,node *obj,node *block,node *parameters);
 node *nyxh_gt_eq(node *state,node *obj,node *block,node *parameters);

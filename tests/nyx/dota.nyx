@@ -6,15 +6,16 @@ sock.write("GET /ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=570&format=
 timeouts=1000;
 ??({r:=(c=sock.read())},{(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0)},{sock.close()},1);
 j=http.parse_answer(c)["body"].from_json();
-chars = ["|","\\","-","/"];
+/*chars = ["|","\\","-","/"];
 char = chars[ch];
 ch=ch+1;
 print("\r");
-print("[",char,"]");
+print("[",char,"]");*/
+print("\r");
 print("Number of players in Dota2 now:",j.response.player_count);
-print("[",char,"]");
+/*print("[",char,"]");
 
-?({ch==len(chars)},{ch=0},{},0);
+?({ch==len(chars)},{ch=0},{},0);*/
 };
 
 println("");

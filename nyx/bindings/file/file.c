@@ -77,7 +77,7 @@ node *file_close(node *state,node *obj,node *block,node *parameters)
   node *handle = node_GetItemByKey(privates,"file_handle");
   if(handle!=NULL)
   {
-    FILE *fhandle = node_GetValue(handle);
+    FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
     int ret = fclose(fhandle);
     if(ret)
       value = get_true_class(state);
@@ -105,7 +105,7 @@ node *file_readall(node *state,node *obj,node *block,node *parameters)
   if(handle!=NULL)
   {
     char *ret = NULL;
-    FILE *fhandle = node_GetValue(handle);
+    FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
     fseek(fhandle,0,SEEK_END);
     long len = ftell(fhandle);
     fseek(fhandle,0,SEEK_SET);
@@ -136,7 +136,7 @@ node *file_writeall(node *state,node *obj,node *block,node *parameters)
     node *handle = node_GetItemByKey(privates,"file_handle");
     if(handle!=NULL)
     {
-      FILE *fhandle = node_GetValue(handle);
+      FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
       char *content = node_GetString(real_value);
       long len = strlen(content);
       fwrite(content,len,1,fhandle);

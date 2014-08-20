@@ -22,6 +22,7 @@
 
 #include "microhttpd.h"
 
+
 #ifdef USE_MICROHTTPD
 
 void microhttpd_bind(node *class)
@@ -53,28 +54,24 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node *parameters = create_obj("parameters");
 
   node *url_value = create_class_instance(base_class);
-  add_garbage(state,url_value);
   set_obj_string(url_value,"name","url");
   set_obj_string(url_value,"value",(char*)url);
   set_obj_int(url_value,"item_index",0);
   node_AddItem(parameters,url_value);
 
   node *method_value = create_class_instance(base_class);
-  add_garbage(state,method_value);
   set_obj_string(method_value,"value",(char*)method);
   set_obj_string(method_value,"name","method");
   set_obj_int(method_value,"item_index",1);
   node_AddItem(parameters,method_value);
 
   node *version_value = create_class_instance(base_class);
-  add_garbage(state,version_value);
   set_obj_string(version_value,"name","version");
   set_obj_string(version_value,"value",(char*)version);
   set_obj_int(version_value,"item_index",2);
   node_AddItem(parameters,version_value);
 
   node *upload_value = create_class_instance(base_class);
-  add_garbage(state,upload_value);
   char *uploads = (char*)malloc(*upload_data_size+1);
   memset(uploads+*upload_data_size + 0, 0, 1);
   memcpy(uploads,upload_data,*upload_data_size);
@@ -86,6 +83,12 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node *ret_obj = execute_obj(state,read_block,block,parameters,True,False,True);
   node *ret_obj_value = get_value(ret_obj);
   char *me = node_GetString(ret_obj_value);
+
+  add_garbage(state,upload_value);
+  add_garbage(state,url_value);
+  add_garbage(state,method_value);
+  add_garbage(state,version_value);
+
 
   response = MHD_create_response_from_buffer(strlen(me),(void *)me,MHD_RESPMEM_PERSISTENT);
   ret = MHD_queue_response(connection,MHD_HTTP_OK,response);
@@ -135,8 +138,9 @@ node *microhttpd_stop(node *state,node *obj,node *block,node *parameters)
     node *read_block = node_GetItem(mhd_state,1);
     node *daemon = node_GetItem(mhd_state,3);
     node *daemon_value = get_value(daemon);
-    struct MHD_Daemon *d = (struct MHD_Daemon*)node_GetValue(daemon_value);
+    struct MHD_Daemon *d = (struct MHD_Daemon*)(unsigned long)node_GetValue(daemon_value);
     MHD_stop_daemon(d);
+    set_obj_ptr(daemon,"value",NULL);
 
     dec_obj_refcount(daemon);
     add_garbage(state,daemon);

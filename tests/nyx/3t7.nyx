@@ -1,0 +1,16 @@
+read()=
+{
+chars = ["a":"test_array_item1"];
+char = chars["a"];
+println("char:["+char+"]");
+/*ret="gaelic";*/
+};
+
+read();
+/*read();
+read();*/
+/*?(1,{read()},{},1);*/
+
+
+
+

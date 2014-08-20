@@ -1,0 +1,14 @@
+read()=
+{
+chars = ["|","-"];
+char = chars[0];
+};
+
+read();
+read();
+read();
+/*?(1,{read()},{},1);*/
+
+
+
+

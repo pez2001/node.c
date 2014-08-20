@@ -1,0 +1,13 @@
+read()=
+{
+chars = ["free_me" "a":"test_array_item1"];
+char = chars["a"];
+println("char:["+char+"]");
+};
+
+read();
+/*?(1,{read()},{},1);*/
+
+
+
+

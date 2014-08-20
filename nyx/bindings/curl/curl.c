@@ -57,7 +57,8 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   set_obj_string(value,"name","data");
   node *parameters = create_obj("parameters");
   node_AddItem(parameters,value);
-  node *read_obj = execute_obj(state,read_block,block,parameters,True,False,True);
+  //node *read_obj = 
+  execute_obj(state,read_block,block,parameters,True,False,True);
   return((size*nmemb));
 }
 

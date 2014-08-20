@@ -68,12 +68,13 @@ mem_chunk *mem_get_chunk(void *ptr)
 		//printf("checking chunk:%x with ptr:%x against: %x\n",mi,mi->ptr,ptr);
 		if(mi->ptr == ptr)
 			return(mi);
-		mi = mi->next;
-		if(mi==NULL)
+		if(mi->next==NULL)
 		{
-			printf("error in chunk chain:%x\n",ptr);
+			if(mi != mem_last_chunk)
+				printf("error in chunk chain:%x\n",ptr);
 			return(NULL);
 		}
+		mi = mi->next;
 	}
   }	
   return(NULL);
@@ -122,12 +123,12 @@ void mem_Dump(void *mem)
 		printf("chunk for ptr: %x not found\n",mem);
 		return;
 	}
-	printf("chunk address:%x\nsize:%d\nhex:\n",mem,chunk->size);
+	printf("chunk address: %x\nsize: %d\nhex: ",mem,chunk->size);
     for(unsigned long b = 0;b<chunk->size;b++)
 	{
 	  printf("%2x ",((unsigned char*)chunk->ptr)[b]);
 	}
-	printf("\nraw:\n");
+	printf("\nraw: ");
 	for(unsigned long b = 0;b<chunk->size;b++)
 	{
 	  printf("%c",((unsigned char*)chunk->ptr)[b]);

@@ -1,0 +1,4 @@
+a=1;
+func()={println("a:"+arguments[0])};
+g=func(15);
+

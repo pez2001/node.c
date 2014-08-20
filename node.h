@@ -71,7 +71,9 @@ extern "C"  {
 typedef struct _node
 {
   char *key;
-  void *value;
+  //void *value; /*TODO make sure its 4byte wide on every platform*/
+  //long value;
+  unsigned long long value;
   struct _node *parent;
   //int type;
   unsigned char type;
@@ -114,41 +116,45 @@ unsigned long node_GetKeyHash(node *n);
 void node_SetKeyHash(node *n,unsigned long key_hash);
 void *node_GetItemByKeyHash(node *n,unsigned long key_hash);
 
+//void node_SetGlobalHashMode(int mode);
+
 
 #endif
 
 
 /*utilities*/
-char *node_CopyString(char *string);
+/*char *node_CopyString(char *string);*/
 
 
 /*basic node management*/
 node *node_Create(void);
-node *node_CreateFilled(node *parent,char *key,void *value,unsigned char type,list *items);
-void *node_CreateValue(unsigned char type,void *value);
+node *node_CreateFilled(node *parent,char *key,unsigned long long value,unsigned char type,list *items);
+/*unsigned long long node_CreateValue(unsigned char type,void *value);*/
+unsigned long node_CopyValue(node *n);
 void node_Free(node *n,BOOL free_value);
-void node_FreeValue(unsigned char type,void *value);
+void node_FreeValue(unsigned char type,unsigned long long value);
 node *node_Copy(node *n,BOOL copy_value);
 
 node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents);
 
 /*basic node access*/
 void node_SetKey(node *n,char *key);
-void node_SetValue(node *n,void *value,BOOL copy_value,BOOL free_old_value);
-void node_SetValueType(node *n,unsigned char type,void *value,BOOL copy_value,BOOL free_old_value);
+void node_SetValue(node *n,unsigned long long value,BOOL copy_value,BOOL free_old_value);
+void node_SetValueType(node *n,unsigned char type,unsigned long long value,BOOL copy_value,BOOL free_old_value);
 void node_SetTag(node *n,void *tag);
 void *node_GetTag(node *n);
 void node_SetType(node *n,unsigned char type);
 void node_SetParent(node *n,node *p);
 void node_SetItems(node *n, list *items);
 char *node_GetKey(node *n);
-void *node_GetValue(node *n);
+unsigned long long node_GetValue(node *n);
 unsigned char node_GetType(node *n);
 int node_IsType(node *n, unsigned char type);
 node *node_GetParent(node *n);
 list *node_GetItems(node *n);
 int node_HasKey(node *n);
-int node_HasValue(node *n);
+
+/*int node_HasValue(node *n);*/
 
 node *node_GetRoot(node *n);
 
@@ -169,7 +175,7 @@ long node_GetItemIndex(node *n,node *s);
 void *node_GetItem(node *n,long index);
 long node_GetItemsNum(node *n);
 int node_HasItems(node *n);
-void *node_GetItemByKey(node *n,char *key);
+node *node_GetItemByKey(node *n,char *key);
 //int node_SetItemByKey(node *n,char *key,)
 int node_HasItem(node *n,node *s);
 

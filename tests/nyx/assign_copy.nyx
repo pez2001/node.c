@@ -1,0 +1,10 @@
+
+a="hello world";
+b:=a;
+a="changed";
+println("a:"+a);
+println("b:"+b);
+
+
+
+

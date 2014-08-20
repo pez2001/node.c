@@ -53,12 +53,20 @@ node *sockets_create_class_object(void)
 node *sockets_open(node *state,node *obj,node *block,node *parameters)
 {
   //returns socket stream object
-  //node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *base_class = get_base_class(state);
   node *value = sockets_create_class_object();
   //node_SetParent(value,NULL);
   //reset_obj_refcount(value);
   add_garbage(state,value);
   set_obj_int(value,"value",0);
+
+  node *is_connected = create_class_instance(base_class);
+  add_garbage(state,is_connected);
+  set_obj_string(is_connected,"name","is_connected");
+  set_obj_int(is_connected,"value",0);
+  add_member(value,is_connected);
+  inc_obj_refcount(is_connected);
+
   if(node_GetItemsNum(parameters))
   {
     //node *nprotocol = NULL;
@@ -90,6 +98,7 @@ node *sockets_open(node *state,node *obj,node *block,node *parameters)
       //set_obj_int(value,"socket_type",(long)type);
       set_obj_int(privates,"socket_handle",(long)sock);
       set_obj_int(privates,"socket_type",(long)type);
+      set_obj_int(privates,"socket_is_connected",0);
 
       //printf("socket_handle opened:%d\n",sock);
     }
@@ -105,6 +114,7 @@ node *sockets_close(node *state,node *obj,node *block,node *parameters)
   node *handle = node_GetItemByKey(privates,"socket_handle");
   if(handle!=NULL)
   {
+    node *is_connected = get_member_non_recursive(obj,"is_connected");
     int socket_handle = (int)node_GetSint32(handle);
     //printf("socket_handle to close:%d\n",socket_handle);
     #ifdef WIN32 
@@ -114,6 +124,7 @@ node *sockets_close(node *state,node *obj,node *block,node *parameters)
     #endif
     if(ret>0)
     	value=get_true_class(state);
+    set_obj_int(is_connected,"value",0);
   }
   /*if(strcmp(get_obj_name(obj),"socket"))
   {
@@ -168,8 +179,7 @@ node *sockets_connect(node *state,node *obj,node *block,node *parameters)
   {
     int sock = (int)node_GetSint32(socket_handle);
     int type = (int)node_GetSint32(socket_type);
-    //int orgsock=sock;
-    //node_SetString(real_value,ret);
+    node *is_connected = get_member_non_recursive(obj,"is_connected");
     if(node_GetItemsNum(parameters))
     {
       node *nhost = node_GetItem(parameters,0);
@@ -217,6 +227,7 @@ node *sockets_connect(node *state,node *obj,node *block,node *parameters)
             }*/             
             if(connect(sock,test->ai_addr,test->ai_addrlen)!=-1)
             {
+              set_obj_int(is_connected,"value",1);
               //printf("connected to host\n");
               unsigned long one = 1;
               if(ioctlsocket(sock,FIONBIO,&one)==SOCKET_ERROR)
@@ -235,8 +246,17 @@ node *sockets_connect(node *state,node *obj,node *block,node *parameters)
               set_obj_int(obj,"value",1);
               break;
             }
-            printf("reopening socket\n");
-            close(sock);
+            //printf("reopening socket\n");
+            #ifdef WIN32 
+              int ret = closesocket(sock);
+            #else  
+              int ret = close(sock);
+            #endif
+              if(ret==-1)
+              {
+                set_obj_int(obj,"value",1);
+                break;
+              }
             sock = socket(test->ai_family,type,test->ai_protocol);
             node_SetSint32(socket_handle,sock);
             //printf("updated socket handle\n");
@@ -270,6 +290,7 @@ node *sockets_read(node *state,node *obj,node *block,node *parameters)
   char *ret = str_CreateEmpty();
   if(nsocket_handle!=NULL)
   {
+    node *is_connected = get_member_non_recursive(obj,"is_connected");
     int socket_handle = (int)node_GetSint32(nsocket_handle);
     //printf("receiving data:%d\n",socket_handle);
     //fflush(stdout);
@@ -295,6 +316,8 @@ node *sockets_read(node *state,node *obj,node *block,node *parameters)
       }
       if(len==0)
       {
+        set_obj_int(is_connected,"value",0);
+
         //printf("received data:%d\n",data_received);
         break;
       }

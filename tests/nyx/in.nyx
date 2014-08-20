@@ -1,0 +1,5 @@
+/*?("microhttpd".in(sys.modules),{println("microhttpd supported")},{println("microhttpd not supported");sys.exit(1)},0);*/
+println(sys.modules);
+println(sys.modules);
+a="microhttpd".in(sys.modules);
+println(a);

@@ -8,11 +8,12 @@ connected=sock.connect("openstrike.de",80);/*.else({println("restarting reading"
 println("connected:",connected);
 sock.write("GET /aluria/client/clients.json HTTP/1.1\r\nHost: openstrike.de\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
 println("reading reading first chunk");
-timeouts=1000;
+timeouts=10;
 r=sock.read();
-c=r.copy();
+c=r;
+println("["+c+"]");
 println("reading next chunks");
-?({(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{print(".");timeouts=timeouts-1},{},0);},{},1);
+?({len(r)||timeouts},{r=sock.read();c=c+r;?(len(r)==0,{print("."+timeouts);timeouts=timeouts-1},{},0);},{},1);
 sock.close();
 println("closed connection");
 println("answer:",c);
