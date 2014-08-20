@@ -378,10 +378,7 @@ void set_obj_node(node *obj,char *key,node *n)
     add_obj_node(obj,key,n);
   else
   {
-    //node_SetType(kv,NODE_TYPE_NODE);
-    //kv->value = n;
     node_SetNode(kv,n);
-
   }
 }
 
@@ -439,27 +436,23 @@ void set_obj_refcount(node *obj,long refcount)
 {
   node *_refcount = node_GetItemByKey(obj,"refcount");
   node_SetSint32(_refcount,refcount);
-  //printf("set refcount: %d of %x\n",refcount,obj);
 }
 
 void inc_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
-  //printf("inc refcount: %d of %x\n",node_GetSint32(refcount),obj);
   node_SetSint32(refcount,node_GetSint32(refcount)+1);
 }
 
 void reset_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
-  //printf("rst refcount: %d of %x\n",0,obj);
   node_SetSint32(refcount,0);
 }
 
 void dec_obj_refcount(node *obj)
 {
   node *refcount = node_GetItemByKey(obj,"refcount");
-  //printf("dec refcount: %d of %x\n",node_GetSint32(refcount),obj);
   node_SetSint32(refcount,node_GetSint32(refcount)-1);
 }
 
@@ -712,13 +705,6 @@ node *get_item(node *state,node *obj,node *key,BOOL append_new_item)//TODO remov
 node *create_class_instance(node *class_obj)
 {
   node *child = node_CopyTree(class_obj,True,True);
-  /*node *base_class_type = (node*)node_GetValue(node_GetItemByKey(class_obj,"base_class_type"));
-  if(base_class_type!=NULL)
-  {
-    node *base_class_instance = create_class_instance(base_class_type);
-    set_obj_node(child,"base_class_instance",base_class_instance);
-  }*/
-  //printf("created class instance:%x :%s\n",child,get_obj_name(child));
   reset_obj_refcount(child);
   node_SetParent(child,NULL);
   return(child);
@@ -766,121 +752,8 @@ void add_class_object_function(node *class,char *method_name,node*(*handler)(nod
   add_member(class,method);
 }
 
-/*
-node *create_file_class_object(void)
-{
-  node *base = create_base_obj_layout("file");
-
-  add_class_object_function(base,"=",nyxh_assign);
-
-  add_class_object_function(base,"readall",nyxh_readall);
-  add_class_object_function(base,"writeall",nyxh_writeall);
-  add_class_object_function(base,"open",nyxh_open);
-  add_class_object_function(base,"close",nyxh_close);
-  //add_class_object_function(base,"write",nyxh_write);
-  //add_class_object_function(base,"read",nyxh_read);
-  //add_class_object_function(base,"seek",nyxh_seek);
-  //add_class_object_function(base,"set_mode",nyxh_set_mode);
-  //add_class_object_function(base,"flush",nyxh_flush);
-  //add_class_object_function(base,"ioctl",nyxh_ioctl);
-
-  return(base);
-}
-
-#ifdef USE_HTTP
-node *create_http_class_object(void)
-{
-  node *base = create_base_obj_layout("http");
-  add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"create_request",nyxh_http_create_request);
-  add_class_object_function(base,"parse_answer",nyxh_http_parse_answer);
-  return(base);
-}
-#endif
-
-#ifdef USE_SOCKETS
-node *create_socket_class_object(void)
-{
-  node *base = create_base_obj_layout("socket");
-  add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"open",nyxh_socket_open);
-  add_class_object_function(base,"close",nyxh_socket_close);
-  add_class_object_function(base,"write",nyxh_socket_write);
-  add_class_object_function(base,"read",nyxh_socket_read);
-  add_class_object_function(base,"set_address",nyxh_socket_set_address);
-  add_class_object_function(base,"connect",nyxh_socket_connect);
-  node *sock_dgram_const = create_base_obj_layout("SOCK_DGRAM");
-  node *sock_stream_const = create_base_obj_layout("SOCK_STREAM");
-  add_member(base,sock_dgram_const);
-  inc_obj_refcount(sock_dgram_const);
-  add_member(base,sock_stream_const);
-  inc_obj_refcount(sock_stream_const);
-  //add_class_object_function(base,base,"write",nyxh_socket_write);
-  //add_class_object_function(base,base,"read",nyxh_socket_read);
-  return(base);
-}
-#endif
-*/
-
-/*
-node *create_sys_class_object(node *base_class)
-{
-  node *base = create_base_obj_layout("sys");
-  add_class_object_function(base,"=",nyxh_assign);
-
-  add_class_object_function(base,"name",nyxh_sys_name);
-  add_class_object_function(base,"working_directory",nyxh_sys_working_directory); //contains name/path and files as sub items
-  add_class_object_function(base,"change_working_directory",nyxh_sys_change_working_directory);
-  add_class_object_function(base,"dump",nyxh_sys_dump);
-  add_class_object_function(base,"time",nyxh_sys_time);
-  add_class_object_function(base,"execute",nyxh_sys_execute);
-  add_class_object_function(base,"exit",nyxh_sys_exit);
-  add_class_object_function(base,"sleep",nyxh_sys_sleep);
-  add_class_object_function(base,"script_filename",nyxh_sys_script_filename);//if applicable
-  add_class_object_function(base,"interpreter_filename",nyxh_sys_interpreter_filename);
-  add_class_object_function(base,"interpreter_version",nyxh_sys_interpreter_version);//returns array with major/minor/build
-
-
-  node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
-  inc_obj_refcount(value);
-  set_obj_string(value,"name","modules");
-  add_member(base,value);
-  node *items = create_obj("items");
-  add_obj_kv(value,items);
-  long items_index = 0;
-  #ifdef USE_SOCKETS
-  add_module(base_class,items,"sockets");
-  #endif
-  #ifdef USE_HTTP
-  add_module(base_class,items,"http");
-  #endif
-  #ifdef USE_CURL
-  add_module(base_class,items,"curl");
-  #endif
-  #ifdef USE_WEBSOCKETS
-  add_module(base_class,items,"websockets");
-  #endif
-  #ifdef USE_MICROHTTPD
-  add_module(base_class,items,"microhttpd");
-  #endif
-  #ifdef USE_CURSES
-  add_module(base_class,items,"curses");
-  #endif
-  //add_class_object_function(base,"load",nyxh_load);
-  //add_class_object_function(base,"reset",nyxh_reset);
-  //add_class_object_function(base,"remove",nyxh_remove);//remove file/directory
-  //add_class_object_function(base,"gc_collect",nyxh_gc_collect);
-  //add_class_object_function(base,"error",nyxh_error);//print to stderr
-  //add_class_object_function(base,"obj_kv",nyxh_obj_kv);//returns an kv pair in an object as valued new base class instance
-  return(base);
-}
-*/
-
 node *create_proxy_object(node *state,node *target,char *name)
 {
-  //node *proxy = create_base_obj_layout(method_name);
-  //node *proxy = create_base_obj_layout(name);
   node *base_class = get_base_class(state);
   node *proxy = create_class_instance(base_class);
   set_obj_string(proxy,"type","proxy");
@@ -904,7 +777,6 @@ node *resolve_object(node *obj)
   else
     return(obj);
 }
-
 
 node *create_class_object(void)
 {
@@ -1308,32 +1180,13 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
 
   node *dst_privates = node_GetItemByKey(dst,"privates");
   node *src_privates = node_GetItemByKey(src,"privates");
-  /*node_ItemIterationReset(dst_privates);
-  while(node_ItemIterationUnfinished(dst_privates))
-  {
-    node *dst_private = node_ItemIterate(dst_privates);
-    dec_obj_refcount(dst_private);
-    add_garbage(state,dst_private);
-  }*/
 
   node_RemoveItem(dst,dst_privates);
   node_FreeTree(dst_privates);
 
   node *privates = node_CopyTree(src_privates,True,True);
   add_obj_kv(dst,privates);//TODO ref_counts not correct
-
-
-
-
-
-
   //add_obj_int(base,"refcount",0);
-//clear members
-//clear items
-//remove some internal vars
-//copy members
-//copy items
-
 
 }
 
@@ -1365,191 +1218,6 @@ node *create_nyx_state(node *base_class,node *block_class)
   add_obj_kv(state,blocks);
   return(state);
 }
-
-/*
-node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block)
-{
-  node *value = NULL;
-  node *pars = NULL;
-  if(parameters==NULL)
-    pars = create_obj("parameters");
-  else
-    pars = parameters;
-  if(!strcmp(get_obj_type(obj),"nyx_il_block"))
-  {
-    if(execute_block)
-    {
-      node *block_parameters = node_GetItemByKey(obj,"nyx_parameters");
-      if(block_parameters!=NULL)
-      {
-        node_ItemIterationReset(block_parameters);
-        long p_index = 0;
-        while(node_ItemIterationUnfinished(block_parameters))
-        {
-          node *token = node_ItemIterate(block_parameters);
-          if(!strcmp(node_GetKey(token),"nyx_statement"))
-          {
-            node *tmp_parent = node_GetParent(obj);
-            node_SetParent(obj,NULL);
-            node *abp = node_GetItemByKey(obj,"anonymous_block_parent");
-            node *tmp_abp_value = NULL;
-            if(abp!=NULL)
-            {
-              tmp_abp_value = node_GetValue(abp);
-              node_SetNode(abp,NULL);
-            }
-
-
-            //printf("eval obj:%x ,parent:%x\n",obj,node_GetParent(obj));
-            //node_PrintTree(obj);
-            node *sub = evaluate_statement(state,token,obj,0,NULL);
-
-            if(abp!=NULL)
-              node_SetNode(abp,tmp_abp_value);
-
-            node_SetParent(obj,tmp_parent);
-            node *obj_name = node_GetItemByKey(sub,"name");
-            
-            //node *parent = node_GetParent(node_GetParent(sub));
-            //node_RemoveItem(node_GetParent(sub),sub);
-
-            node_SetParent(sub,NULL);
-            //dec_obj_refcount(sub);
-            //add_garbage(state,sub);
-
-            value = node_CopyTree(node_GetItem(pars,p_index),True,True);//TODO instead of a copy use a temporay name appended to object which gets preferred by namespace searching and removed after execution
-            reset_obj_refcount(value);
-            set_obj_string(value,"name",node_GetString(obj_name));
-            //node_AddItem(parent,value);
-            //node_SetParent(value,parent);
-            //add_member(parent,value);
-            node *oldm = get_member(obj,node_GetString(obj_name));
-            if(oldm)
-            {
-              printf("removing old function par\n");
-              remove_member(obj,oldm);
-              dec_obj_refcount(oldm);
-              add_garbage(state,oldm);
-            }
-            add_member(obj,value);
-
-            inc_obj_refcount(value);
-            node *obj_parameters = node_GetItemByKey(sub,"nyx_parameters");
-            if(obj_parameters!=NULL)
-            {
-              node_RemoveItem(sub,obj_parameters);
-              add_obj_kv(value,node_CopyTree(obj_parameters,True,True));
-            }
-          }
-          p_index++;
-        }
-      }
-      else
-      {
-        if(node_GetItemsNum(pars))
-        {
-          node *base_class = get_base_class(state);
-          node *arguments = create_class_instance(base_class);
-          set_obj_string(arguments,"name","arguments");
-          node *items = create_obj("items");
-          add_obj_kv(arguments,items);
-          node_ItemIterationReset(pars);
-          long item_index=0;
-          while(node_ItemIterationUnfinished(pars))
-          {
-            node *par = node_ItemIterate(pars);
-            node *item = node_CopyTree(par,True,True);
-            reset_obj_refcount(item);
-            node_AddItem(items,item);
-            node_SetParent(item,items);
-            set_obj_int(item,"item_index",item_index);
-            inc_obj_refcount(item);
-            item_index++;
-          }    
-          node *old_arguments = get_member(obj,"arguments");
-          if(old_arguments!=NULL)
-          {
-            remove_member(obj,old_arguments);
-            node *old_items = node_GetItemByKey(old_arguments,"items");
-            node_ItemIterationReset(old_items);
-            while(node_ItemIterationUnfinished(old_items))
-            {
-              node *arg = node_ItemIterate(old_items);
-              dec_obj_refcount(arg);
-              add_garbage(state,arg);
-            }   
-            node_ClearItems(old_items); 
-            dec_obj_refcount(old_arguments);
-            add_garbage(state,old_arguments);
-          }
-          add_member(obj,arguments);
-        }
-      }
-      if(execute_in_block)
-        value = evaluate_block_instance_in(state,obj,block);
-      else
-        value = evaluate_block_instance(state,obj);
-      node *obj_members = node_GetItemByKey(obj,"members");
-      node *arguments = node_GetItemByKey(obj_members,"arguments");
-      if(arguments!=NULL)
-      {
-        node_RemoveItem(obj_members,arguments);
-        node_FreeTree(arguments);
-      }
-    }
-    else
-    {
-      value = obj;
-    }
-  }
-  else if(!strcmp(get_obj_type(obj),"function"))
-  {
-    //if(execute_block)
-    //{
-      node *handler = node_GetItemByKey(obj,"handler");
-      if(handler!=NULL)
-      {
-        //node *(*real_handler)(node*,node*,node*,node*) = (nyx_function_handler)node_GetValue(handler);
-        //TODO to make this thread safe
-        //add a locking mechanism here - should be sufficient
-        //to make the whole interpreter threadsafe without the need for locks in scripts
-        //in eval check val find+add (lock there too i guess)
-        nyx_function_handler real_handler = (nyx_function_handler)node_GetValue(handler);
-        node *parent = node_GetParent(node_GetParent(obj));
-        value = real_handler(state,parent,block,pars);
-      }
-    //}
-    //else
-    //{
-    //  value = obj;
-    //}
-  }
-  else if(!strcmp(get_obj_type(obj),"proxy"))
-  {
-    printf("resolving proxy obj: %x,%s\n",obj,get_obj_name(obj));
-    fflush(stdout);
-    value=get_proxy_target(obj);
-    //printf("resolved to: %x\n",value);
-    //node_PrintTree(value);
-    //fflush(stdout);
-    printf("resolved to: %x,%s\n",value,get_obj_name(value));
-    fflush(stdout);
-  }
-  else if(!strcmp(node_GetKey(obj),"nyx_object"))
-  {
-    //nothing to be done ,just return obj
-    value = obj;
-  }
-  if(value==NULL)
-  {
-    //return an interpreter error here 
-    printf("exec return NULL\n");
-  }
-  node_ClearItems(pars);
-  node_FreeTree(pars);
-  return(value);
-}
-*/
 
 node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block,BOOL resolve_obj)
 {
@@ -1741,7 +1409,7 @@ node *search_block_path_for_member(node *block,char *key)
   {
     node *abp=node_GetItemByKey(block,"anonymous_block_parent");
     if(node_GetValue(abp))
-    {//printf("searching in anon parent:%x\n",node_GetValue(abp));
+    {
       found_obj = get_member((node*)(unsigned long)node_GetValue(abp),key);
       if(found_obj==NULL)
       {
