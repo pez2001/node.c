@@ -1,0 +1,2 @@
+i=20;/*roll 20 times*/
+?({i--},{println("dice roll:"+sys.random(6)+1);},{},1);

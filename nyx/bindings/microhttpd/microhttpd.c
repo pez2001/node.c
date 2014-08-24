@@ -37,6 +37,7 @@ node *microhttpd_create_class_object(void)
   node *base = create_base_obj_layout("microhttpd");
   add_class_object_function(base,"=",nyxh_assign);
   add_class_object_function(base,"start",microhttpd_start);
+  add_class_object_function(base,"service",microhttpd_service);
   add_class_object_function(base,"stop",microhttpd_stop);
   return(base);
 }
@@ -72,13 +73,20 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   node_AddItem(parameters,version_value);
 
   node *upload_value = create_class_instance(base_class);
+  set_obj_string(upload_value,"name","upload");
+  set_obj_int(upload_value,"item_index",3);
+  node_AddItem(parameters,upload_value);
+
+  if(*upload_data_size)
+  {
   char *uploads = (char*)malloc(*upload_data_size+1);
   memset(uploads+*upload_data_size + 0, 0, 1);
   memcpy(uploads,upload_data,*upload_data_size);
-  set_obj_string(upload_value,"name","upload");
   set_obj_string(upload_value,"value",uploads);
-  set_obj_int(upload_value,"item_index",3);
-  node_AddItem(parameters,upload_value);
+  free(uploads);
+  }
+  else
+    set_obj_string(upload_value,"value","");
 
   node *ret_obj = execute_obj(state,read_block,block,parameters,True,False,True);
   node *ret_obj_value = get_value(ret_obj);
@@ -94,6 +102,53 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   ret = MHD_queue_response(connection,MHD_HTTP_OK,response);
   MHD_destroy_response(response);
   return(ret);
+}
+
+node *microhttpd_service(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = get_true_class(state);
+  if(node_GetItemsNum(parameters))
+  {
+    node *pstate = node_GetItem(parameters,0);
+    node *privates = node_GetItemByKey(pstate,"privates");
+    node *nmhd_state = node_GetItemByKey(privates,"microhttpd.state");
+    node *mhd_state = node_GetNode(nmhd_state);
+    node *read_block = node_GetItem(mhd_state,1);
+    node *daemon = node_GetItem(mhd_state,3);
+    node *daemon_value = get_value(daemon);
+    struct MHD_Daemon *d = (struct MHD_Daemon*)(unsigned long)node_GetValue(daemon_value);
+    MHD_UNSIGNED_LONG_LONG mhd_timeout;
+    struct timeval tv;
+    MHD_socket max;
+    fd_set rs;
+    fd_set ws;
+    fd_set es;
+    FD_ZERO(&rs);
+    FD_ZERO(&ws);
+    FD_ZERO(&es);
+    max = 0;
+    //printf("servicing\n");
+    if(MHD_YES!=MHD_get_fdset(d,&rs,&ws,&es,&max))
+    {
+      value = get_false_class(state);
+      //printf("nothing to do\n");
+      //return(value);
+    }
+
+    /*if(MHD_get_timeout(d,&mhd_timeout)==MHD_YES)
+    {
+      if(((MHD_UNSIGNED_LONG_LONG)tv.tv_sec) < mhd_timeout / 1000LL)
+      {
+        tv.tv_sec = mhd_timeout / 1000LL;
+        tv.tv_usec = (mhd_timeout - (tv.tv_sec * 1000LL)) * 1000LL;
+      }
+      //return(value);
+    }*/
+    //printf("selecting\n");
+    select(max+1,&rs,&ws,&es,&tv);
+    MHD_run(d);
+  }
+  return(value);
 }
 
 
@@ -116,7 +171,9 @@ node *microhttpd_start(node *state,node *obj,node *block,node *parameters)
     node *value_privates = node_GetItemByKey(value,"privates");
 
     set_obj_node(value_privates,"microhttpd.state",mhd_state);
-    struct MHD_Daemon *d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY,node_GetSint32(port_value),NULL,NULL,&microhttpd_answer,mhd_state,MHD_OPTION_CONNECTION_TIMEOUT,(unsigned int)120,MHD_OPTION_END);
+    //struct MHD_Daemon *d = MHD_start_daemon(MHD_USE_SELECT_INTERNALLY,node_GetSint32(port_value),NULL,NULL,&microhttpd_answer,mhd_state,MHD_OPTION_CONNECTION_TIMEOUT,(unsigned int)120,MHD_OPTION_END);
+    //struct MHD_Daemon *d = MHD_start_daemon(0,node_GetSint32(port_value),NULL,NULL,&microhttpd_answer,mhd_state,MHD_OPTION_END);
+    struct MHD_Daemon *d = MHD_start_daemon(MHD_USE_DEBUG,node_GetSint32(port_value),NULL,NULL,&microhttpd_answer,mhd_state,MHD_OPTION_CONNECTION_TIMEOUT,(unsigned int)120,MHD_OPTION_END);
     node *daemon = create_class_instance(base_class);
     set_obj_string(daemon,"name","daemon_instance");
     set_obj_ptr(daemon,"value",(void*)d);

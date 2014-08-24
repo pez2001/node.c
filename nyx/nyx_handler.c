@@ -136,11 +136,22 @@ node *nyxh_add(node *state,node *obj,node *block,node *parameters)
       free(cat_string);
       free(num);
     }
-    else
+    else if(node_GetType(real_value2)==NODE_TYPE_STRING)
     {
       char *cat_string=str_Cat(node_GetString(real_value),node_GetString(real_value2));
       node_SetString(real_value,cat_string);
       free(cat_string);
+    }
+    else if(node_GetType(real_value2)==NODE_TYPE_BINARY)
+    {
+      void *content = node_GetBinary(real_value2);
+      unsigned long len = node_GetBinaryLength(real_value2);
+      unsigned long str_len = strlen(node_GetString(real_value));
+      char *cat_string=str_AddChars(node_GetString(real_value),content,len);
+      //char *cat_string=str_Cat(,node_GetString(real_value2));
+      //node_SetString(real_value,cat_string);
+      node_SetBinary(real_value,cat_string,str_len+len);
+      //free(cat_string);
     }
   }
   return(value);
@@ -1386,6 +1397,54 @@ node *nyxh_continue(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+node *nyxh_replace(node *state,node *obj,node *block,node *parameters)
+{
+  //replace string with a new string(lengths may differ)
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  node *real_value = get_value(value);
+  add_garbage(state,value);
+  long index = -1;
+  if(node_GetItemsNum(parameters))
+  {
+    node *needle = node_GetItem(parameters,0);
+    node *needle_value = get_value(needle);
+    node *diamond = node_GetItem(parameters,1);
+    node *diamond_value = get_value(diamond);
+    node *obj_value = get_value(obj);
+    if(node_GetType(diamond_value)==NODE_TYPE_STRING && node_GetType(needle_value)==NODE_TYPE_STRING && node_GetType(obj_value) == NODE_TYPE_STRING)
+    {
+      char *cneedle = node_GetString(needle_value);
+      char *cdiamond = node_GetString(diamond_value);
+      char *chay = node_GetString(obj_value);
+      if(!strlen(chay)||!strlen(cneedle))
+        return(value);
+      char *pos = strstr(chay,cneedle);
+      if(pos)
+      {
+        index = (long)(pos-chay);
+        unsigned long total_len = (strlen(chay)-strlen(cneedle))+strlen(cdiamond);
+        char *new_hay = (char*)malloc(total_len+1);
+        memset(new_hay+total_len,0,1);
+        if(index)
+          memcpy(new_hay,chay,index);
+        if(strlen(cdiamond))
+          memcpy(new_hay+index,cdiamond,strlen(cdiamond));
+        unsigned long remainder_len = total_len - index - strlen(cdiamond);
+        if(remainder_len)
+          memcpy(new_hay+index+strlen(cdiamond),chay+index+strlen(cneedle),remainder_len);
+        node_SetString(real_value,new_hay);//TODO add setstringWithoutCopy
+        free(new_hay);
+      } 
+    }
+  }
+  else 
+    node_SetString(real_value,"");
+
+  return(value);
+}
+
+
 node *nyxh_index_of(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
@@ -1405,7 +1464,7 @@ node *nyxh_index_of(node *state,node *obj,node *block,node *parameters)
       char *pos = strstr(chay,cneedle);
       if(pos)
       {
-        index = (long)(chay-pos);
+        index = (long)(pos-chay);
       } 
 
     }
@@ -1428,10 +1487,11 @@ node *nyxh_substr(node *state,node *obj,node *block,node *parameters)
     node *len = node_GetItem(parameters,1);
     node *len_value = NULL;
     long llen = -1;
-    if(len && node_GetType(len_value)==NODE_TYPE_SINT32)
+    if(len)
     {
       len_value = get_value(len);
-      llen = node_GetSint32(len_value);
+      if(node_GetType(len_value)==NODE_TYPE_SINT32)
+        llen = node_GetSint32(len_value);
     }
     node *obj_value = get_value(obj);
 
@@ -1471,6 +1531,8 @@ node *nyxh_len(node *state,node *obj,node *block,node *parameters)
   {
     if(node_GetType(real_value)==NODE_TYPE_STRING)
       len = strlen(node_GetString(real_value));
+    else if(node_GetType(real_value)==NODE_TYPE_BINARY)
+      len = node_GetBinaryLength(real_value);
   }
 
   value = create_class_instance(base_class);

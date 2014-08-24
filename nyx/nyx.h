@@ -76,6 +76,15 @@
 #include "getopt.h"
 #include "signal.h"
 
+typedef struct _nyx_module
+{
+	char *name;
+	//int priority;
+	node *(*bind)(node*,node*);
+	node *(*init)(node*);
+	node *(*close)(node*);
+} nyx_module;
+
 
 typedef node *(*nyx_function_handler)(node*,node*,node*,node*);
 

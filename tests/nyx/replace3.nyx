@@ -1,0 +1,3 @@
+change="12";
+println("replacing \"1\" with \"\": "+change.replace("1",""));
+println("replacing \"2\" with \"\": "+change.replace("2",""));

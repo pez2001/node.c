@@ -37,6 +37,8 @@ node *file_create_class_object(void)
   add_class_object_function(base,"=",nyxh_assign);
   add_class_object_function(base,"readall",file_readall);
   add_class_object_function(base,"writeall",file_writeall);
+  add_class_object_function(base,"readallbytes",file_readallbytes);
+  add_class_object_function(base,"writeallbytes",file_writeallbytes);
   add_class_object_function(base,"open",file_open);
   add_class_object_function(base,"close",file_close);
   return(base);
@@ -92,6 +94,59 @@ node *file_close(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+node *file_writeallbytes(node *state,node *obj,node *block,node *parameters)
+{
+  //writes binary blob to file 
+  node *value = get_false_class(state);
+  node *value2 = NULL;
+  if(node_GetItemsNum(parameters))
+  {
+    value2 = node_GetItem(parameters,0);
+    node *real_value = node_GetItemByKey(value2,"value");
+    node *privates = node_GetItemByKey(obj,"privates");
+    node *handle = node_GetItemByKey(privates,"file_handle");
+    if(handle!=NULL)
+    {
+      FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
+      void *content = node_GetBinary(real_value);
+      unsigned long len = node_GetBinaryLength(real_value);
+      fwrite(content,len,1,fhandle);
+      node *value_privates = node_GetItemByKey(value,"privates");
+      set_obj_ptr(value_privates,"file_handle",fhandle);
+      value = get_true_class(state);
+    }
+  }
+  return(value);
+}
+
+node *file_readallbytes(node *state,node *obj,node *block,node *parameters)
+{
+  //returns binary blob with all file content
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *privates = node_GetItemByKey(obj,"privates");
+  node *handle = node_GetItemByKey(privates,"file_handle");
+  if(handle!=NULL)
+  {
+    char *ret = NULL;
+    FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
+    fseek(fhandle,0,SEEK_END);
+    long len = ftell(fhandle);
+    fseek(fhandle,0,SEEK_SET);
+    ret = (char*)malloc(len);
+    fread(ret,len,1,fhandle);
+    node_SetBinary(real_value,ret,len);
+    node *value_privates = node_GetItemByKey(value,"privates");
+    set_obj_ptr(value_privates,"file_handle",fhandle);
+    add_class_object_function(value,"close",file_close);
+    //free(ret);
+  }
+  return(value);
+}
+
 node *file_readall(node *state,node *obj,node *block,node *parameters)
 {
   //returns string with all file content
@@ -129,8 +184,6 @@ node *file_writeall(node *state,node *obj,node *block,node *parameters)
   if(node_GetItemsNum(parameters))
   {
     value2 = node_GetItem(parameters,0);
-    //if(obj != block)
-    //{ 
     node *real_value = node_GetItemByKey(value2,"value");
     node *privates = node_GetItemByKey(obj,"privates");
     node *handle = node_GetItemByKey(privates,"file_handle");
@@ -144,7 +197,6 @@ node *file_writeall(node *state,node *obj,node *block,node *parameters)
       set_obj_ptr(value_privates,"file_handle",fhandle);
       value = get_true_class(state);
     }
-    //}
   }
   return(value);
 }

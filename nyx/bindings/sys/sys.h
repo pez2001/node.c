@@ -34,6 +34,7 @@
 #include "string.h"
 #include "unistd.h"
 #include "time.h"
+#include "limits.h"
 
 #ifdef WIN32
 FILE *popen(const char *command, const char *type);
@@ -47,6 +48,8 @@ void sys_add_parameter(node *state,node *parameter);
 
 node *sys(node *state,node *obj,node *block,node *parameters);
 
+
+node *sys_random(node *state,node *obj,node *block,node *parameters);
 node *sys_name(node *state,node *obj,node *block,node *parameters);
 node *sys_working_directory(node *state,node *obj,node *block,node *parameters);
 node *sys_change_working_directory(node *state,node *obj,node *block,node *parameters);

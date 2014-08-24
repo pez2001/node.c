@@ -239,6 +239,7 @@ node_array *node_CopyArray(node_array *array,BOOL copy_values);
 
 /*binary type -> binary chunks managed by it need to be freed on its own at the moment*/
 node_binary *node_CreateBinary(void *binary,unsigned long len);
+node_binary *node_CopyBinary(void *binary,unsigned long len);
 void node_FreeBinary(node_binary *binary,BOOL free_value);
 void node_SetBinary(node *n,void *binary,unsigned long len);
 void *node_GetBinary(node *n);

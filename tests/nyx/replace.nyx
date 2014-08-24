@@ -1,0 +1,15 @@
+change="Hello World";
+println("replacing \"World\" with \"Earth\": "+change.replace("World","Earth"));
+println("replacing \"Hello\" with \"Hi\": "+change.replace("Hello","Hi"));
+println("replacing \"Hello\" with \"Our nice little\": "+change.replace("Hello","Our nice little"));
+
+change="12345";
+println("replacing \"34\" with \"666\": "+change.replace("34","666"));
+println("replacing \"12\" with \"6\": "+change.replace("12","6"));
+println("replacing \"5\" with \"6\": "+change.replace("5","6"));
+println("replacing \"4\" with \"66666\": "+change.replace("4","66666"));
+
+
+change="12";
+println("replacing \"1\" with \"666\": "+change.replace("1","666"));
+println("replacing \"2\" with \"666\": "+change.replace("2","666"));

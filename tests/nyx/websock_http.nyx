@@ -1,0 +1,87 @@
+index.file = file.open("websocket-html/index.html","rb"); 
+index.html = index.file.readall();
+copco.file = file.open("websocket-html/copco display.png","rb"); 
+copco.data = copco.file.readallbytes();
+fav.file = file.open("websocket-html/logo_draft.ico","rb"); 
+fav.data = fav.file.readallbytes();
+
+
+http_call={
+	println("serving request:",arguments["protocol"]);
+	/*msg="Hallo Welt!:"+arguments["protocol"];*/
+	url = arguments["url"];
+	println("serving url:["+url+"]");
+	msg="";
+	type="text/html";
+	(url=="/").do({msg = index.html.replace("{$$ROOM$$}","room:default");});
+	/*(url=="/").do({msg = index.html;});*/
+	(url=="/status").do({msg = "actual chat server status";daemon.broadcast("echo","someone is watching the status");});
+	(url=="/stop").do({msg = "stopping server";running=0;});
+	(url=="/copco").do({msg = copco.data;type="image/png";});
+	(url=="/favicon.ico").do({msg = fav.data;type="image/ico";});
+
+	room="";
+	url.index_of("/room/").else(
+	{
+		room = url.sub(url.index_of("/room/")+"/room/".len());
+		end = room.index_of("/");
+		(end!=-1).do({room = room.sub(0,end);});
+	  	msg = index.html.replace("{$$ROOM$$}","room:"+room);
+	});
+
+	(url.index_of("/admin/")!=-1).do(
+	{
+		chat = url.sub(url.index_of("/admin/")+"/admin/".len());
+		end = chat.index_of("/");
+		(end!=-1).do({chat = chat.sub(0,end);});
+	  	msg = "sending message: "+chat;
+		daemon.broadcast("echo","("+room+")admin: "+chat);
+	});
+
+
+	header = "HTTP/1.0 200 OK\r\n" +
+        "Server: nyx_chat_example\r\n" +
+        "Content-Type: "+type+"\r\n" + 
+        "Content-Length: " + len(msg) + "\r\n\r\n";
+	ret = header + msg;
+};
+
+echo_call=
+{
+	println("serving request:[",arguments["message"],"] : ",arguments["protocol"]);
+	chat_name = arguments["session"].id;
+	room="";
+	(arguments["message"].index_of("room:")==0).do(
+	{
+		room = arguments["message"].sub("room:".len());
+	});
+	(arguments["message"].index_of("name:")==0).do(
+	{
+		chat_name = arguments["message"].sub("name:".len());
+		/*arguments["session"].name = chat_name;*/
+	});
+
+	/*arguments["session"].has("name").do({chat_name=arguments["session"].name});*/
+	daemon.broadcast_other(arguments["protocol"],chat_name+ " : "+arguments["message"],arguments["session"].id);
+	ret="";
+};
+
+client_call=
+{
+	println("serving request:[",arguments["message"],"] : ",arguments["protocol"]);
+	chat_name = arguments["session"].id;
+	daemon.broadcast_other(arguments["protocol"],chat_name+ " : "+arguments["message"],arguments["session"].id);
+	ret="";
+};
+
+
+
+daemon=websockets.start(8080,["http-only":http_call,"echo":echo_call]);
+/*client=websockets.connect("localhost",8080,client_call);*/
+timeout=10;
+println("servicing");
+running=1;
+sys.execute("start http:/localhost:8080/");
+?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
+
+

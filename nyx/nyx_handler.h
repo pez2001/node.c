@@ -79,8 +79,12 @@ node *nyxh_sub(node *state,node *obj,node *block,node *parameters);
 node *nyxh_add(node *state,node *obj,node *block,node *parameters);
 node *nyxh_split(node *state,node *obj,node *block,node *parameters);
 
+node *nyxh_modulo(node *state,node *obj,node *block,node *parameters);
+
+
 node *nyxh_index_of(node *state,node *obj,node *block,node *parameters);
 node *nyxh_substr(node *state,node *obj,node *block,node *parameters);
+node *nyxh_replace(node *state,node *obj,node *block,node *parameters);
 
 
 

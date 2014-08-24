@@ -1,0 +1,9 @@
+copco.file = file.open("websocket-html/copco display.png","rb"); 
+copco.data = copco.file.readallbytes();
+copco.file.close();
+
+copco.out = file.open("websocket-html/bin_out.png","wb+"); 
+copco.out.writeallbytes(copco.data);
+copco.out.close();
+
+

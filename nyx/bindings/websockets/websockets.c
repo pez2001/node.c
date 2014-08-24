@@ -41,335 +41,7 @@ node *websockets_create_class_object(void)
   return(base);
 }
 
-/*
-int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *url,const char *method,const char *version,const char *upload_data, size_t *upload_data_size, void **ptr)
-{
-  struct MHD_Response *response;
-  int ret;
-  node *mhd_state = (node*)cls;
-  node *state = node_GetItem(mhd_state,0);
-  node *read_block = node_GetItem(mhd_state,1);
-  node *block = node_GetItem(mhd_state,2);
-  node *base_class = node_GetItemByKey(state,"nyx_object");
-
-  node *parameters = create_obj("parameters");
-
-  node *url_value = create_class_instance(base_class);
-  reset_obj_refcount(url_value);
-  add_garbage(state,url_value);
-  set_obj_string(url_value,"name","url");
-  set_obj_string(url_value,"value",(char*)url);
-  set_obj_int(url_value,"item_index",0);
-  node_AddItem(parameters,url_value);
-
-  node *method_value = create_class_instance(base_class);
-  reset_obj_refcount(method_value);
-  add_garbage(state,method_value);
-  set_obj_string(method_value,"value",(char*)method);
-  set_obj_string(method_value,"name","method");
-  set_obj_int(method_value,"item_index",1);
-  node_AddItem(parameters,method_value);
-
-  node *version_value = create_class_instance(base_class);
-  reset_obj_refcount(version_value);
-  add_garbage(state,version_value);
-  set_obj_string(version_value,"name","version");
-  set_obj_string(version_value,"value",(char*)version);
-  set_obj_int(version_value,"item_index",2);
-  node_AddItem(parameters,version_value);
-
-  node *upload_value = create_class_instance(base_class);
-  reset_obj_refcount(upload_value);
-  add_garbage(state,upload_value);
-  char *uploads = (char*)malloc(*upload_data_size+1);
-  memset(uploads+*upload_data_size + 0, 0, 1);
-  memcpy(uploads,upload_data,*upload_data_size);
-  set_obj_string(upload_value,"name","upload");
-  set_obj_string(upload_value,"value",uploads);
-  set_obj_int(upload_value,"item_index",3);
-  node_AddItem(parameters,upload_value);
-
-  node *ret_obj = execute_obj(state,read_block,block,parameters,True,False);
-  node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
-  char *me = node_GetString(ret_obj_value);
-
-  response = MHD_create_response_from_buffer(strlen(me),(void *)me,MHD_RESPMEM_PERSISTENT);
-  ret = MHD_queue_response(connection,MHD_HTTP_OK,response);
-  MHD_destroy_response(response);
-  return(ret);
-}
-*/
-
-
-//#define LOCAL_RESOURCE_PATH "nyx/tests/websockets/server"
-#define LOCAL_RESOURCE_PATH "websockets-test"
-char *resource_path = LOCAL_RESOURCE_PATH;
-
-
-
-#define MAX_ECHO_PAYLOAD 1400
-
-struct per_session_data__http {
-  int fd;
-};
-
-const char * get_mimetype(const char *file)
-{
-  int n = strlen(file);
-
-  if (n < 5)
-    return NULL;
-
-  if (!strcmp(&file[n - 4], ".ico"))
-    return "image/x-icon";
-
-  if (!strcmp(&file[n - 4], ".png"))
-    return "image/png";
-
-  if (!strcmp(&file[n - 5], ".html"))
-    return "text/html";
-
-  return NULL;
-}
-
-static int callback_http(struct libwebsocket_context *context,struct libwebsocket *wsi,enum libwebsocket_callback_reasons reason, void *user,void *in, size_t len)
-{
-  char buf[256];
-  char leaf_path[1024];
-  char b64[64];
-  struct timeval tv;
-  int n, m;
-  unsigned char *p;
-  char *other_headers;
-  static unsigned char buffer[4096];
-  struct stat stat_buf;
-  struct per_session_data__http *pss = (struct per_session_data__http *)user;
-
-  //if(wsi && wsi->protocol && wsi->protocol->name)
-  //  printf("prot:%s\n",wsi->protocol->name);
-
-  const char *mimetype;
-  switch (reason) {
-  case LWS_CALLBACK_HTTP:
-    if (len < 1) {
-      libwebsockets_return_http_status(context, wsi,
-            HTTP_STATUS_BAD_REQUEST, NULL);
-      return -1;
-    }
-
-    /* this server has no concept of directories */
-    if (strchr((const char *)in + 1, '/')) {
-      libwebsockets_return_http_status(context, wsi,
-            HTTP_STATUS_FORBIDDEN, NULL);
-      return -1;
-    }
-
-    /* if a legal POST URL, let it continue and accept data */
-    if (lws_hdr_total_length(wsi, WSI_TOKEN_POST_URI))
-      return 0;
-
-    /* check for the "send a big file by hand" example case */
-
-    if (!strcmp((const char *)in, "/leaf.jpg")) {
-      if (strlen(resource_path) > sizeof(leaf_path) - 10)
-        return -1;
-      sprintf(leaf_path, "%s/leaf.jpg", resource_path);
-
-      /* well, let's demonstrate how to send the hard way */
-
-      p = buffer;
-
-#ifdef WIN32
-      pss->fd = open(leaf_path, O_RDONLY | _O_BINARY);
-#else
-      pss->fd = open(leaf_path, O_RDONLY);
-#endif
-
-      if (pss->fd < 0)
-        return -1;
-
-      fstat(pss->fd, &stat_buf);
-
-      /*
-       * we will send a big jpeg file, but it could be
-       * anything.  Set the Content-Type: appropriately
-       * so the browser knows what to do with it.
-       */
-
-      p += sprintf((char *)p,
-        "HTTP/1.0 200 OK\x0d\x0a"
-        "Server: libwebsockets\x0d\x0a"
-        "Content-Type: image/jpeg\x0d\x0a"
-          "Content-Length: %u\x0d\x0a\x0d\x0a",
-          (unsigned int)stat_buf.st_size);
-
-      /*
-       * send the http headers...
-       * this won't block since it's the first payload sent
-       * on the connection since it was established
-       * (too small for partial)
-       */
-
-      n = libwebsocket_write(wsi, buffer,
-           p - buffer, LWS_WRITE_HTTP);
-
-      if (n < 0) {
-        close(pss->fd);
-        return -1;
-      }
-      /*
-       * book us a LWS_CALLBACK_HTTP_WRITEABLE callback
-       */
-      libwebsocket_callback_on_writable(context, wsi);
-      break;
-    }
-
-    /* if not, send a file the easy way */
-    strcpy(buf, resource_path);
-    if (strcmp(in, "/")) {
-      if (*((const char *)in) != '/')
-        strcat(buf, "/");
-      strncat(buf, in, sizeof(buf) - strlen(resource_path));
-    } else /* default file to serve */
-      strcat(buf, "/test.html");
-    buf[sizeof(buf) - 1] = '\0';
-
-    /* refuse to serve files we don't understand */
-    mimetype = get_mimetype(buf);
-    if (!mimetype) {
-      lwsl_err("Unknown mimetype for %s\n", buf);
-      libwebsockets_return_http_status(context, wsi,
-              HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, NULL);
-      return -1;
-    }
-
-    /* demostrates how to set a cookie on / */
-
-    other_headers = NULL;
-    if (!strcmp((const char *)in, "/") &&
-         !lws_hdr_total_length(wsi, WSI_TOKEN_HTTP_COOKIE)) {
-      /* this isn't very unguessable but it'll do for us */
-      gettimeofday(&tv, NULL);
-      sprintf(b64, "LWS_%u_%u_COOKIE",
-        (unsigned int)tv.tv_sec,
-        (unsigned int)tv.tv_usec);
-
-      sprintf(leaf_path,
-        "Set-Cookie: test=LWS_%u_%u_COOKIE;Max-Age=360000\x0d\x0a",
-          (unsigned int)tv.tv_sec, (unsigned int)tv.tv_usec);
-      other_headers = leaf_path;
-      lwsl_err(other_headers);
-    }
-
-    if (libwebsockets_serve_http_file(context, wsi, buf,
-            mimetype, other_headers))
-      return -1; /* through completion or error, close the socket */
-
-    /*
-     * notice that the sending of the file completes asynchronously,
-     * we'll get a LWS_CALLBACK_HTTP_FILE_COMPLETION callback when
-     * it's done
-     */
-
-    break;
-
-  case LWS_CALLBACK_HTTP_BODY:
-    strncpy(buf, in, 20);
-    buf[20] = '\0';
-    if (len < 20)
-      buf[len] = '\0';
-
-    lwsl_notice("LWS_CALLBACK_HTTP_BODY: %s... len %d\n",
-        (const char *)buf, (int)len);
-
-    break;
-
-  case LWS_CALLBACK_HTTP_BODY_COMPLETION:
-    lwsl_notice("LWS_CALLBACK_HTTP_BODY_COMPLETION\n");
-    /* the whole of the sent body arried, close the connection */
-    libwebsockets_return_http_status(context, wsi,
-            HTTP_STATUS_OK, NULL);
-
-    return -1;
-
-  case LWS_CALLBACK_HTTP_FILE_COMPLETION:
-//    lwsl_info("LWS_CALLBACK_HTTP_FILE_COMPLETION seen\n");
-    /* kill the connection after we sent one file */
-    return -1;
-
-  case LWS_CALLBACK_HTTP_WRITEABLE:
-    /*
-     * we can send more of whatever it is we were sending
-     */
-
-    do {
-      n = read(pss->fd, buffer, sizeof buffer);
-      /* problem reading, close conn */
-      if (n < 0)
-        goto bail;
-      /* sent it all, close conn */
-      if (n == 0)
-        goto flush_bail;
-      /*
-       * because it's HTTP and not websocket, don't need to take
-       * care about pre and postamble
-       */
-      m = libwebsocket_write(wsi, buffer, n, LWS_WRITE_HTTP);
-      if (m < 0)
-        /* write failed, close conn */
-        goto bail;
-      if (m != n)
-        /* partial write, adjust */
-        lseek(pss->fd, m - n, SEEK_CUR);
-
-      if (m) /* while still active, extend timeout */
-        libwebsocket_set_timeout(wsi,
-          PENDING_TIMEOUT_HTTP_CONTENT, 5);
-
-    } while (!lws_send_pipe_choked(wsi));
-    libwebsocket_callback_on_writable(context, wsi);
-    break;
-flush_bail:
-    /* true if still partial pending */
-    if (lws_send_pipe_choked(wsi)) {
-      libwebsocket_callback_on_writable(context, wsi);
-      break;
-    }
-
-bail:
-    close(pss->fd);
-    return -1;
-
-  /*
-   * callback for confirming to continue with client IP appear in
-   * protocol 0 callback since no websocket protocol has been agreed
-   * yet.  You can just ignore this if you won't filter on client IP
-   * since the default uhandled callback return is 0 meaning let the
-   * connection continue.
-   */
-
-  case LWS_CALLBACK_FILTER_NETWORK_CONNECTION:
-    /* if we returned non-zero from here, we kill the connection */
-    break;
-
-  case LWS_CALLBACK_GET_THREAD_ID:
-    break;
-
-  default:
-    break;
-  }
-
-  return 0;
-}
-
-
-/*struct per_session_data__echo {
-  unsigned char buf[LWS_SEND_BUFFER_PRE_PADDING + MAX_ECHO_PAYLOAD + LWS_SEND_BUFFER_POST_PADDING];
-  unsigned int len;
-  unsigned int index;
-};*/
-
-node *create_session(node *state,node *sessions,long session_uid)
+node *create_session(node *state,node *sessions,long session_uid,char *protocol_name)
 {
   node *base_class = get_base_class(state);
   node *session = create_class_instance(base_class);
@@ -383,6 +55,13 @@ node *create_session(node *state,node *sessions,long session_uid)
   set_obj_int(nsession_uid,"value",session_uid);
   add_member(session,nsession_uid);
   inc_obj_refcount(nsession_uid);
+
+  node *nsession_protocol = create_class_instance(base_class);
+  //reset_obj_refcount(nsession_uid);
+  set_obj_string(nsession_protocol,"name","protocol");
+  set_obj_string(nsession_protocol,"value",protocol_name);
+  add_member(session,nsession_protocol);
+  inc_obj_refcount(nsession_protocol);
 
   node *sessions_items = node_GetItemByKey(sessions,"items");
   set_obj_int(session,"item_index",get_last_index(sessions_items)+1);
@@ -402,14 +81,14 @@ void delete_session(node *state,node *sessions,node *session)
   add_garbage(state,session);
 }
 
-struct per_session_data__echo {
+struct per_session_data_nyx {
   node *session;
 };
 
 
-static int callback_echo(struct libwebsocket_context *context,struct libwebsocket *wsi,enum libwebsocket_callback_reasons reason, void *user,void *in,size_t len)
+static int callback_nyx_websockets(struct libwebsocket_context *context,struct libwebsocket *wsi,enum libwebsocket_callback_reasons reason, void *user,void *in,size_t len)
 {
-  struct per_session_data__echo *pss =(struct per_session_data__echo*)user;
+  struct per_session_data_nyx *pss =(struct per_session_data_nyx*)user;
   int n;
 
   node *wsd_state = (node*)libwebsocket_context_user(context);
@@ -461,12 +140,77 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
   {
 
     case LWS_CALLBACK_HTTP:
-      if (len < 1)
+      if(len < 1)
       {
         libwebsockets_return_http_status(context,wsi,HTTP_STATUS_BAD_REQUEST,NULL);
-        return -1;
+        return(-1);
+      }
+      if(lws_hdr_total_length(wsi,WSI_TOKEN_POST_URI))
+        return(0);
+
+      if(found_prot)
+      {
+        //printf("found prot in http callback : %d,num:%d\n",lsession_uid,lsessions_num);
+        lsession_uid++;
+        node *session_uid_value = node_GetItemByKey(session_uid,"value");
+        node_SetSint32(session_uid_value,lsession_uid);
+        lsessions_num++;
+        node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
+        node_SetSint32(sessions_num_value,lsessions_num);
+        pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
+        node *session_privates = node_GetItemByKey(pss->session,"privates");
+        set_obj_int(session_privates,"is_http",1);
+
+
+        node *parameters = create_obj("parameters");
+        node *base_class = get_base_class(state);
+        node *prot_value = create_class_instance(base_class);
+        set_obj_string(prot_value,"name","protocol");
+        set_obj_string(prot_value,"value",get_obj_name(found_prot));
+        node_AddItem(parameters,prot_value);
+        inc_obj_refcount(prot_value);
+        char *url = str_CreateEmpty();
+        url = str_AddChars(url,in,len);
+        node *url_value = create_class_instance(base_class);
+        set_obj_string(url_value,"name","url");
+        set_obj_string(url_value,"value",url);
+        node_AddItem(parameters,url_value);
+        inc_obj_refcount(url_value);
+        free(url);
+        node_AddItem(parameters,pss->session);
+        node_AddItem(parameters,daemon_obj);
+        node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
+        //dec_obj_refcount(msg_value);
+        dec_obj_refcount(prot_value);
+        //add_garbage(state,msg_value);//TODO check if "just survives"
+        add_garbage(state,prot_value);
+        node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
+        if( (node_GetType(ret_obj_value)==NODE_TYPE_STRING && strlen(node_GetString(ret_obj_value))) || (node_GetType(ret_obj_value)==NODE_TYPE_BINARY && node_GetBinaryLength(ret_obj_value)) )
+        {
+          //printf("returning http message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
+          node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
+          set_obj_string(ret_obj_copy,"name","message");
+          add_member(pss->session,ret_obj_copy);
+          inc_obj_refcount(ret_obj_copy);
+          libwebsocket_callback_on_writable(context, wsi);
+        }
       }
 
+      //libwebsocket_callback_on_writable(context, wsi);
+      break;
+
+
+
+    case LWS_CALLBACK_HTTP_BODY_COMPLETION:
+      lwsl_notice("LWS_CALLBACK_HTTP_BODY_COMPLETION\n");
+      libwebsockets_return_http_status(context,wsi,HTTP_STATUS_OK,NULL);
+     return(-1);
+
+    case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+      return(-1);
+
+
+    case LWS_CALLBACK_HTTP_WRITEABLE: 
     case LWS_CALLBACK_SERVER_WRITEABLE:
       {
         node *message = get_member(pss->session,"message");
@@ -474,11 +218,27 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
         node *session_id_value = node_GetItemByKey(session_id,"value");
         if(message)
         {
+          node *session_privates = node_GetItemByKey(pss->session,"privates");
+          node *http_only = node_GetItemByKey(session_privates,"is_http");
           node *message_value = node_GetItemByKey(message,"value");
-          char *me = node_GetString(message_value);
-          printf("sending message now: [%s] to: %d\n",me,node_GetSint32(session_id_value));
-          fflush(stdout);
-          n = libwebsocket_write(wsi, me, strlen(me), LWS_WRITE_TEXT);
+          char *me = NULL;
+          unsigned long me_len = 0;
+          if(node_GetType(message_value)==NODE_TYPE_STRING)
+          {
+            me = node_GetString(message_value);
+            me_len = strlen(me);
+          }
+          else if(node_GetType(message_value)==NODE_TYPE_BINARY)
+          {
+            me = node_GetBinary(message_value);
+            me_len = node_GetBinaryLength(message_value);
+          }
+          //printf("sending message now: [%s] to: %d\n",me,node_GetSint32(session_id_value));
+          //fflush(stdout);
+          if(http_only)
+            n = libwebsocket_write(wsi, me, me_len, LWS_WRITE_HTTP);
+          else
+            n = libwebsocket_write(wsi, me, me_len, LWS_WRITE_TEXT);
           if(n<0)
           {
             printf("ERROR %d writing to socket, hanging up\n", n);
@@ -509,7 +269,7 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
       lsessions_num++;
       node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
       node_SetSint32(sessions_num_value,lsessions_num);
-      pss->session = create_session(state,sessions,lsession_uid);
+      pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
     }
     break;
 
@@ -529,37 +289,26 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
 
 
   case LWS_CALLBACK_RECEIVE:
-    if (len > MAX_ECHO_PAYLOAD) {
-      lwsl_err("Server received packet bigger than %u, hanging up\n", MAX_ECHO_PAYLOAD);
-      return 1;
+    if(len>1024) { //TODO use some variable
+      lwsl_err("Server received packet bigger than %u, hanging up\n", 1024);
+      return(1);
     }
-    /*memcpy(&pss->buf[LWS_SEND_BUFFER_PRE_PADDING], in, len);
-    pss->len = (unsigned int)len;
-    libwebsocket_callback_on_writable(context, wsi);
-    */
     if(found_prot)
     {
       node *parameters = create_obj("parameters");
       node *base_class = get_base_class(state);
       
       node *prot_value = create_class_instance(base_class);
-      //reset_obj_refcount(prot_value);
-      //add_garbage(state,prot_value);
       set_obj_string(prot_value,"name","protocol");
       set_obj_string(prot_value,"value",get_obj_name(found_prot));
-      //set_obj_int(prot_value,"item_index",0);
       node_AddItem(parameters,prot_value);
       inc_obj_refcount(prot_value);
-      //node_SetParent(prot_value,para)
 
       char *msg = str_CreateEmpty();
       msg = str_AddChars(msg,in,len);
       node *msg_value = create_class_instance(base_class);
-      //reset_obj_refcount(msg_value);
-      //add_garbage(state,msg_value);//TODO check if "just survives"
       set_obj_string(msg_value,"name","message");
       set_obj_string(msg_value,"value",msg);
-      //set_obj_int(msg_value,"item_index",1);
       node_AddItem(parameters,msg_value);
       inc_obj_refcount(msg_value);
       free(msg);
@@ -589,7 +338,7 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
       node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
       if(node_GetType(ret_obj_value)==NODE_TYPE_STRING && strlen(node_GetString(ret_obj_value)))
       {
-        printf("returning message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
+        //printf("returning message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
         node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
         set_obj_string(ret_obj_copy,"name","message");
         add_member(pss->session,ret_obj_copy);
@@ -612,7 +361,7 @@ static int callback_echo(struct libwebsocket_context *context,struct libwebsocke
 
 node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
 {
-  printf("broadcasting\n");
+  //printf("broadcasting\n");
   node *value = get_true_class(state);
   node *wsd_state = node_GetNode(get_value(obj));
   node *daemon = node_GetItem(wsd_state,2);
@@ -641,11 +390,13 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
   {
     node *state_protocol = node_ItemIterate(state_protocols_items);
     node *state_protocol_value = node_GetItemByKey(state_protocol,"name");
-    printf("checking protocols:%s,%s\n",node_GetString(state_protocol_value),node_GetString(protocol_value));
+    //printf("checking protocols:%s,%s\n",node_GetString(state_protocol_value),node_GetString(protocol_value));
+    //fflush(stdout);
     struct libwebsocket_protocols *cprot = prots;
     if(!strcmp(node_GetString(state_protocol_value),node_GetString(protocol_value)))
     {
-      printf("now broadcasting:[%s]\n",node_GetString(message_value));
+      //printf("now broadcasting:[%s]\n",node_GetString(message_value));
+      //fflush(stdout);
       node *base_class = get_base_class(state);
       node *broadcast_message = create_class_instance(base_class);
       set_obj_string(broadcast_message,"name","message");
@@ -658,11 +409,18 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
       {
         node *session = node_ItemIterate(sessions_items);
         node *session_uid = get_member(session,"id");
-        node *session_uid_value = node_GetItemByKey(session_uid,"value");
-        printf("sending message to uid: %d\n",node_GetSint32(session_uid_value));
-        fflush(stdout);
-        add_member(session,broadcast_message);
-        inc_obj_refcount(broadcast_message);
+        node *session_uid_value = get_value(session_uid);
+        node *session_prot = get_member(session,"protocol");
+        node *session_prot_value = get_value(session_prot);
+        //printf("comparing session_prot: [%s] against prot: [%s]\n",node_GetString(session_prot_value),node_GetString(protocol_value));
+        //fflush(stdout);
+        if(!strcmp(node_GetString(protocol_value),node_GetString(session_prot_value)))
+        {
+          //printf("sending message to uid: %d\n",node_GetSint32(session_uid_value));
+          //fflush(stdout);
+          add_member(session,broadcast_message);
+          inc_obj_refcount(broadcast_message);
+        }
       }
 
       libwebsocket_callback_on_writable_all_protocol(cprot);
@@ -673,17 +431,14 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
     }
     prots+=sizeof(struct libwebsocket_protocols);
   }
-
-  fflush(stdout);
-
-  
-
   return(value);
 }
 
+//TODO add checks for true and false lists
+
 node *websockets_broadcast_other(node *state,node *obj,node *block,node *parameters)
 {
-  printf("broadcasting_other\n");
+  //printf("broadcasting_other\n");
   node *value = get_true_class(state);
   node *wsd_state = node_GetNode(get_value(obj));
   node *daemon = node_GetItem(wsd_state,2);
@@ -718,7 +473,7 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
     struct libwebsocket_protocols *cprot = prots;
     if(!strcmp(node_GetString(state_protocol_value),node_GetString(protocol_value)))
     {
-      printf("now broadcasting:[%s]\n",node_GetString(message_value));
+      //printf("now broadcasting:[%s]\n",node_GetString(message_value));
       node *base_class = get_base_class(state);
       node *broadcast_message = create_class_instance(base_class);
       set_obj_string(broadcast_message,"name","message");
@@ -732,8 +487,11 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
         node *session = node_ItemIterate(sessions_items);
         node *session_uid = get_member(session,"id");
         node *session_uid_value = node_GetItemByKey(session_uid,"value");
+        node *session_prot = get_member(session,"protocol");
+        node *session_prot_value = get_value(session_prot);
         long luid = node_GetSint32(session_uid_value);
-        if(luid != lskip_uid)
+        
+        if(!strcmp(node_GetString(protocol_value),node_GetString(session_prot_value)) && luid != lskip_uid)
         {
           printf("sending message to uid: %d (skip:%d)\n",luid,lskip_uid);
           fflush(stdout);
@@ -750,8 +508,8 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
     }
     prots+=sizeof(struct libwebsocket_protocols);
   }
-  printf("broadcast_other finished\n");
-  fflush(stdout);  
+  //printf("broadcast_other finished\n");
+  //fflush(stdout);  
   return(value);
 }
 
@@ -834,7 +592,6 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters)
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   set_obj_string(value,"name","websockets.daemon");
-  //reset_obj_refcount(value);//TODO remove these after create_class_instance
   add_garbage(state,value);
   if(node_GetItemsNum(parameters))
   {
@@ -862,8 +619,8 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters)
       struct libwebsocket_protocols *cprot = lws_prot;
       cprot->name = str_Copy(get_obj_name(proto));
       //cprot->name = get_obj_name(proto);
-      cprot->callback = callback_echo;
-      cprot->per_session_data_size = sizeof(struct per_session_data__echo);
+      cprot->callback = callback_nyx_websockets;
+      cprot->per_session_data_size = sizeof(struct per_session_data_nyx);
       lws_prot+=sizeof(struct libwebsocket_protocols);
     }
     struct libwebsocket_protocols *cprot = lws_prot;

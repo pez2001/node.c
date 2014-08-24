@@ -826,6 +826,7 @@ node *create_class_object(void)
   add_class_object_function(base,"in_keys",nyxh_in_keys);
   add_class_object_function(base,"in",nyxh_in);
   add_class_object_function(base,"sub",nyxh_substr);
+  add_class_object_function(base,"replace",nyxh_replace);
   add_class_object_function(base,"else",nyxh_else);
   add_class_object_function(base,"do",nyxh_do);
   add_class_object_function(base,"has",nyxh_has);
@@ -1303,8 +1304,9 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
           while(node_ItemIterationUnfinished(pars))
           {
             node *par = node_ItemIterate(pars);
-            node *item = node_CopyTree(par,True,True);
-            reset_obj_refcount(item);
+            //node *item = node_CopyTree(par,True,True);
+            node *item = create_proxy_object(state,par,get_obj_name(par));
+            //reset_obj_refcount(item);
             node_AddItem(items,item);
             node_SetParent(item,items);
             set_obj_int(item,"item_index",item_index);

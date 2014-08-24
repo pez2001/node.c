@@ -34,6 +34,8 @@ void file_bind(node *class);
 node *file_create_class_object(void);
 node *file_writeall(node *state,node *obj,node *block,node *parameters);
 node *file_readall(node *state,node *obj,node *block,node *parameters);
+node *file_writeallbytes(node *state,node *obj,node *block,node *parameters);
+node *file_readallbytes(node *state,node *obj,node *block,node *parameters);
 node *file_close(node *state,node *obj,node *block,node *parameters);
 node *file_open(node *state,node *obj,node *block,node *parameters);
 

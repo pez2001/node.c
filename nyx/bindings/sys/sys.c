@@ -29,6 +29,7 @@ void sys_bind(node *base_class,node *class)
   node *sys = sys_create_class_object(base_class);
   add_member(class,sys);
   inc_obj_refcount(sys);
+  srand(time(NULL));
 }
 
 void add_module(node *base_class,node *items,char *module_name)
@@ -72,6 +73,7 @@ node *sys_create_class_object(node *base_class)
   add_class_object_function(base,"change_working_directory",sys_change_working_directory);
   add_class_object_function(base,"dump",sys_dump);
   add_class_object_function(base,"time",sys_time);
+  add_class_object_function(base,"random",sys_random);
   add_class_object_function(base,"execute",sys_execute);
   add_class_object_function(base,"exit",sys_exit);
   add_class_object_function(base,"sleep",sys_sleep);
@@ -132,6 +134,41 @@ node *sys_time(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+unsigned long rand_unbiased(unsigned long max)
+{
+  unsigned long r;
+  unsigned long min;
+  if(max<2)
+    return(0);
+  min = -max % max;
+  while(1)
+  {
+    r = rand();
+    if(r>=min)
+      break;
+  }
+  return(r%max);
+}
+
+
+node *sys_random(node *state,node *obj,node *block,node *parameters)
+{
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  add_garbage(state,value);
+  unsigned long max = ULONG_MAX;
+  if(node_GetItemsNum(parameters))
+  {
+    node *nmax = node_GetItem(parameters,0);
+    node *real_max = get_value(nmax);
+    max = node_GetSint32(real_max);
+  }
+  node *real_value = get_value(value);
+  node_SetSint32(real_value,(long)rand_unbiased(max));
+  return(value);
+}
+
+
 node *sys_name(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
@@ -158,11 +195,11 @@ node *sys_execute(node *state,node *obj,node *block,node *parameters)
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value = get_value(value);
   if(node_GetItemsNum(parameters))
   {
     node *command = node_GetItem(parameters,0);
-    node *real_command = node_GetItemByKey(command,"value");
+    node *real_command = get_value(command);
     if(node_GetType(real_command)==NODE_TYPE_STRING)
     {
       char *cc = node_GetString(real_command);

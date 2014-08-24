@@ -14,7 +14,8 @@ PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
 PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll -lmicrohttpd.dll -lwebsockets.dll
 PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
-PLATFORM_DEBUG_CFLAGS = -DWIN32 -DUSE_MEMORY_DEBUGGING
+PLATFORM_DEBUG_CFLAGS = -DWIN32 
+#-DUSE_MEMORY_DEBUGGING
 else
 PLATFORM_NAME = Win32
 PLATFORM_EXT = 
@@ -36,8 +37,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 4
-BUILD = 3338
-DEBUG_BUILD = 3678
+BUILD = 3395
+DEBUG_BUILD = 3735
 
 CSTD = c99
 
@@ -77,6 +78,11 @@ TOOLS_BUILD_INC_BINS = build_inc$(PLATFORM_EXT)
 TOOLS_BUILD_INC_INCLUDE_FILES = tools/build_inc/build_inc.h
 TOOLS_BUILD_INC_OBJ = tools/build_inc/build_inc.o
 
+TOOLS_STARTER_FILES = tools/starter/starter.c strings.c
+TOOLS_STARTER_BINS = starter$(PLATFORM_EXT)
+TOOLS_STARTER_INCLUDE_FILES = tools/starter/starter.h strings.h
+TOOLS_STARTER_OBJ = tools/starter/starter.o strings.o
+
 
 print_version:
 	@echo -n "$(BUILD)"
@@ -95,7 +101,7 @@ clean_all: clean libnyx_clean clean_debug clean_binaries all debug
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 	$(SUCCESS_NOTIFY)
 
-all: node_static node_dynamic build_inc unit_tests debug libnyx nyxi
+all: node_static node_dynamic build_inc starter unit_tests debug libnyx nyxi
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 	$(SUCCESS_NOTIFY)
@@ -129,6 +135,9 @@ nyxi_debug: node_static_debug libnyx $(NYXI_DEBUG_OBJ)
 
 build_inc: $(TOOLS_BUILD_INC_OBJ) 
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
+
+starter: $(TOOLS_STARTER_OBJ) 
+	$(CC) $(TOOLS_STARTER_OBJ) -o starter
 
 
 node_static: $(NODE_OBJ)

@@ -138,7 +138,8 @@ unsigned long node_CopyValue(node *n)
          break;
     case NODE_TYPE_BINARY:
          {
-           node_binary *tmp = node_CreateBinary(((node_binary*)(unsigned long)n->value)->value,((node_binary*)(unsigned long)n->value)->len);
+            //node_binary *tmp = node_CreateBinary(((node_binary*)(unsigned long)n->value)->value,((node_binary*)(unsigned long)n->value)->len);
+            node_binary *tmp = node_CopyBinary(((node_binary*)(unsigned long)n->value)->value,((node_binary*)(unsigned long)n->value)->len);
             r = (unsigned long long)(unsigned long)tmp;
          }
          break;
@@ -1365,6 +1366,15 @@ node_binary *node_CreateBinary(void *binary,unsigned long len)
 {
   node_binary *r = (node_binary*)malloc(sizeof(node_binary));
   r->value = binary;
+  r->len = len;
+  return(r);
+}
+
+node_binary *node_CopyBinary(void *binary,unsigned long len)
+{
+  node_binary *r = (node_binary*)malloc(sizeof(node_binary));
+  r->value = malloc(len);
+  memcpy(r->value,binary,len);
   r->len = len;
   return(r);
 }
