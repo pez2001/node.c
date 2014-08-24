@@ -154,6 +154,24 @@ int option_copy_file = 0;
 int option_execute_file = 0;
 int option_check_tag = 0;
 
+int create_output(FILE *in,unsigned long len,char *output_filename)
+{
+  FILE *out = fopen(output_filename,"wb+");
+  copy_itself_to_file(in,exe_len,out);
+  tag t;
+  t.magic=123456;
+  t.num_entries = 1;
+  entry e;
+  char *exe = "url";
+  char *args = "\"http://www.works.org/\"";
+  e.exe_string_len = strlen(exe)+1;
+  e.args_string_len = strlen(args)+1;
+  write_data(exe,strlen(exe)+1,len,out);
+  write_data(args,strlen(args)+1,len+strlen(exe)+1,out);
+  write_data(&e,sizeof(entry),len+strlen(exe)+1+strlen(args)+1,out);
+  write_data(&t,sizeof(tag),len+strlen(exe)+1+strlen(args)+1+sizeof(entry),out);
+  fclose(out);
+}
 
 int check_options(int argc, char **argv)
 {
@@ -210,7 +228,7 @@ int check_tagged_options(int argc, char **argv)
 {
   int c = 0;
   int ret = 0;
-  while ((c = getopt (argc, argv, "trdxoc:hp")) != -1)
+  while ((c = getopt (argc, argv, "trdxmoc:hp")) != -1)
   {
     switch (c)
     {
@@ -286,25 +304,12 @@ int main(int argc, char** argv)
     {
       printf("no starter tag found\n");
     }
+    create_output(in,exe_len,option_temp_output_filename);
 
   }
 
   fclose(in);
 /*
-  FILE *out = fopen(output_filename,"wb+");
-  copy_itself_to_file(in,exe_len,out);
-  tag t;
-  t.magic=123456;
-  t.num_entries = 1;
-  entry e;
-  char *exe = "url";
-  char *args = "\"http://www.works.org/\"";
-  e.exe_string_len = strlen(exe)+1;
-  e.args_string_len = strlen(args)+1;
-  write_data(exe,strlen(exe)+1,len,out);
-  write_data(args,strlen(args)+1,len+strlen(exe)+1,out);
-  write_data(&e,sizeof(entry),len+strlen(exe)+1+strlen(args)+1,out);
-  write_data(&t,sizeof(tag),len+strlen(exe)+1+strlen(args)+1+sizeof(entry),out);
 
 fseek(in,len-sizeof(tag),SEEK_SET);
 tag ti;
