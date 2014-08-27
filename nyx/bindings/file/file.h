@@ -30,8 +30,11 @@
 
 #include <stdio.h>
 
-void file_bind(node *class);
-node *file_create_class_object(void);
+void file_binding_open(node *state);
+void file_binding_close(node *state);
+
+node *file_bind(node *base_class,node *class);
+node *file_create_class_object(node *base_class);
 node *file_writeall(node *state,node *obj,node *block,node *parameters);
 node *file_readall(node *state,node *obj,node *block,node *parameters);
 node *file_writeallbytes(node *state,node *obj,node *block,node *parameters);

@@ -25,11 +25,29 @@
 
 #ifdef USE_MICROHTTPD
 
-void microhttpd_bind(node *class)
+void microhttpd_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *microhttpd = microhttpd_bind(modules);
+  node *proxy = create_proxy_object(state,microhttpd,"microhttpd");
+  inc_obj_refcount(microhttpd);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void microhttpd_binding_close(node *state)
+{
+
+}
+
+node *microhttpd_bind(node *class)
 {
   node *httpd = microhttpd_create_class_object();
   add_member(class,httpd);
   inc_obj_refcount(httpd);
+  return(httpd);
 }
 
 node *microhttpd_create_class_object(void)

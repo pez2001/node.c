@@ -103,10 +103,17 @@ unsigned long node_CopyValue(node *n)
   unsigned long long r = 0;
   switch(n->type)
   {
-    case NODE_TYPE_NULL:
-    case NODE_TYPE_INT:
     case NODE_TYPE_FLOAT:
     case NODE_TYPE_DOUBLE:
+    //double *dp = (double*)&(n->value);
+    //*dp = d;
+    printf("copying double:%f\n",node_GetDouble(n));
+    double *d = (double*)&r;
+    *d = node_GetDouble(n);
+    printf("copying double2:%f\n",*d);
+    break;
+    case NODE_TYPE_NULL:
+    case NODE_TYPE_INT:
     case NODE_TYPE_UINT8:
     case NODE_TYPE_SINT8:
     case NODE_TYPE_BOOL:
@@ -353,7 +360,7 @@ int node_count_digits(char *number_string)
 
     i++;
   }
-  if(num_e>1 || middle_signs>1 || (middle_signs>0 && num_e == 0))
+  if(num_e>1 || middle_signs>1 || (middle_signs==1 && num_e==0) || (middle_signs>0 && num_e == 0))
     return(0);
   int lead_worth = 1;
   if(len==1)
@@ -377,12 +384,15 @@ void node_ParseNumber(node *n,char *number_string)
 {
   if(!node_count_digits(number_string))
   {
+    //printf("number parse found string:%s\n",number_string);
     node_SetString(n,number_string);
     return;
   }
   if(node_NumberIsFloat(number_string))
   {
+    //printf("number parse found float:[%s]\n",number_string);
     double d = atof(number_string);
+    //printf("float:%f\n",(float)d);
     node_SetDouble(n,d);
   }
   else
@@ -718,17 +728,49 @@ void node_SetParent(node *n,node *p)
 
 node *node_Copy(node *n,BOOL copy_value)
 {
-  unsigned long long v = node_CopyValue(n); 
-  list *l = list_Copy(n->items);
-  node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+  node *r=NULL;
+  if(n->type == NODE_TYPE_DOUBLE)
+  {
+    list *l = list_Create(0,0);
+    r = node_CreateFilled(n->parent,n->key,0,n->type,l);
+    node_SetDouble(r,node_GetDouble(n));
+  }
+  else if(n->type == NODE_TYPE_FLOAT)
+  {
+    list *l = list_Create(0,0);
+    r = node_CreateFilled(n->parent,n->key,0,n->type,l);
+    node_SetFloat(r,node_GetFloat(n));
+  }
+  else
+  {
+    unsigned long long v = node_CopyValue(n); 
+    list *l = list_Copy(n->items);
+    r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+  }
   return(r);
 }
 
 node *node_CopySub(node *n,BOOL copy_value)
 {
-  unsigned long long v = node_CopyValue(n); 
-  list *l = list_Create(0,0);
-  node *r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+  node *r=NULL;
+  if(n->type == NODE_TYPE_DOUBLE)
+  {
+    list *l = list_Create(0,0);
+    r = node_CreateFilled(n->parent,n->key,0,n->type,l);
+    node_SetDouble(r,node_GetDouble(n));
+  }
+  else if(n->type == NODE_TYPE_FLOAT)
+  {
+    list *l = list_Create(0,0);
+    r = node_CreateFilled(n->parent,n->key,0,n->type,l);
+    node_SetFloat(r,node_GetFloat(n));
+  }
+  else
+  {
+    unsigned long long v = node_CopyValue(n); 
+    list *l = list_Create(0,0);
+    r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+  }
   return(r);
 }
 

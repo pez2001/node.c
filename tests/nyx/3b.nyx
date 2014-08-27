@@ -19,6 +19,7 @@ println("answer:",c);
 /*println("body:",http.parse_answer(c)["body"]);*/
 j=http.parse_answer(c)["body"].from_json();
 println("bootloader[0].file:",j.bootloader[0].file);
+println("bootloader[0].file:",j.tags_list.test);
 };
 
 

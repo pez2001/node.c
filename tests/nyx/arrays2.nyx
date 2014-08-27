@@ -1,0 +1,3 @@
+array["Hello"] = "World";
+println("array:"+array);
+println("array0:"+array[0]);

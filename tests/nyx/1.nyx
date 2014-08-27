@@ -17,7 +17,7 @@ words = s.split(" \n");
 
 a=[1];
 a[0]=10;
-/*a[1]=12;*/
+
 println("array:",a[0]);
 
 a=file.open("tests/output.json","rb").readall().close().from_json();

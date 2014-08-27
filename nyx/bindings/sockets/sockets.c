@@ -24,11 +24,35 @@
 
 #ifdef USE_SOCKETS
 
-void sockets_bind(node *class)
+void sockets_binding_open(node *state)
+{
+  #ifdef WIN32
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2),&wsaData);
+  #endif
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *sockets = sockets_bind(modules);
+  node *proxy = create_proxy_object(state,sockets,"socket");
+  inc_obj_refcount(sockets);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void sockets_binding_close(node *state)
+{
+  #ifdef WIN32
+    WSACleanup();
+  #endif
+}
+
+node *sockets_bind(node *class)
 {
   node *sockets = sockets_create_class_object();
   add_member(class,sockets);
   inc_obj_refcount(sockets);
+  return(sockets);
 }
 
 node *sockets_create_class_object(void)

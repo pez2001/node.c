@@ -1,0 +1,29 @@
+ta=["hallo","test","welt"];
+echo_call=
+{
+	skip=0;
+	(!skip).do(
+	{
+		myid=arguments["session"];
+		/*myid=arguments["session"].id;*/
+		println("myid:"+myid);
+		ta.each(
+		{
+			sendid:=arguments[0];
+			println("si:"+sendid+"myid:"+myid);
+			(sendid!=myid).do({
+				println("sending message:"+message+" to:"+sendid);
+			});
+		});
+	});
+	ret="";
+};
+
+
+
+println("servicing");
+running=1;
+?({running},{echo_call(session="test")},{},1);
+println("stopped");
+
+

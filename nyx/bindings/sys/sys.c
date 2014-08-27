@@ -24,12 +24,31 @@
 
 #ifdef USE_SYS
 
-void sys_bind(node *base_class,node *class)
+void sys_binding_open(node *state)
+{
+  srand(time(NULL));
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *sys = sys_bind(base_class,modules);
+  node *proxy = create_proxy_object(state,sys,"sys");
+  inc_obj_refcount(sys);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void sys_binding_close(node *state)
+{
+
+}
+
+
+node *sys_bind(node *base_class,node *class)
 {
   node *sys = sys_create_class_object(base_class);
-  add_member(class,sys);
+  add_member(class,sys);//TODO performance killer use a proxy to a static
   inc_obj_refcount(sys);
-  srand(time(NULL));
+  return(sys);
 }
 
 void add_module(node *base_class,node *items,char *module_name)

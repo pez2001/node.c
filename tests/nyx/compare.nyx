@@ -1,0 +1,8 @@
+println("a!=i: ","test"==0);
+println("a==i: ","19"==19);
+println("i==a: ",19=="19");
+println("i!=a: ",0=="19");
+
+println("u!=a: ",unknown=="19");
+println("u!=a: ",unknown=="test");
+println("a!=u: ","test"==unknown);

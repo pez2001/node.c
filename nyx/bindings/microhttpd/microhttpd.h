@@ -32,7 +32,10 @@
 //#include <platform.h>
 #include <microhttpd.h>
 
-void microhttpd_bind(node *class);
+void microhttpd_binding_open(node *state);
+void microhttpd_binding_close(node *state);
+
+node *microhttpd_bind(node *class);
 node *microhttpd_create_class_object(void);
 node *microhttpd_start(node *state,node *obj,node *block,node *parameters);
 node *microhttpd_stop(node *state,node *obj,node *block,node *parameters);

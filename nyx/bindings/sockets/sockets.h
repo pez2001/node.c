@@ -40,7 +40,10 @@
 
 #include <stdio.h>
 
-void sockets_bind(node *class);
+void sockets_binding_open(node *state);
+void sockets_binding_close(node *state);
+
+node *sockets_bind(node *class);
 node *sockets_create_class_object(void);
 node *sockets_open(node *state,node *obj,node *block,node *parameters);
 //node *sockets_bind(node *state,node *obj,node *block,node *parameters);

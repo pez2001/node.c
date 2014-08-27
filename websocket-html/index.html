@@ -16,7 +16,13 @@
    	#fs_window 
    	{
    		min-height: 100%; 
-   	}
+		background: url("http://img.inspiringwallpapers.net/wp-content/uploads/2013/06/HD-wallpapers-beautiful-pictures-21761366-1920-12001.jpg") no-repeat center center fixed;
+		background-size: 100%;
+		-webkit-background-size: cover; /* For WebKit*/
+    	-moz-background-size: cover;    /* Mozilla*/
+    	-o-background-size: cover;      /* Opera*/
+    	background-size: cover;         /* Generic*/   	
+	}
    	#fs_chat
    	{
    		background-color: transparent;
@@ -31,7 +37,6 @@
     	height: -webkit-calc(100% - 24px);
     	height: calc(100% - 24px);
 		background-size: 100%;
-		background-image: url("http://img.inspiringwallpapers.net/wp-content/uploads/2013/06/HD-wallpapers-beautiful-pictures-21761366-1920-12001.jpg");
   		color: #FEF4FF;
   		text-shadow: 3px 3px 3px #030303;
 
@@ -139,7 +144,7 @@ function connect()
 	connection.onopen = function () 
 	{
 		add_message("Connected to server.");
-		connection.send("{$$ROOM$$}");
+		//connection.send("{$$ROOM$$}");
 		connection.send("Hi there...");
 	};
 	connection.onerror = function(error) 
@@ -170,12 +175,35 @@ function reconnect()
 	connect();
 }
 
+function verify_send(message)
+{
+	if(connection.readyState==2 || connection.readyState==3)
+	{
+		add_message("Connection Closed.")
+		add_message("Trying to reconnect in 10 seconds")
+ 		setTimeout(function() { reconnect(); }, 10000);	
+	}
+	else
+		connection.send(message);
+}
 
 function add_message(message)
 {
-	document.getElementById("fs_chat").innerHTML = document.getElementById("fs_chat").innerHTML+"\n"+message;
-	var textarea = document.getElementById("fs_chat");
-	textarea.scrollTop = textarea.scrollHeight;
+	if(message.indexOf("bg_url:") != -1)
+	{
+		var url = message.substring(message.indexOf("bg_url:")+7);
+		var bg_div = document.getElementById("fs_window");
+	    bg_div.style.backgroundImage = "";
+	    bg_div.style.backgroundImage = "url(" + url + ")";
+		/*document.getElementById("fs_chat").style.visibility = "hidden"; 
+	    alert("set bg:"+url);*/
+	}
+	else
+	{
+		document.getElementById("fs_chat").innerHTML = document.getElementById("fs_chat").innerHTML+"\n"+message;
+		var textarea = document.getElementById("fs_chat");
+		textarea.scrollTop = textarea.scrollHeight;
+	}
 
 
 }
@@ -184,18 +212,14 @@ function add_message(message)
 function send_message()
 {
 	var message = document.getElementById("chat_text").value;
-
+	verify_send(message);
 	if(message.indexOf("bg_url:") === 0)
 	{
-		var url = message.substring(7);
-		var bg_div = document.getElementById("fs_window");
-	    bg_div.style.backgroundImage = "url(" + url + ")";
-		/*document.getElementById("fs_chat").style.visibility = "hidden"; 
-	    alert("set bg:"+url);*/
+		add_message("You:"+message);
+		add_message("You changed the background image of all");
 	}
-
-	connection.send(message);
-	add_message("You: "+message);
+	else
+		add_message("You: "+message);
 	document.getElementById("chat_text").value="";
 
 	

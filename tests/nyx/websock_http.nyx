@@ -5,28 +5,58 @@ copco.data = copco.file.readallbytes();
 fav.file = file.open("websocket-html/logo_draft.ico","rb"); 
 fav.data = fav.file.readallbytes();
 
+rooms=[];
+
+lobby_name="lobby";
+println("creating room: "+lobby_name);
+rooms[lobby_name].users_num = 0;
+rooms[lobby_name].created = sys.time;
+rooms[lobby_name].password="";
+rooms[lobby_name].bg_url="";
+rooms[lobby_name].users = [];
+
+
 
 http_call={
 	println("serving request:",arguments["protocol"]);
 	/*msg="Hallo Welt!:"+arguments["protocol"];*/
 	url = arguments["url"];
 	println("serving url:["+url+"]");
-	msg="";
+	msg=index.html;
 	type="text/html";
-	(url=="/").do({msg = index.html.replace("{$$ROOM$$}","room:default");});
+	/*(url=="/").do({msg = index.html.replace("{$$ROOM$$}","room:default");});*/
 	/*(url=="/").do({msg = index.html;});*/
 	(url=="/status").do({msg = "actual chat server status";daemon.broadcast("echo","someone is watching the status");});
 	(url=="/stop").do({msg = "stopping server";running=0;});
 	(url=="/copco").do({msg = copco.data;type="image/png";});
 	(url=="/favicon.ico").do({msg = fav.data;type="image/ico";});
 
-	room="";
+	room="lobby";
+	cookie_room="room=lobby";
+	cookie_name="";
 	url.index_of("/room/").else(
 	{
 		room = url.sub(url.index_of("/room/")+"/room/".len());
 		end = room.index_of("/");
 		(end!=-1).do({room = room.sub(0,end);});
-	  	msg = index.html.replace("{$$ROOM$$}","room:"+room);
+	  	/*msg = index.html.replace("{$$ROOM$$}","room:"+room);*/
+	  	(!room.in(rooms)).do({
+	  		println("creating room in http:"+room);
+	  		rooms[room].created = sys.time;
+	  		rooms[room].users_num=0;
+	  		rooms[room].users=[];
+	  		rooms[room].password="";
+	  		rooms[room].bg_url="";
+	  	});
+	  	cookie_room = "room="+room;
+	});
+
+	(url.index_of("/name/")!=-1).do(
+	{
+		name = url.sub(url.index_of("/name/")+"/name/".len());
+		end = name.index_of("/");
+		(end!=-1).do({name = name.sub(0,end);});
+	  	cookie_name = "name="+name;
 	});
 
 	(url.index_of("/admin/")!=-1).do(
@@ -42,27 +72,126 @@ http_call={
 	header = "HTTP/1.0 200 OK\r\n" +
         "Server: nyx_chat_example\r\n" +
         "Content-Type: "+type+"\r\n" + 
-        "Content-Length: " + len(msg) + "\r\n\r\n";
+        "Content-Length: " + len(msg) + "\r\n";
+    (cookie_room!="").do({header = header+"Set-Cookie: "+cookie_room+";path=/; Max-Age=360000\r\n";});
+    (cookie_name!="").do({header = header+"Set-Cookie: "+cookie_name+";path=/; Max-Age=360000\r\n";});
+    header = header + "\r\n\r\n";
 	ret = header + msg;
 };
 
 echo_call=
 {
-	println("serving request:[",arguments["message"],"] : ",arguments["protocol"]);
-	chat_name = arguments["session"].id;
+	println("serving request:["+arguments["message"]+"] : "+arguments["protocol"]+" : "+arguments["session"].id+" cookies: "+arguments["session"].cookie);
+	(arguments["session"].has("uname")==0).do({arguments["session"].uname = arguments["session"].id.str()});
+	(arguments["session"].has("room_name")==0).do({
+		arguments["session"].room_name = "lobby";
+		rooms["lobby"].users_num = rooms["lobby"].users_num + 1;
+		println("users lobby len:"+rooms["lobby"].users.len());
+		rooms["lobby"].users.append_item(arguments["session"].id);
+	});
+	/*uname:=arguments["session"].id.str();arguments["session"].uname = uname;*/
 	room="";
+	skip=0;
 	(arguments["message"].index_of("room:")==0).do(
 	{
 		room = arguments["message"].sub("room:".len());
+		(room=="").do({room="lobby"});
+		arguments["session"].room := room;
+		(arguments["session"].has("room_name")).do({
+			rooms[arguments["session"].room_name].users_num = rooms[arguments["session"].room_name].users_num - 1;
+			rooms[arguments["session"].room_name].users.remove(arguments["session"].id);
+		});
+		(!(room.in_keys(rooms))).do({
+			println("creating room:"+room);
+			rooms[room].users_num = 0;
+			rooms[room].created = sys.time;
+	  		rooms[room].password="";
+	  		rooms[room].bg_url="";
+			rooms[room].users = [];
+		});
+		(room.in_keys(rooms)).do({
+			println("users:"+rooms[room].users_num);
+			rooms[room].users_num = rooms[room].users_num + 1;
+			println("users len:"+rooms[room].users.len());
+			/*rooms[room].users[arguments["session"].id] = arguments["session"];*/
+			rooms[room].users.append_item(arguments["session"].id);
+			arguments["session"].room_name:=room;
+		});
+		
+		skip=1;
 	});
 	(arguments["message"].index_of("name:")==0).do(
 	{
 		chat_name = arguments["message"].sub("name:".len());
-		/*arguments["session"].name = chat_name;*/
+		arguments["session"].uname = chat_name;/*if a simple assign is used here it would resetted with each new echo_call run*/
+		skip=1;
 	});
 
-	/*arguments["session"].has("name").do({chat_name=arguments["session"].name});*/
-	daemon.broadcast_other(arguments["protocol"],chat_name+ " : "+arguments["message"],arguments["session"].id);
+	(arguments["message"].index_of("/last")==0).do(
+	{
+		arguments["session"].has("dice").do({
+		daemon.send(arguments["protocol"],"your last roll was: "+arguments["session"].dice,arguments["session"].id);
+		});
+		skip=1;
+	});
+
+	arguments["session"].has("room").do({println("new room:"+arguments["session"].room);room=arguments["session"].room});
+
+	(arguments["message"].index_of("/roll")==0).do(
+	{
+		println("number of sessions:"+arguments["daemon.sessions"].len());
+		di=0;
+		high=0;
+		winner=-1;
+		?({di<arguments["daemon.sessions"].len()},
+		{
+			session = arguments["daemon.sessions"][di];
+			println("room== : "+ (session.room_name==arguments["session"].room_name));
+			println("session room : "+session.room_name);
+			println("arguments room : "+ arguments["session"].room_name);
+
+			((session.protocol==arguments["protocol"]) && (session.room_name==arguments["session"].room_name)).do({
+				session.dice := sys.random(6)+1;
+				(session.dice>high).do({high=session.dice;winner=session;});
+				daemon.send(arguments["protocol"],"you rolled: "+session.dice,session.id);
+				/*daemon.broadcast_other(arguments["protocol"],session.uname+" rolled: "+session.dice,session.id);*/
+				myid=session.id;
+				prot=arguments["protocol"];
+				rooms[arguments["session"].room_name].users.each({sendid=arguments[0];(sendid!=myid).do({daemon.send(prot,session.uname+" rolled: "+session.dice,sendid)})});
+
+			});
+			di=di+1;
+		},{},1);
+
+		daemon.send(arguments["protocol"],"you won with:"+high,winner.id);
+		prot=arguments["protocol"];
+		println("notifying loosers");
+		rooms[arguments["session"].room_name].users.each({sendid=arguments[0];(sendid!=winner.id).do({println("tx lost: "+sendid);daemon.send(prot,"you lost.",sendid)})});
+		println("done with that");
+
+		/*dice = sys.random(6)+1;
+		daemon.send(arguments["protocol"],"you rolled: "+dice,arguments["session"].id);
+		daemon.broadcast_other(arguments["protocol"],chat_name+" rolled: "+dice,arguments["session"].id);*/
+		skip=1;
+	});
+
+
+	(!skip).do(
+	{
+		println("sending message to room users:"+arguments["session"].room_def._name_);
+		message=arguments["session"].uname+" ("+room+") : "+arguments["message"];
+		prot=arguments["protocol"];
+		myid=arguments["session"].id;
+		rooms[arguments["session"].room_name].users.each(
+		{
+			sendid=arguments[0];
+			(sendid!=myid).do({
+				println("sending message:"+message+" to:"+sendid);
+				daemon.send(prot,message,sendid);
+			});
+		});
+		/*daemon.broadcast_other(arguments["protocol"],arguments["session"].uname+" ("+room+") : "+arguments["message"],arguments["session"].id);*/
+	});
 	ret="";
 };
 
@@ -81,7 +210,7 @@ daemon=websockets.start(8080,["http-only":http_call,"echo":echo_call]);
 timeout=10;
 println("servicing");
 running=1;
-sys.execute("start http:/localhost:8080/");
+/*sys.execute("start http:/192.168.0.2:8080/");*/
 ?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
 
 

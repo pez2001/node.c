@@ -23,12 +23,29 @@
 #include "http.h"
 
 #ifdef USE_HTTP
+void http_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *http = http_bind(modules);
+  node *proxy = create_proxy_object(state,http,"http");
+  inc_obj_refcount(http);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
 
-void http_bind(node *class)
+void http_binding_close(node *state)
+{
+
+}
+
+node *http_bind(node *class)
 {
   node *http = http_create_class_object();
   add_member(class,http);
   inc_obj_refcount(http);
+  return(http);
 }
 
 node *http_create_class_object(void)

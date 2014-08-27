@@ -1,0 +1,13 @@
+ta=["hallo","welt","neu","weiter","crash"];
+i=0;
+?({i<len(ta)},
+{
+it = ta[i];
+println("ta:"+it);
+i++;
+},{},1);
+
+
+
+
+

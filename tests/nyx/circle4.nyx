@@ -1,0 +1,11 @@
+ta=["hallo","test","welt"];
+ta.each(
+{
+	sendid=arguments[0];
+	println("si: "+sendid);
+});
+
+
+
+
+

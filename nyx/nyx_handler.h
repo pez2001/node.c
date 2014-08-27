@@ -90,6 +90,10 @@ node *nyxh_replace(node *state,node *obj,node *block,node *parameters);
 
 node *nyxh_else(node *state,node *obj,node *block,node *parameters);
 node *nyxh_do(node *state,node *obj,node *block,node *parameters);
+node *nyxh_each(node *state,node *obj,node *block,node *parameters);
+node *nyxh_remove(node *state,node *obj,node *block,node *parameters);
+node *nyxh_slice(node *state,node *obj,node *block,node *parameters);
+//node *nyxh_remove_by_key(node *state,node *obj,node *block,node *parameters);
 node *nyxh_args(node *state,node *obj,node *block,node *parameters);
 
 
@@ -120,6 +124,7 @@ node *nyxh_return(node *state,node *obj,node *block,node *parameters);
 
 node *nyxh_name(node *state,node *obj,node *block,node *parameters);
 
+node *nyxh_append_item(node *state,node *obj,node *block,node *parameters);
 node *nyxh_item_at(node *state,node *obj,node *block,node *parameters);
 node *nyxh_in(node *state,node *obj,node *block,node *parameters);
 node *nyxh_in_keys(node *state,node *obj,node *block,node *parameters);

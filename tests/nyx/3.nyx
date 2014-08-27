@@ -1,9 +1,9 @@
 read_players()=
 {
 sock=socket.open(socket.SOCK_STREAM);
-sock.connect("api.steampowered.com",80).else({println("restarting reading");restart(2)});
+sock.connect("api.steampowered.com",80).else({restart(2)});
 sock.write("GET /ISteamUserStats/GetNumberOfCurrentPlayers/v1/?appid=570&format=json HTTP/1.1\r\nHost: api.steampowered.com\r\nUser-Agent: Mozilla/4.0\r\nAccept: */*\r\nConnection: close\r\n\r\n");
-timeouts=1000;
+timeouts=100;
 ??({r:=(c=sock.read())},{(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0)},{sock.close()},1);
 j=http.parse_answer(c)["body"].from_json();
 chars = ["|","\\","-","/"];

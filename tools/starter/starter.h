@@ -3,11 +3,13 @@
 #endif
 #include <stdio.h>
 #include <stdlib.h>
-#include "math.h"
-#include "string.h"
-#include "unistd.h"
-#include "getopt.h"
-#include "signal.h"
+#include <math.h>
+#include <string.h>
+#include <unistd.h>
+#include <getopt.h>
+#include <signal.h>
+#include <process.h> 
+
 #include "strings.h"
 
 
@@ -25,7 +27,7 @@ typedef struct _entry
   unsigned long command_len;
   unsigned long payload_len;
   unsigned long second_payload_len;
-  unsigned long flags;
+  //unsigned long flags;
 } entry;
 
 
@@ -33,6 +35,7 @@ typedef struct _tag
 {
   int magic;
   int num_entries;
+  int get_options;
 } tag;
 
 

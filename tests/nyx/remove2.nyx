@@ -1,0 +1,24 @@
+array=["Hello","World"];
+println("array:",array);
+array.remove(0);
+println("array:",array);
+array.remove(1);
+println("array:",array);
+array=["1st":"Hello","2nd":"World"];
+println("array:",array);
+array.remove("2nd");
+println("array:",array);
+array.remove("1st");
+println("array:",array);
+
+b=[12,20];
+println("b:",b);
+b[200] = 666;
+println("b:",b);
+b[180] = 5;
+b[220] = 5;
+println("b:",b);
+println("b:",b[220]);
+b.remove(200);
+println("b:",b);
+

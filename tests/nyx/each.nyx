@@ -1,0 +1,14 @@
+array=["Hello","World"];
+array.each({println("each:"+arguments[0]);});
+array.remove(0);
+array.each({println("each after remove:"+arguments[0]);});
+array.remove(1);
+array.each({println("each after remove2:"+arguments[0]);});
+
+array=["1st":"Hello","2nd":"World"];
+array.each({println("each name:"+arguments[0]._name_);});
+array.remove("2nd");
+array.each({println("each after remove 2nd:"+arguments[0]);});
+array.remove("1st");
+array.each({println("each after remove 1st:"+arguments[0]);});
+

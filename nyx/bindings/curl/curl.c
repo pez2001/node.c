@@ -24,11 +24,30 @@
 
 #ifdef USE_CURL
 
-void curl_bind(node *class)
+void curl_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *curl = curl_bind(modules);
+  node *proxy = create_proxy_object(state,curl,"curl");
+  inc_obj_refcount(curl);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void curl_binding_close(node *state)
+{
+
+}
+
+
+node *curl_bind(node *class)
 {
   node *curl = curl_create_class_object();
   add_member(class,curl);
   inc_obj_refcount(curl);
+  return(curl);
 }
 
 node *curl_create_class_object(void)
@@ -44,11 +63,10 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   node *state = node_GetItem((node*)stream,0);
   node *read_block = node_GetItem((node*)stream,1);
   node *block = node_GetItem((node*)stream,2);
-
-  node *base_class = node_GetItemByKey(state,"nyx_object");
+  node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value = get_value(value);
   char *ret = (char*)malloc((size*nmemb)+1);
   memset(ret+(size*nmemb) + 0, 0, 1);
   memcpy(ret,ptr,(size*nmemb));

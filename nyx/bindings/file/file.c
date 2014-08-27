@@ -24,21 +24,41 @@
 
 #ifdef USE_HTTP
 
-void file_bind(node *class)
+void file_binding_open(node *state)
 {
-  node *file = file_create_class_object();
-  add_member(class,file);
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *file = file_bind(base_class,modules);
+  node *proxy = create_proxy_object(state,file,"file");
   inc_obj_refcount(file);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
 }
 
-node *file_create_class_object(void)
+void file_binding_close(node *state)
 {
-  node *base = create_base_obj_layout("file");
-  add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"readall",file_readall);
-  add_class_object_function(base,"writeall",file_writeall);
+
+}
+
+node *file_bind(node *base_class,node *class)
+{
+  node *file = file_create_class_object(base_class);
+  add_member(class,file);
+  inc_obj_refcount(file);
+  return(file);
+}
+
+node *file_create_class_object(node *base_class)
+{
+  //node *base = create_base_obj_layout("file");
+  node *base = create_class_instance(base_class);
+  set_obj_string(base,"name","file");
+  //add_class_object_function(base,"=",nyxh_assign);
   add_class_object_function(base,"readallbytes",file_readallbytes);
   add_class_object_function(base,"writeallbytes",file_writeallbytes);
+  add_class_object_function(base,"readall",file_readall);
+  add_class_object_function(base,"writeall",file_writeall);
   add_class_object_function(base,"open",file_open);
   add_class_object_function(base,"close",file_close);
   return(base);
@@ -49,14 +69,15 @@ node *file_open(node *state,node *obj,node *block,node *parameters)
   //returns io stream object
   node *filename = NULL;
   node *mode = NULL;
-  node *value = file_create_class_object();
+  node *base_class = get_base_class(state);
+  node *value = file_create_class_object(base_class);
   add_garbage(state,value);
   if(node_GetItemsNum(parameters))
   {
     filename = node_GetItem(parameters,0);
     mode = node_GetItem(parameters,1);
-    node *real_filename = node_GetItemByKey(filename,"value");
-    node *real_mode = node_GetItemByKey(mode,"value");
+    node *real_filename = get_value(filename);
+    node *real_mode = get_value(mode);
     if(node_GetType(real_filename)==NODE_TYPE_STRING)
     {
       node *privates = node_GetItemByKey(value,"privates");
@@ -81,15 +102,16 @@ node *file_close(node *state,node *obj,node *block,node *parameters)
   {
     FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
     int ret = fclose(fhandle);
-    if(ret)
-      value = get_true_class(state);
+    //if(ret)
+      return(obj);
+      //value = get_true_class(state);
     //node_SetNull(handle);
   }
-  if(strcmp(get_obj_name(obj),"file"))
+  /*if(strcmp(get_obj_name(obj),"file"))
   {
     //printf("chained return\n");
     return(obj);
-  }
+  }*/
   //printf("unchained return\n");
   return(value);
 }
@@ -152,9 +174,9 @@ node *file_readall(node *state,node *obj,node *block,node *parameters)
   //returns string with all file content
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
-  reset_obj_refcount(value);
+  //reset_obj_refcount(value);
   add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value = get_value(value);
   node *privates = node_GetItemByKey(obj,"privates");
   node *handle = node_GetItemByKey(privates,"file_handle");
   if(handle!=NULL)
@@ -165,7 +187,7 @@ node *file_readall(node *state,node *obj,node *block,node *parameters)
     long len = ftell(fhandle);
     fseek(fhandle,0,SEEK_SET);
     ret = (char*)malloc(len+1);
-    memset(ret+len + 0, 0, 1);
+    memset(ret+len,0,1);
     fread(ret,len,1,fhandle);
     node_SetString(real_value,ret);
     node *value_privates = node_GetItemByKey(value,"privates");

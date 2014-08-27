@@ -35,8 +35,10 @@
 #include <libwebsockets.h>
 #include <private-libwebsockets.h>
 
+void websockets_binding_open(node *state);
+void websockets_binding_close(node *state);
 
-void websockets_bind(node *class);
+node *websockets_bind(node *class);
 node *websockets_create_class_object(void);
 node *websockets_start(node *state,node *obj,node *block,node *parameters);
 node *websockets_stop(node *state,node *obj,node *block,node *parameters);

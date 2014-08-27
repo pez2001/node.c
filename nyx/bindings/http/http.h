@@ -30,7 +30,10 @@
 
 #include <stdio.h>
 
-void http_bind(node *class);
+void http_binding_open(node *state);
+void http_binding_close(node *state);
+
+node *http_bind(node *class);
 node *http_create_class_object(void);
 node *http_create_request(node *state,node *obj,node *block,node *parameters);
 node *http_parse_answer(node *state,node *obj,node *block,node *parameters);

@@ -1,0 +1,9 @@
+array = [];
+array["Hello"] = "World";
+array.append_item("key":"World2");
+println("array:"+array);
+println("array[0]:"+array[0]);
+println("array at 0:"+array.item_at(0));
+println("array at 1:"+array.item_at(1));
+println("array[\"key\"]:"+array["key"]);
+println("array[\"Hello\"]:"+array["Hello"]);

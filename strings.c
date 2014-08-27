@@ -39,14 +39,18 @@ char *str_FromLong(long i)
 char *str_FromDouble(double d)
 {
   char *ret=NULL;
-  long len = snprintf(NULL,0,"%13g",d);
+  //long len = snprintf(NULL,0,"%13g",d);
+  //printf("converting double:%f\n",d);
+  long len = snprintf(NULL,0,"%f",d);
   if(len)
   {
     ret = (char*)malloc(len+1);
-    snprintf(ret,len+1,"%13g",d);
+    //snprintf(ret,len+1,"%13g",d);
+    snprintf(ret,len+1,"%f",d);
   }
   else
     ret=str_CreateEmpty();
+  //printf("converted double to:[%s]\n",ret);
   return(ret);
 } 
 

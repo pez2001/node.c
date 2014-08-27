@@ -118,10 +118,6 @@ int main(int argc, char** argv)
   #ifdef USE_MEMORY_DEBUGGING
   mem_Init();
   #endif
-  #ifdef WIN32
-  WSADATA wsaData;
-  WSAStartup(MAKEWORD(2, 2), &wsaData);
-  #endif
 
 
   int c = 0;
@@ -303,9 +299,6 @@ int main(int argc, char** argv)
     }
   }
   close_nyx(state);
-  #ifdef WIN32 //TODO move to close_bindings -> sockets_close
-  WSACleanup();
-  #endif
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
   #endif

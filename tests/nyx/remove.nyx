@@ -1,0 +1,13 @@
+array=["Hello","World"];
+println("array:",array);
+array.remove(0);
+println("array:",array);
+array.remove(1);
+println("array:",array);
+array=["1st":"Hello","2nd":"World"];
+println("array:",array);
+array.remove("2nd");
+println("array:",array);
+array.remove("1st");
+println("array:",array);
+

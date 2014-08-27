@@ -1,0 +1,16 @@
+a=file.open("tests/output2.json","rb").readall().close().from_json();
+println("c:float:"+a.fv);
+println("c:float2:"+a.fs);
+println("p:float:",a.fv);
+println("p:float2:",a.fs);
+ab=file.open("tests/test_yeti2.json","rb").readall().close().from_json();
+println("file content:"+ab.age);
+println("file json:",ab.from_json());
+println("file json:",from_json(ab));
+t=from_json(ab);
+println("file t:",t);
+/*.from_json();*/
+println(ab.float_val);
+println(ab.phoneNumbers[0].type);
+println(ab.phoneNumbers[1].type);
+

@@ -1,28 +1,6 @@
 {
 
 {
-	"firstName": "John",
-	"lastName": "Smith",
-	"age": 25,
-	"test_array": [		1,		2,		3,
-],
-	"address": 
-	{
-		"streetAddress": "21 2nd Street",
-		"city": "New York",
-		"state": "NY",
-		"postalCode": 10021,
-	},
-	"phoneNumbers": [		
-		{
-			"type": "home",
-			"number": "212 555-1234",
-		},		
-		{
-			"type": "fax",
-			"number": "646 555-4567",
-		},
-],
-	"float_val":          4.95,
+	"float_val": 4.250000,
 	"floats": 14,
 }}

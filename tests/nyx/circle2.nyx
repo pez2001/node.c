@@ -1,0 +1,14 @@
+ta=["hallo","test","welt"];
+
+myid=ta[1];
+println("myid:"+myid);
+ta.each(
+{
+	sendid:=arguments[0];
+	println("si: "+sendid+" myid: "+myid);
+});
+
+
+
+
+

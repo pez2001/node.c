@@ -24,11 +24,29 @@
 
 #ifdef USE_WEBSOCKETS
 
-void websockets_bind(node *class)
+void websockets_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *websockets = websockets_bind(modules);
+  node *proxy = create_proxy_object(state,websockets,"websockets");
+  inc_obj_refcount(websockets);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void websockets_binding_close(node *state)
+{
+
+}
+
+node *websockets_bind(node *class)
 {
   node *websockets = websockets_create_class_object();
   add_member(class,websockets);
   inc_obj_refcount(websockets);
+  return(websockets);
 }
 
 node *websockets_create_class_object(void)
@@ -192,8 +210,8 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
           set_obj_string(ret_obj_copy,"name","message");
           add_member(pss->session,ret_obj_copy);
           inc_obj_refcount(ret_obj_copy);
-          libwebsocket_callback_on_writable(context, wsi);
         }
+        libwebsocket_callback_on_writable(context, wsi);
       }
 
       //libwebsocket_callback_on_writable(context, wsi);
@@ -207,17 +225,106 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
      return(-1);
 
     case LWS_CALLBACK_HTTP_FILE_COMPLETION:
+      if(found_prot)
+     {
+        printf("found prot in http file complete : %d,num:%d\n",lsession_uid,lsessions_num);
+        lsessions_num--;
+        node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
+        node_SetSint32(sessions_num_value,lsessions_num);
+        delete_session(state,sessions,pss->session);
+      }
       return(-1);
 
+  case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+    if(found_prot)
+    {
+      int n;
+      static const char *token_names[] = 
+      {
+        /*[WSI_TOKEN_GET_URI]   =*/ "GET URI",
+        /*[WSI_TOKEN_POST_URI]    =*/ "POST URI",
+        /*[WSI_TOKEN_OPTIONS]    =*/ "Options",
+        /*[WSI_TOKEN_HOST]    =*/ "Host",
+        /*[WSI_TOKEN_CONNECTION]  =*/ "Connection",
+        /*[WSI_TOKEN_KEY1]    =*/ "key 1",
+        /*[WSI_TOKEN_KEY2]    =*/ "key 2",
+        /*[WSI_TOKEN_PROTOCOL]    =*/ "Protocol",
+        /*[WSI_TOKEN_UPGRADE]   =*/ "Upgrade",
+        /*[WSI_TOKEN_ORIGIN]    =*/ "Origin",
+        /*[WSI_TOKEN_DRAFT]   =*/ "Draft",
+        /*[WSI_TOKEN_CHALLENGE]   =*/ "Challenge",
+        /* new for 04 */
+        /*[WSI_TOKEN_KEY]   =*/ "Key",
+        /*[WSI_TOKEN_VERSION]   =*/ "Version",
+        /*[WSI_TOKEN_SWORIGIN]    =*/ "Sworigin",
+        /* new for 05 */
+        /*[WSI_TOKEN_EXTENSIONS]  =*/ "Extensions",
+        /* client receives these */
+        /*[WSI_TOKEN_ACCEPT]    =*/ "Accept",
+        /*[WSI_TOKEN_NONCE]   =*/ "Nonce",
+        /*[WSI_TOKEN_HTTP]    =*/ "Http",
+        "Accept:",
+        "Accept_Request_Headers:",
+        "If-None-Match:",
+        "If-Modified-Since:",
+        "Accept-Encoding:",
+        "Accept-Language:",
+        "Pragma:",
+        "Cache-Control:",
+        "Authorization:",
+        "Cookie:",
+        "Content-Length:",
+        "Content-Type:",
+        "Date:",
+        "Range:",
+        "Referer:",
+        "Uri-Args:",
+        /*[WSI_TOKEN_MUXURL]  =*/ "MuxURL",
+      };
 
-    case LWS_CALLBACK_HTTP_WRITEABLE: 
-    case LWS_CALLBACK_SERVER_WRITEABLE:
+      lsession_uid++;
+      node *session_uid_value = node_GetItemByKey(session_uid,"value");
+      node_SetSint32(session_uid_value,lsession_uid);
+      lsessions_num++;
+      node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
+      node_SetSint32(sessions_num_value,lsessions_num);
+      pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
+
+
+
+      for(n=0;n<sizeof(token_names)/sizeof(token_names[0]);n++) 
+      {
+        if (!lws_hdr_total_length(wsi, n))
+          continue;
+        char *cookies = (char*)malloc(512);
+        memset(cookies,0,512);
+        lws_hdr_copy(wsi,cookies,511,n);
+        //printf("header:%s = [%s]\n",token_names[n],cookies);
+        //fflush(stdout);
+        if(pss->session && !strcmp("Cookie:",token_names[n]))
+        {
+          //printf("cookie found:%s = [%s]\n",token_names[n],cookies);
+          //fflush(stdout);
+          node *base_class = get_base_class(state);
+          node *cookie_value = create_class_instance(base_class);
+          set_obj_string(cookie_value,"name","cookie");
+          set_obj_string(cookie_value,"value",cookies);
+          add_member(pss->session,cookie_value);
+          inc_obj_refcount(cookie_value);
+        }
+        free(cookies);
+      }
+    }
+    break;
+
+  case LWS_CALLBACK_HTTP_WRITEABLE: 
+  case LWS_CALLBACK_SERVER_WRITEABLE:
       {
         node *message = get_member(pss->session,"message");
-        node *session_id = get_member(pss->session,"id");
-        node *session_id_value = node_GetItemByKey(session_id,"value");
-        if(message)
+        while(message)
         {
+          node *session_id = get_member(pss->session,"id");
+          node *session_id_value = node_GetItemByKey(session_id,"value");
           node *session_privates = node_GetItemByKey(pss->session,"privates");
           node *http_only = node_GetItemByKey(session_privates,"is_http");
           node *message_value = node_GetItemByKey(message,"value");
@@ -254,15 +361,16 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
           dec_obj_refcount(message);
           add_garbage(state,message);
           //pss->message = NULL;
+          message = get_member(pss->session,"message");          
         }
       }
-    break;
+      break;
 
   case LWS_CALLBACK_ESTABLISHED:
     //printf("init pss: %x ,message: %x\n",pss,pss->message);
-    if(found_prot)
+    if(found_prot && pss->session==NULL)
     {
-      //printf("found prot in establish callback : %d,num:%d\n",lsession_uid,lsessions_num);
+      printf("found prot in establish callback : %d,num:%d\n",lsession_uid,lsessions_num);
       lsession_uid++;
       node *session_uid_value = node_GetItemByKey(session_uid,"value");
       node_SetSint32(session_uid_value,lsession_uid);
@@ -322,16 +430,29 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       node_AddItem(parameters,session_value);
       */
       node_AddItem(parameters,pss->session);
+      inc_obj_refcount(pss->session);
       node_AddItem(parameters,daemon_obj);
-      //inc_obj_refcount(daemon);
+      inc_obj_refcount(daemon_obj);
 
+      node_AddItem(parameters,sessions);
+      inc_obj_refcount(sessions);
 
+      //printf("recv callback\n");
+      //fflush(stdout);
       node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
+      //printf("recv callback finished\n");
+      //fflush(stdout);
 
       dec_obj_refcount(msg_value);
       dec_obj_refcount(prot_value);
       add_garbage(state,msg_value);//TODO check if "just survives"
       add_garbage(state,prot_value);
+
+      dec_obj_refcount(pss->session);
+      dec_obj_refcount(sessions);
+      dec_obj_refcount(daemon_obj);
+      //printf("recv gc\n");
+      //fflush(stdout);
       //node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
       //char *me = node_GetString(ret_obj_value);
       //printf("returned string:[%s]\n",me);
@@ -346,8 +467,8 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         //set_obj_string(ret_obj,"name","message");
         //add_member(pss->session,ret_obj);
         //inc_obj_refcount(ret_obj);
-        libwebsocket_callback_on_writable(context, wsi);
       }
+      libwebsocket_callback_on_writable(context, wsi);
     }
 
     break;
@@ -420,6 +541,7 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
           //fflush(stdout);
           add_member(session,broadcast_message);
           inc_obj_refcount(broadcast_message);
+          libwebsocket_callback_on_writable_all_protocol(cprot);
         }
       }
 
@@ -497,6 +619,7 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
           fflush(stdout);
           add_member(session,broadcast_message);
           inc_obj_refcount(broadcast_message);
+          libwebsocket_callback_on_writable_all_protocol(cprot);
         }
       }
 
@@ -571,6 +694,7 @@ node *websockets_send(node *state,node *obj,node *block,node *parameters)
           fflush(stdout);
           add_member(session,broadcast_message);
           inc_obj_refcount(broadcast_message);
+          libwebsocket_callback_on_writable_all_protocol(cprot);
         }
       }
 
@@ -673,6 +797,7 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters)
     inc_obj_refcount(daemon_prots);
 
     node_AddItem(wsd_state,value);//9 ->this/self
+    inc_obj_refcount(value);
     //inc_obj_refcount(value);
 
    
