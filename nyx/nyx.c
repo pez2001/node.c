@@ -525,6 +525,23 @@ node *get_member_non_recursive(node *obj,char *key)
   return(NULL);
 }
 
+node *get_object(node *obj,char *key)
+{
+  if(obj!=NULL)
+  {
+    node_ItemIterationReset(obj);
+    while(node_ItemIterationUnfinished(obj))
+    {
+      node *item = node_ItemIterate(obj);
+      node *item_name = node_GetItemByKey(item,"name");
+      if(!strcmp(node_GetString(item_name),key))
+        return(item);
+    }
+  }
+  return(NULL);
+}
+
+
 node *get_member(node *obj,char *key)
 {
   if(obj==NULL)
@@ -755,8 +772,8 @@ node *create_base_obj_layout(char *obj_name)
   node *base = create_obj("nyx_object");
   add_obj_string(base,"type","class");
   add_obj_string(base,"name",obj_name);
-  add_obj_kv(base,create_obj("members"));
-  add_obj_kv(base,create_obj("privates"));
+  add_obj_kv(base,create_obj("members"));//TODO dont add this automatically
+  add_obj_kv(base,create_obj("privates"));//TODO dont add this automatically
   set_obj_int(base,"value",0);
   add_obj_int(base,"refcount",0);
   return(base);
@@ -881,6 +898,7 @@ node *create_block_class_object(node *base_class)
   add_class_object_function(base,"return",nyxh_return);
   add_class_object_function(base,"import",nyxh_import);
   add_class_object_function(base,"eval",nyxh_eval);
+  add_class_object_function(base,"test",nyxh_test);
   //add_class_object_function(base,"args",nyxh_args);
   return(base);
 }
@@ -1316,28 +1334,31 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
               node_SetNode(abp,NULL);
             }
 
+            node *par = node_GetItem(pars,p_index);
             node *sub = evaluate_statement(state,token,obj,0,NULL,False,NULL);
             //node_SetParent(sub,NULL);
 
             //node *obj_name = node_GetItemByKey(sub,"name");
-
-            node *oldm = get_member_non_recursive(obj,get_obj_name(sub));
-            if(oldm)
+            if(par)
             {
-              //printf("removing old function par:%s\n",get_obj_name(sub));
-              remove_member(obj,oldm);
-              dec_obj_refcount(oldm);
-              add_garbage(state,oldm);
-            }
+              node *oldm = get_member_non_recursive(obj,get_obj_name(sub));
+              if(oldm)// || (oldm && par && sub != oldm))
+              {
+               //printf("removing old function par:%s\n",get_obj_name(sub));
+               remove_member(obj,oldm);
+               dec_obj_refcount(oldm);
+               add_garbage(state,oldm);
+              }
+              node *proxy = create_proxy_object(state,par,get_obj_name(sub));
+              add_member(obj,proxy);
+              inc_obj_refcount(proxy);
+              inc_obj_refcount(par);
+            } 
 
             if(abp!=NULL)
               node_SetNode(abp,tmp_abp_value);
             node_SetParent(obj,tmp_parent);
 
-            node *proxy = create_proxy_object(state,node_GetItem(pars,p_index),get_obj_name(sub));
-            add_member(obj,proxy);
-            inc_obj_refcount(proxy);
-            inc_obj_refcount(node_GetItem(pars,p_index));
             //??
             /*node *obj_parameters = node_GetItemByKey(sub,"nyx_parameters");
             if(obj_parameters!=NULL)
@@ -1846,7 +1867,6 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           long tlen=strlen(t);
           free(t);
           double d=((double)node_GetSint32(token))+(((double)tenth)/pow(10,tlen));
-          //global functions (copy and parenting on the fly)
           //select/poll events
           //parse error reporting
           //error/exception handling

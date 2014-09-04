@@ -1,0 +1,17 @@
+get(u="top")=
+{
+	println("u:["+u+"]");
+};
+
+get();
+get("none");
+get(u="tack");
+println("top u:"+u);
+
+u="test";
+get(u=u);
+ui="next";
+get(u=ui);
+
+
+

@@ -1,0 +1,27 @@
+get_url(url="http://openstrike.de/aluria/client/clients.json")=
+{
+parsed_url=http.parse_url(url);
+
+println("uri:"+parsed_url["uri"]);
+println("host:"+parsed_url["host"]);
+println("port:"+parsed_url["port"]);
+
+sock=socket.open(socket.SOCK_STREAM);
+connected=sock.connect("openstrike.de",80);.else({restart(1)});
+sock.write();
+timeouts=1000;
+r=sock.read();
+c=r.copy();
+?({(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{print(".");timeouts=timeouts-1},{},0);},{},1);
+sock.close();
+j=http.parse_answer(c)["body"].from_json();
+
+};
+
+data = get_url();
+data = get_url("www.openstrike.de");
+data = get_url("http://www.openstrike.de:80");
+
+
+
+

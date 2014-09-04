@@ -69,6 +69,19 @@ b="a".in("Hallo"); => b=1
 
 update readme
 
+
+NEXT:
+
+code consolidation,refactoring
+more api like naming 
+more kerneldoc comments
+redundancy reductions
+minor features adding (http)
+automatic test suite
+
+
+
+
 */
 
 
@@ -127,9 +140,9 @@ int main(int argc, char** argv)
   int use_input_as_script_string=0;
 
   int ret = 0;
-  while ((c = getopt (argc, argv, "iashvp")) != -1)
+  while((c=getopt(argc,argv,"iashvp")) != -1)
   {
-    switch (c)
+    switch(c)
     {
       case 's':
         use_input_as_script_string = 1;
@@ -150,12 +163,12 @@ int main(int argc, char** argv)
         printf("nyx interpreter %d.%d (build %d)\n",MAJOR_VERSION,MINOR_VERSION,BUILD+1);
         return(0);
       case '?':
-        if (optopt == 'c')
-          fprintf (stderr, "Option -%c requires an argument.\n", optopt);
+        if(optopt == 'c')
+          printf("Option -%c requires an argument.\n",optopt);
         else if (isprint(optopt))
-          fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+          printf("Unknown option `-%c'.\n",optopt);
         else
-          fprintf (stderr,"Unknown option character `\\x%x'.\n",optopt);
+          printf("Unknown option character `\\x%x'.\n",optopt);
         return(1);
       default:
         abort();
@@ -169,10 +182,7 @@ int main(int argc, char** argv)
   {
     optind++;
     if(argv[optind])
-    {
-      //printf("optional arg:%s\n",argv[optind]);
       nyx_add_parameter(state,argv[optind]);
-    }
   }
 
   node *nyx_stream = NULL;
@@ -192,7 +202,6 @@ int main(int argc, char** argv)
   else //read from stdin
   {
     setup_terminal();
-    //node *state = init_nyx();
     node *blocks=node_GetItemByKey(state,"blocks");
     char *buf =(char*)malloc(100);
     char *tmp_get=NULL;
@@ -256,7 +265,6 @@ int main(int argc, char** argv)
   }
   else // interpret stream
   { 
-    //node *state = init_nyx();
     set_obj_string(state,"script_filename",filename);
     set_obj_string(state,"interpreter_filename",argv[0]);
     if(nyx_stream!=NULL)
@@ -268,10 +276,6 @@ int main(int argc, char** argv)
         node_RemoveItem(nyx_stream,nyx_block);
         node_FreeTree(nyx_stream);
         node *ret_obj = evaluate_block(state,nyx_block);  
-        //test call into script 
-        //node *parameters = create_obj("parameters");
-        //printf("calling defined script function\n");
-        //node *ret_call_obj = call_function(nyx_state,"external_call",parameters);//,nyx_block);
         node *real_value = node_GetItemByKey(ret_obj,"value");
         if(print_return_value)
         {

@@ -212,6 +212,52 @@ char *str_AddChars(char *string,char *append,long len)
   return(string);
 }
 
+char *str_Replace(char *hay,char *needle,char*diamond)
+{
+  if(!hay)
+    return(str_CreateEmpty());
+  if(!strlen(hay) || !needle || !strlen(needle))
+    return(str_Copy(hay));
+  char *pos = strstr(hay,needle);
+  if(pos)
+  {
+    long index = (long)(pos-hay);
+    unsigned long total_len = (strlen(hay)-strlen(needle))+strlen(diamond);
+    char *new_hay = (char*)malloc(total_len+1);
+    memset(new_hay+total_len,0,1);
+    if(index)
+      memcpy(new_hay,hay,index);
+    if(strlen(diamond))
+      memcpy(new_hay+index,diamond,strlen(diamond));
+    unsigned long remainder_len = total_len - index - strlen(diamond);
+    if(remainder_len)
+      memcpy(new_hay+index+strlen(diamond),hay+index+strlen(needle),remainder_len);
+    return(new_hay);
+  }
+  return(str_Copy(hay));
+}
+
+long str_IndexOf(char *hay,char *needle)
+{
+  long index = -1;
+  char *pos = strstr(hay,needle);
+  if(pos)
+  {
+    index = (long)(pos-hay);
+  } 
+  return(index);
+}
+
+long str_LastIndexOf(char *hay,char *needle)
+{
+  long index = -1;
+  char *pos = NULL;
+  while((pos=strstr(hay+index+1,needle))!=NULL)
+  {
+    index = (long)(pos-hay);
+  } 
+  return(index);
+}
 
 char *str_CreateEmpty(void)
 {

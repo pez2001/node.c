@@ -1,0 +1,28 @@
+get_url(url="http://openstrike.de/aluria/client/clients.json")=
+{
+println("parsing url:["+url+"]");
+parsed_url=http.parse_url(url);
+
+println("uri:"+parsed_url["uri"]);
+println("path:"+parsed_url["path"]);
+println("file:"+parsed_url["file"]);
+println("host:"+parsed_url["host"]);
+println("protocol:"+parsed_url["protocol"]);
+println("port:"+parsed_url["port"]);
+println("parameters:"+parsed_url["parameters"]);
+
+};
+
+data = get_url();
+data = get_url("www.openstrike.de");
+data = get_url("https://www.openstrike.de");
+data = get_url("www.openstrike.de:8080");
+data = get_url("http://www.openstrike.de:8080");
+data = get_url("http://www.openstrike.de:8080/index.html");
+data = get_url("http://www.openstrike.de:8080/sub/index.html");
+data = get_url("http://www.openstrike.de:8080/sub/index.html?name=trudy");
+data = get_url("http://www.openstrike.de:8080/sub/sub2/index.html?name=trudy&pw=abc");
+
+
+
+

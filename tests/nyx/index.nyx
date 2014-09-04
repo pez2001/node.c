@@ -1,0 +1,3 @@
+change="Hello World";
+println("index of \"Earth\": "+change.index_of("World"));
+println("index of \"Heart\": "+change.index_of("Heart"));

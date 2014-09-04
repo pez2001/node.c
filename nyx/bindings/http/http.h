@@ -37,6 +37,10 @@ node *http_bind(node *class);
 node *http_create_class_object(void);
 node *http_create_request(node *state,node *obj,node *block,node *parameters);
 node *http_parse_answer(node *state,node *obj,node *block,node *parameters);
+node *http_parse_url(node *state,node *obj,node *block,node *parameters);
+node *http_create_response(node *state,node *obj,node *block,node *parameters);
+node *http_parse_cookies(node *state,node *obj,node *block,node *parameters);
+
 node *http_query(node *state,node *obj,node *block,node *parameters);
 
 #endif

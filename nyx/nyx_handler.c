@@ -157,54 +157,6 @@ node *nyxh_add(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-/*node *nyxh_add(node *state,node *obj,node *block,node *parameters)
-{
-  node *value = node_CopyTree(obj,True,True);
-  node_SetParent(value,NULL);
-  reset_obj_refcount(value);
-  add_garbage(state,value);
-  node *value2 = node_GetItem(parameters,0);
-  node *real_value = node_GetItemByKey(value,"value");
-  node *real_value2 = node_GetItemByKey(value2,"value");
-  printf("adding values together\n");
-  printf("a:\n");
-  node_PrintTree(real_value);
-  printf("b:\n");
-  node_PrintTree(real_value2);
-
-  if(node_GetType(real_value)==NODE_TYPE_DOUBLE || node_GetType(real_value2)==NODE_TYPE_DOUBLE)
-  {
-    double d1,d2;
-    if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
-      d1=node_GetDouble(real_value);
-    else if(node_GetType(real_value)==NODE_TYPE_SINT32)
-      d1=(double)node_GetSint32(real_value);
-    if(node_GetType(real_value2)==NODE_TYPE_DOUBLE)
-      d2=node_GetDouble(real_value2);
-    else if(node_GetType(real_value2)==NODE_TYPE_SINT32)
-      d2=(double)node_GetSint32(real_value2);
-    node_SetDouble(real_value,d1+d2);
-  }
-  else if(node_GetType(real_value)==NODE_TYPE_SINT32 && node_GetType(real_value2)==NODE_TYPE_SINT32)
-    node_SetSint32(real_value,node_GetSint32(real_value)+node_GetSint32(real_value2));
-  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_STRING)
-  {
-    char *cat_string=str_Cat(node_GetString(real_value),node_GetString(real_value2));
-    node_SetString(real_value,cat_string);
-    free(cat_string);
-  }
-  else if(node_GetType(real_value)==NODE_TYPE_STRING && node_GetType(real_value2)==NODE_TYPE_SINT32)
-  {
-    char *num=str_FromLong(node_GetSint32(real_value2));
-    char *cat_string=str_Cat(node_GetString(real_value),num);
-    printf("appending int:[%s] + [%s] = [%s]\n",node_GetString(real_value),num,cat_string);
-    node_SetString(real_value,cat_string);
-    free(cat_string);
-    free(num);
-  }
-  return(value);
-}*/
-
 node *nyxh_sub(node *state,node *obj,node *block,node *parameters)
 {
   node *value = copy_class(obj);
@@ -720,60 +672,7 @@ node *nyxh_copy(node *state,node *obj,node *block,node *parameters)
 }
 
 
-/*
 // = handler
-node *nyxh_assign(node *state,node *obj,node *block,node *parameters)
-{
-  node *obj_name = node_GetItemByKey(obj,"name");
-  //printf("assigning:%s,%x with: %s,%x\n",get_obj_name(obj),obj,get_obj_name(node_GetItem(parameters,0)),node_GetItem(parameters,0));
-  //fflush(stdout);
-  node *parent = node_GetParent(obj);
-  //if(parent)
-  //{
-  int r = node_RemoveItem(parent,obj);
-  node_SetParent(obj,NULL);
-  if(r==-1)
-  {
-    printf("error item not removed\n");
-  }
-  dec_obj_refcount(obj);
-  //}
-  add_garbage(state,obj);
-
-  node *item_index = node_GetItemByKey(obj,"item_index");
-
-  node *value = node_CopyTree(node_GetItem(parameters,0),True,True);
-  reset_obj_refcount(value);
-  //if(item_index==NULL)
-  set_obj_string(value,"name",node_GetString(obj_name));
-  //else 
-  //  printf("leaving name as it is:[%s]\n",);
-  node_AddItem(parent,value);
-  inc_obj_refcount(value);
-  node_SetParent(value,parent);
-  //printf("assigning:[%s]\n",node_GetString(obj_name));
-  if(item_index!=NULL) //TODO check if really working like expected
-  {
-    node_RemoveItem(obj,item_index);
-    node_SetParent(item_index,value);
-    node_AddItem(value,item_index);
-  }
-  node *obj_parameters = node_GetItemByKey(obj,"nyx_parameters");
-  if(obj_parameters!=NULL)
-  {
-    node *pars = node_CopyTree(obj_parameters,True,True);
-    add_obj_kv(value,pars);
-  }
-  //node *anon = node_GetItemByKey(value,"anonymous_block_parent");
-  //if(anon!=NULL)
-  //{
-  //  node_RemoveItem(value,anon);
-  //  node_FreeTree(anon);
-  //}
-  return(value);
-}
-*/
-
 node *nyxh_assign(node *state,node *obj,node *block,node *parameters)
 {
   node *obj_name = node_GetItemByKey(obj,"name");
@@ -869,6 +768,7 @@ node *nyxh_assign(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+// := handler
 node *nyxh_assign_copy(node *state,node *obj,node *block,node *parameters)
 {
   //node *obj_name = node_GetItemByKey(obj,"name");
@@ -968,8 +868,6 @@ node *nyxh_assign_copy(node *state,node *obj,node *block,node *parameters)
   //printf("assigned obj now has refs: %d\n",get_obj_refcount(value));
   return(value);
 }
-
-
 
 //println,print handler
 node *nyxh_print(node *state,node *obj,node *block,node *parameters)
@@ -1362,7 +1260,6 @@ node *nyxh_remove(node *state,node *obj,node *block,node *parameters)
   {
     node *array = obj;//node_GetItem(parameters,0);
     node *found = get_item(state,array,node_GetItem(parameters,0),False);
-    TODO doesnt seem to work
     if(found!=NULL)
     {
       remove_item(array,found);
@@ -1538,7 +1435,10 @@ node *nyxh_replace(node *state,node *obj,node *block,node *parameters)
       char *cneedle = node_GetString(needle_value);
       char *cdiamond = node_GetString(diamond_value);
       char *chay = node_GetString(obj_value);
-      if(!strlen(chay)||!strlen(cneedle))
+      char *new_hay = str_Replace(chay,cneedle,cdiamond);
+      node_SetString(real_value,new_hay);//TODO add setstringWithoutCopy
+      free(new_hay);
+      /*if(!strlen(chay)||!strlen(cneedle))
         return(value);
       char *pos = strstr(chay,cneedle);
       if(pos)
@@ -1556,7 +1456,7 @@ node *nyxh_replace(node *state,node *obj,node *block,node *parameters)
           memcpy(new_hay+index+strlen(cdiamond),chay+index+strlen(cneedle),remainder_len);
         node_SetString(real_value,new_hay);//TODO add setstringWithoutCopy
         free(new_hay);
-      } 
+      } */
     }
   }
   else 
@@ -1582,12 +1482,7 @@ node *nyxh_index_of(node *state,node *obj,node *block,node *parameters)
     {
       char *cneedle = node_GetString(needle_value);
       char *chay = node_GetString(obj_value);
-      char *pos = strstr(chay,cneedle);
-      if(pos)
-      {
-        index = (long)(pos-chay);
-      } 
-
+      index = str_IndexOf(chay,cneedle);
     }
   }
   node_SetSint32(real_value,index);
@@ -2187,6 +2082,41 @@ node *nyxh_eval(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+
+node *nyxh_test(node *state,node *obj,node *block,node *parameters)
+{
+  node *value = get_true_class(state);
+  node *m = get_object(parameters,"m");
+  node *p = get_object(parameters,"p");
+  node *o = get_object(parameters,"o");
+  node *mv = NULL;
+  if(m)
+    mv = get_value(m);
+  node *ov = NULL;
+  if(o)
+    ov = get_value(o);
+  node *pv = NULL;
+  if(p)
+    pv = get_value(p);
+  
+  if(mv)
+    printf("m:[%s]\n",node_GetString(mv));
+  else
+    printf("no m!\n");
+  if(ov)
+    printf("o:[%s]\n",node_GetString(ov));
+  else
+    printf("no o!\n");
+  if(pv)
+    printf("p:[%s]\n",node_GetString(pv));
+  else
+    printf("no p!\n");
+  return(value);
+}
+
+
+
+/*
 // : handler
 node *nyxh_set_value_only(node *state,node *obj,node *block,node *parameters)
 {
@@ -2251,4 +2181,4 @@ node *nyxh_handler_test(node *state,node *obj,node *block,node *parameters)
   node_SetSint32(real_value,100+node_GetSint32(real_value2));
   return(value);
 }
-
+*/

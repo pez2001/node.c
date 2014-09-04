@@ -30,6 +30,8 @@ Create Starter Executables.\n\
     remove file function
     open console window/or disable it
 
+    add manifest support to simplify creation (json format)
+
     works in linux and windows environments
 
     static executable
@@ -225,6 +227,8 @@ int copy_file()
 char *option_temp_output_filename="starter_output.exe";  
 char *option_filename = NULL;
 
+char *option_manifest_filename = NULL;
+
 int option_rename_file = 0;
 int option_delete_file = 0;
 int option_copy_file = 0;
@@ -232,11 +236,13 @@ int option_patch_file = 0;
 int option_execute_file = 0;
 int option_check_tag = 0;
 
+int option_use_manifest = 0;
+
 int check_options(int argc, char **argv)
 {
   int c = 0;
   int ret = 0;
-  while ((c = getopt (argc, argv, "trdxcPo:hp")) != -1)
+  while ((c = getopt (argc, argv, "m:trdxcPo:hp")) != -1)
   {
     switch (c)
     {
@@ -263,6 +269,10 @@ int check_options(int argc, char **argv)
         break;
       case 'o':
         option_temp_output_filename = optarg;
+        break;
+
+      case 'm':
+        option_manifest_filename = optarg;
         break;
       case 'h':
         printf(starter_helpmsg);
@@ -400,8 +410,12 @@ int main(int argc, char** argv)
         t->get_options = 0;
         update_tag(out,exe_len,t);
         fclose(out);
-        //remove(argv[0]);
-        spawnl(P_OVERLAY,"c:\\windows\\system32\\cmd.exe","cmd.exe","/c","del",argv[0],NULL);
+
+        #ifdef WIN32
+          spawnl(P_OVERLAY,"c:\\windows\\system32\\cmd.exe","cmd.exe","/c","del",argv[0],NULL);
+        #else
+          remove(argv[0]);
+        #endif
         return(0);
       }
     }

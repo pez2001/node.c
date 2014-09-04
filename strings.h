@@ -162,7 +162,6 @@ char *str_Sub(char *a,long start,long len);
  */
 char *str_AddChar(char *string,char letter);
 
-
 /**
  * str_AddChars() - Adds multiple characters to a string
  * @string: Input string
@@ -179,6 +178,46 @@ char *str_AddChar(char *string,char letter);
 char *str_AddChars(char *string,char *append,long len);
 
 /**
+ * str_Replace() - Creates new String with the first ocurrence of the search string replaced 
+ * @hay: String to search in
+ * @needle: String to search for
+ * @diamond: Replacement String
+ * 
+ * Replaces the first ocurrence of the needle in the hay with the diamond 
+ * Note any parameter can be null 
+ * at least an empty string will be returned
+ *
+ * Return: a modified string
+ */
+char *str_Replace(char *hay,char *needle,char*diamond);
+
+/**
+ * str_IndexOf() - Returns the Index of the search string 
+ * @hay: String to search in
+ * @needle: String to search for
+ * 
+ * Returns the index of the search string in hay
+ * if needle was not found the position will be returned
+ * else -1 will be returned
+ *
+ * Return: index
+ */
+long str_IndexOf(char *hay,char *needle);
+
+/**
+ * str_LastIndexOf() - Returns the last Index of the search string 
+ * @hay: String to search in
+ * @needle: String to search for
+ * 
+ * Returns the index of the search string in hay
+ * if needle was not found the position will be returned
+ * else -1 will be returned
+ *
+ * Return: index
+ */
+long str_LastIndexOf(char *hay,char *needle);
+
+/**
  * str_CreateEmpty() - Create an empty String
  *
  * Creates an zero length NULL-terminated string
@@ -186,18 +225,6 @@ char *str_AddChars(char *string,char *append,long len);
  * Return: empty string
  */
 char *str_CreateEmpty(void);
-
-
-
-/**
- *
- * @:
- *
- *
- *
- * Return:
- */
-
 
 
 #endif

@@ -1,0 +1,16 @@
+get_url(url="http://openstrike.de/aluria/client/clients.json")=
+{
+	println("url:["+url+"]");
+};
+
+get_url();
+get_url("www.openstrike.de");
+get_url(url="http://www.openstrike.de");
+url="test.com";
+get_url(url=url);
+
+urli="new_gov.com";
+get_url(url=urli);
+
+
+
