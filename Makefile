@@ -81,8 +81,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3598
-DEBUG_BUILD = 3928
+BUILD = 3602
+DEBUG_BUILD = 3931
 
 CSTD = c99
 
@@ -142,13 +142,15 @@ print_version:
 	@echo -n "$(BUILD)"
 
 clean_all: clean libnyx_clean clean_debug clean_binaries all debug 
-	@echo "Compiling for "$(PLATFORM_NAME)
-	./build_inc$(PLATFORM_EXT) Makefile BUILD
-	$(SUCCESS_NOTIFY)
+	@echo "Cleaned all"
+#	@echo "Compiling for "$(PLATFORM_NAME)
+#	./build_inc$(PLATFORM_EXT) Makefile BUILD
+#	$(SUCCESS_NOTIFY)
 
 all: node_static node_dynamic build_inc starter unit_tests debug libnyx nyxi
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
+	./build_inc$(PLATFORM_EXT) README.md BUILD
 	$(SUCCESS_NOTIFY)
 
 .PHONY: libnyx
