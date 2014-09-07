@@ -215,7 +215,7 @@ all: build_inc nyx_static nyx_dynamic unit_tests debug
 	$(SUCCESS_NOTIFY)
 
 unit_tests: nyx_static $(UT_OBJ) 
-	$(CC) $(UT_OBJ) libnyx.a ../libnode.da $(LDFLAGS) -o unit_tests 
+	$(CC) $(UT_OBJ) libnyx.a ../libnode.a $(LDFLAGS) -o unit_tests 
 	strip ./unit_tests$(PLATFORM_EXT)
 
 unit_tests_debug: nyx_static_debug $(UT_DEBUG_OBJ) 
