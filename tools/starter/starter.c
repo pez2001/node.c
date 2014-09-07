@@ -152,10 +152,10 @@ int execute_popen(char *command)
  return(0);
 }
 
-//"open"
+#ifdef WIN32
+
 int execute_shell(char *executable,char *arguments)
 {
-  //printf("shell execute:[%s],[%s]\n",executable,arguments);
   ShellExecute(NULL,executable,arguments,NULL,NULL,SW_SHOWNORMAL); 
 }
 
@@ -193,6 +193,16 @@ int execute_process2(char *executable,char *arguments)
   printf("pid:%d ,r:%d\n",pi.hProcess,r);
   int err = GetLastError();
   printf("err:%d\n",err);
+}
+
+#endif
+
+
+int execute(char *executable, char**args)
+{
+  int pid = fork();
+
+
 }
 
 

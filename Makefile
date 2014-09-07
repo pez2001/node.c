@@ -1,28 +1,29 @@
 
 USER := $(shell whoami)
 UNAME := $(shell uname)
+SYS := $(shell gcc -dumpmachine)
 
-ifeq ($(UNAME), Linux)
+ifneq (, $(findstring linux, $(SYS)))
 PLATFORM_EXT = 
+PLATFORM_LIB_EXT = .so
 PLATFORM_NAME = Linux
-PLATFORM_LIBS = -lm -lcurl.dll
-PLATFORM_CFLAGS =
-PLATFORM_DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING
-endif
-ifeq ($(UNAME), MINGW32_NT-6.2)
+PLATFORM_LIBS = -lm -lcurl -lmicrohttpd 
+PLATFORM_CFLAGS = -D_XOPEN_SOURCE=700
+PLATFORM_DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -D_XOPEN_SOURCE=700
+else ifneq (, $(findstring mingw, $(SYS)))
 PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
+PLATFORM_LIB_EXT = .dll
 PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll -lmicrohttpd.dll -lwebsockets.dll
 PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 PLATFORM_DEBUG_CFLAGS = -DWIN32 
 #-DUSE_MEMORY_DEBUGGING
+else ifneq (, $(findstring cygwin, $(SYS)))
+ # Do cygwin things
 else
-PLATFORM_NAME = Win32
-PLATFORM_EXT = 
-PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll
-PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
-PLATFORM_DEBUG_CFLAGS = -DWIN32 -DUSE_MEMORY_DEBUGGING
+ # Do things for others
 endif
+
 
 #.PHONY: print_version
 
@@ -84,8 +85,6 @@ TOOLS_STARTER_INCLUDE_FILES = tools/starter/starter.h strings.h
 TOOLS_STARTER_OBJ = tools/starter/starter.o strings.o
 
 
-print_version:
-	@echo -n "$(BUILD)"
 
 test: all
 	./unit_tests$(PLATFORM_EXT)
@@ -95,6 +94,9 @@ test_debug: debug
 	
 debug: build_inc node_static_debug libnyx_debug unit_tests_debug nyxi_debug
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
+
+print_version:
+	@echo -n "$(BUILD)"
 
 clean_all: clean libnyx_clean clean_debug clean_binaries all debug 
 	@echo "Compiling for "$(PLATFORM_NAME)
@@ -147,8 +149,8 @@ node_static_debug: $(NODE_DEBUG_OBJ)
 	$(AR) -rs libnode.da $(NODE_DEBUG_OBJ)
 
 node_dynamic: $(NODE_OBJ)
-	$(CC) -DCREATELIB -shared $(NODE_OBJ) -o node.dll
-	strip node.dll	
+	$(CC) -DCREATELIB -shared $(NODE_OBJ) -o node$(PLATFORM_LIB_EXT)
+	strip node$(PLATFORM_LIB_EXT)	
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
@@ -159,7 +161,7 @@ node_dynamic: $(NODE_OBJ)
 
 clean: libnyx_clean
 	$(BEGIN_NOTIFY)
-	rm -f node.dll *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
+	rm -f node$(PLATFORM_LIB_EXT) *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) nyxi$(PLATFORM_EXT) nyxi_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

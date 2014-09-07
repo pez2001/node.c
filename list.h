@@ -43,12 +43,12 @@
 extern "C"  {
 #endif
 
-#ifndef WIN32
-#define BOOL int
-#else
-//#include "windef.h"
+#ifdef WIN32
 #define _WIN32_WINNT  0x501 
 #include "windows.h"
+#else
+#define BOOL int
+//#include "windef.h"
 #endif
 
 #define TRUE 1
