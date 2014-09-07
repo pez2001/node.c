@@ -28,13 +28,16 @@
 
 #ifdef USE_SYS
 
-#include "math.h"
-#include "stdio.h"
-#include "stdlib.h"
-#include "string.h"
-#include "unistd.h"
-#include "time.h"
-#include "limits.h"
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <time.h>
+#include <limits.h>
+
+#include <errno.h>
+
 
 #ifdef WIN32
 FILE *popen(const char *command, const char *type);

@@ -3,12 +3,9 @@
 #LIBWEBSOCKETS := $(shell locate libwebsockets.so)
 #LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
 
-LIBCURL := $(shell echo  "int main(int c,char**v){}"| gcc -lcurl -xc -)
-LIBWEBSOCKETS := $(shell echo  "int main(int c,char**v){}"| gcc -lwebsockets -xc -)
-LIBMICROHTTPD := $(shell echo  "int main(int c,char**v){}"| gcc -lmicrohttpd -xc -)
-
-
-
+LIBCURL = $(shell echo "int main(int c,char**v){}" | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
 
 
 USER := $(shell whoami)
@@ -26,13 +23,13 @@ PLATFORM_LDFLAGS =
 PLATFORM_CFLAGS = -fPIC -D_XOPEN_SOURCE=700
 PLATFORM_DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -D_XOPEN_SOURCE=700
 
-ifneq ($LIBCURL, "")
+ifeq ($(LIBCURL), 0)
 	PLATFORM_LIBS += -lcurl
 endif
-ifneq ($LIBWEBSOCKETS, "")
+ifeq ($(LIBWEBSOCKETS), 0)
 	PLATFORM_LIBS += -lwebsockets
 endif
-ifneq ($LIBMICROHTTPD, "")
+ifeq ($(LIBMICROHTTPD), 0)
 	PLATFORM_LIBS += -lmicrohttpd
 endif
 
@@ -47,13 +44,13 @@ PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 PLATFORM_DEBUG_CFLAGS = -DWIN32 
 #-DUSE_MEMORY_DEBUGGING
 
-ifneq ($LIBCURL, "")
+ifeq ($(LIBCURL), 0)
 	PLATFORM_LIBS += -lcurl.dll
 endif
-ifneq ($LIBWEBSOCKETS, "")
+ifeq ($(LIBWEBSOCKETS), 0)
 	PLATFORM_LIBS += -lwebsockets.dll
 endif
-ifneq ($LIBMICROHTTPD, "")
+ifeq ($(LIBMICROHTTPD), 0)
 	PLATFORM_LIBS += -lmicrohttpd.dll
 endif
 
@@ -80,8 +77,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3562
-DEBUG_BUILD = 3903
+BUILD = 3578
+DEBUG_BUILD = 3917
 
 CSTD = c99
 
@@ -145,6 +142,13 @@ clean_all: clean libnyx_clean clean_debug clean_binaries all debug
 	$(SUCCESS_NOTIFY)
 
 all: node_static node_dynamic build_inc starter unit_tests debug libnyx nyxi
+	@echo -n "cu ret:["
+	@echo -n $(LIBCURL)
+	@echo "]"
+	@echo -n "lw ret:["
+	@echo -n $(LIBWEBSOCKETS)
+	@echo "]"
+
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 	$(SUCCESS_NOTIFY)
