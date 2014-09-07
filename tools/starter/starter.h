@@ -11,13 +11,14 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/wait.h>
 #include <sched.h>
 #include <stddef.h>
-#include <spawn.h>
+//#include <spawn.h>
 
 
 
-#include "strings.h"
+#include "../../strings.h"
 
 
 #ifdef WIN32

@@ -388,7 +388,12 @@ node *sys_sleep(node *state,node *obj,node *block,node *parameters)
   node *time_par = node_GetItem(parameters,0);
   node *time_val = node_GetItemByKey(time_par,"value");
   long ms = node_GetSint32(time_val);
+  #ifdef WIN32
   Sleep(ms);
+  #else
+  sleep(ms);
+  #endif
+
   return(value);
 }
 

@@ -14,25 +14,64 @@ USE_FILE = True
 
 USER := $(shell whoami)
 UNAME := $(shell uname)
+SYS := $(shell gcc -dumpmachine)
 
-ifeq ($(UNAME), Linux)
+ifneq (, $(findstring linux, $(SYS)))
 	PLATFORM_EXT = 
+	PLATFORM_LIB_EXT = .so
 	PLATFORM_NAME = Linux
 	PLATFORM_LIBS = -lm
-	PLATFORM_CFLAGS =
-	PLATFORM_DEBUG_CFLAGS =
+	PLATFORM_CFLAGS = -D_XOPEN_SOURCE=700
+	PLATFORM_LDFLAGS = 
+	#-static
+	PLATFORM_DEBUG_CFLAGS = -D_XOPEN_SOURCE=700
 	ifeq ($(USE_CURL),True)
 		PLATFORM_LIBS += -lcurl
 		PLATFORM_CFLAGS += -DUSE_CURL
 		PLATFORM_DEBUG_CFLAGS += -DUSE_CURL 
 	endif
-endif
-
-ifeq ($(UNAME), MINGW32_NT-6.2)
+	ifeq ($(USE_MICROHTTPD),True)
+		PLATFORM_LIBS += -lmicrohttpd
+		PLATFORM_CFLAGS += -DUSE_MICROHTTPD
+		PLATFORM_DEBUG_CFLAGS += -DUSE_MICROHTTPD 
+	endif
+	ifeq ($(USE_SOCKETS),True)
+		PLATFORM_CFLAGS += -DUSE_SOCKETS
+		PLATFORM_DEBUG_CFLAGS += -DUSE_SOCKETS 
+	endif
+	ifeq ($(USE_WEBSOCKETS),True)
+		PLATFORM_LIBS += -lwebsockets
+		PLATFORM_CFLAGS += -DUSE_WEBSOCKETS 
+		PLATFORM_DEBUG_CFLAGS += -DUSE_WEBSOCKETS 
+	endif
+	ifeq ($(USE_CURSES),True)
+		PLATFORM_LIBS += -lcurses
+		PLATFORM_CFLAGS += -DUSE_CURSES
+		PLATFORM_DEBUG_CFLAGS += -DUSE_CURSES 
+	endif
+	ifeq ($(USE_HTTP),True)
+		PLATFORM_CFLAGS += -DUSE_HTTP
+		PLATFORM_DEBUG_CFLAGS += -DUSE_HTTP
+	endif
+	ifeq ($(USE_SYS),True)
+		PLATFORM_CFLAGS += -DUSE_SYS
+		PLATFORM_DEBUG_CFLAGS += -DUSE_SYS
+	endif
+	ifeq ($(USE_FILE),True)
+		PLATFORM_CFLAGS += -DUSE_FILE
+		PLATFORM_DEBUG_CFLAGS += -DUSE_FILE
+	endif
+	ifeq ($(USE_MEMORY_DEBUG),True)
+		#PLATFORM_CFLAGS += -DUSE_MEMORY_DEBUGGING
+		PLATFORM_DEBUG_CFLAGS += -DUSE_MEMORY_DEBUGGING
+	endif
+else ifneq (, $(findstring mingw, $(SYS)))
 	PLATFORM_NAME = Win32
 	PLATFORM_EXT = .exe
+	PLATFORM_LIB_EXT = .dll
 	PLATFORM_LIBS = -lm
 	PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
+	PLATFORM_LDFLAGS = -static -static-libgcc
 	PLATFORM_DEBUG_CFLAGS = -DWIN32
 	ifeq ($(USE_CURL),True)
 		PLATFORM_LIBS += -lcurl.dll
@@ -76,14 +115,11 @@ ifeq ($(UNAME), MINGW32_NT-6.2)
 		PLATFORM_DEBUG_CFLAGS += -DUSE_MEMORY_DEBUGGING
 	endif
 
+else ifneq (, $(findstring cygwin, $(SYS)))
+ # Do cygwin things
 else
-	PLATFORM_NAME = Win32
-	PLATFORM_EXT = 
-	PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll
-	PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
-	PLATFORM_DEBUG_CFLAGS = -DWIN32
+ # Do things for others
 endif
-
 
 #BEGIN_NOTIFY =	@playsound.exe /c/Users/pez2001/Downloads/217656__reitanna__knuckles-cracking.wav
 #FAILED_NOTIFY = || @playsound.exe /c/Users/pez2001/Downloads/123921__silencer1337__machinefail.wav
@@ -95,9 +131,9 @@ SUCCESS_NOTIFY =
 
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 5
-BUILD = 1046
-DEBUG_BUILD = 2115
+MINOR_VERSION = 6
+BUILD = 1057
+DEBUG_BUILD = 2137
 
 CSTD = c99
 
@@ -107,7 +143,7 @@ CSTD = c99
 CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)
 DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
 #DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
-LDFLAGS= $(PLATFORM_LIBS) -static -static-libgcc
+LDFLAGS= $(PLATFORM_LIBS) $(PLATFORM_LDFLAGS)
 # -static-libstdc++
 DEBUG_LDFLAGS = $(LDFLAGS)
 
@@ -172,8 +208,8 @@ nyx_static_debug: $(NYX_DEBUG_OBJ)
 	$(AR) -rs libnyx.da ../libnode.da $(NYX_DEBUG_OBJ) 
 
 nyx_dynamic: $(NYX_OBJ)
-	$(CC) -DCREATELIB -shared ../node.dll $(NYX_OBJ) $(PLATFORM_LIBS) -o nyx.dll
-	strip nyx.dll	
+	$(CC) -DCREATELIB -shared ../node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o nyx$(PLATFORM_LIB_EXT)
+	strip nyx$(PLATFORM_LIB_EXT)	
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
@@ -184,7 +220,7 @@ nyx_dynamic: $(NYX_OBJ)
 
 clean:
 	$(BEGIN_NOTIFY)
-	rm -f nyx.dll *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/micohttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
+	rm -f nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/micohttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

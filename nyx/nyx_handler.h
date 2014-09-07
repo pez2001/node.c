@@ -23,7 +23,7 @@
 #ifndef NYX_HANDLER_H
 #define NYX_HANDLER_H
 
-#define _XOPEN_SOURCE
+//#define _XOPEN_SOURCE
 
 //#ifndef _GNU_SOURCE
 //#define _GNU_SOURCE

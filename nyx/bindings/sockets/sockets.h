@@ -36,6 +36,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
+#include <sys/ioctl.h>
+//typedef int SOCKET;
+#define INVALID_SOCKET -1
+#define SOCKET_ERROR   -1
 #endif
 
 #include <stdio.h>

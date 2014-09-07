@@ -135,9 +135,9 @@ node *microhttpd_service(node *state,node *obj,node *block,node *parameters)
     node *daemon = node_GetItem(mhd_state,3);
     node *daemon_value = get_value(daemon);
     struct MHD_Daemon *d = (struct MHD_Daemon*)(unsigned long)node_GetValue(daemon_value);
-    MHD_UNSIGNED_LONG_LONG mhd_timeout;
+    unsigned long long mhd_timeout;
     struct timeval tv;
-    MHD_socket max;
+    int max;
     fd_set rs;
     fd_set ws;
     fd_set es;

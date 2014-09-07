@@ -254,11 +254,19 @@ node *sockets_connect(node *state,node *obj,node *block,node *parameters)
               set_obj_int(is_connected,"value",1);
               //printf("connected to host\n");
               unsigned long one = 1;
+              #ifdef WIN32
               if(ioctlsocket(sock,FIONBIO,&one)==SOCKET_ERROR)
               {
                 printf("ioctlsocket error\n");
                 return(value); 
               }
+              #else
+              if(ioctl(sock,FIONBIO,&one)==SOCKET_ERROR)
+              {
+                printf("ioctl socket error\n");
+                return(value); 
+              }
+              #endif
               /*int timeout=0;
               if(setsockopt(sock,SOL_SOCKET,SO_RCVTIMEO,(char*)&timeout,sizeof(timeout)))
               { 

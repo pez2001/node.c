@@ -200,9 +200,22 @@ int execute_process2(char *executable,char *arguments)
 
 int execute(char *executable, char**args)
 {
+  int child_status=0;
   int pid = fork();
+  if(pid == 0)
+  {
+    execvp(executable,args);
+    printf("error executing :%s\n",executable);
+    exit(1);
+  }
+  else
+  {
+    int cpid = -1;
+    while(cpid != pid)
+      cpid = wait(&child_status);
 
-
+  }
+  return(child_status);
 }
 
 
@@ -211,7 +224,12 @@ int execute(char *executable, char**args)
 
 int open_url(char *url)
 {
-  execute_shell("open",url);
+  #ifdef WIN32
+    execute_shell("open",url);
+  #else
+    
+  #endif
+
 }
 
 int extract_payload(FILE *in,char *filename,char *payload,unsigned long payload_len)
@@ -521,7 +539,11 @@ int main(int argc, char** argv)
       copy_itself_to_file(in,exe_len,out);
       fclose(out);
       fclose(in);
-      spawnl(P_NOWAIT,option_filename,option_filename,"-d",argv[0],NULL);
+      #ifdef WIN32
+        spawnl(P_NOWAIT,option_filename,option_filename,"-d",argv[0],NULL);
+      #else
+      #endif
+
       return(0);
     }
 
@@ -568,7 +590,11 @@ int main(int argc, char** argv)
     add_tag(3,out);
     fclose(out);
     fclose(in);
+    #ifdef WIN32
+      spawnl(P_NOWAIT,option_temp_output_filename,option_temp_output_filename,"-P",argv[0],NULL);
+    #else
 
-    spawnl(P_NOWAIT,option_temp_output_filename,option_temp_output_filename,"-P",argv[0],NULL);
+      //execute(option_temp_output_filename,)
+    #endif
   }
 }
