@@ -1,9 +1,17 @@
+*.so
 *.o
 *.do
 *.da
 *.a
 *.dll
 *.exe
+build_inc
+nyxi
+starter
+unit_tests_debug
+unit_tests
+nyxi_debug
+
 tools/build_inc/*.o
 exports/*.o
 exports/*.do
