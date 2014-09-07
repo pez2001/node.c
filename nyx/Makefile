@@ -168,7 +168,7 @@ DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fb
 #DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
 LDFLAGS= $(PLATFORM_LIBS) $(PLATFORM_LDFLAGS)
 # -static-libstdc++
-DEBUG_LDFLAGS = $(LDFLAGS)
+DEBUG_LDFLAGS = -m32 $(LDFLAGS)
 
 CC=gcc
 AR=ar
