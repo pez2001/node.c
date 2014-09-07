@@ -1,2 +1,0 @@
-; C:\MinGW\bin\dlltool.exe -z libnode.c.def --export-all-symbol node.dll
-EXPORTS
