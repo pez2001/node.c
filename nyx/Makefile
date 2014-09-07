@@ -11,9 +11,14 @@ USE_WEBSOCKETS = True
 USE_MICROHTTPD = True
 
 
-LIBCURL := $(shell locate libcurl.so)
-LIBWEBSOCKETS := $(shell locate libwebsockets.so)
-LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
+#LIBCURL := $(shell locate libcurl.so)
+#LIBWEBSOCKETS := $(shell locate libwebsockets.so)
+#LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
+LIBCURL := $(shell echo  "int main(int c,char**v){}"| gcc -lcurl -xc -)
+LIBWEBSOCKETS := $(shell echo  "int main(int c,char**v){}"| gcc -lwebsockets -xc -)
+LIBMICROHTTPD := $(shell echo  "int main(int c,char**v){}"| gcc -lmicrohttpd -xc -)
+
+
 ifeq ($LIBCURL, "")
 	USE_CURL = False
 endif
@@ -150,8 +155,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 1060
-DEBUG_BUILD = 2143
+BUILD = 1061
+DEBUG_BUILD = 2145
 
 CSTD = c99
 

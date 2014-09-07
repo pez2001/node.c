@@ -1,7 +1,14 @@
 
-LIBCURL := $(shell locate libcurl.so)
-LIBWEBSOCKETS := $(shell locate libwebsockets.so)
-LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
+#LIBCURL := $(shell locate libcurl.so)
+#LIBWEBSOCKETS := $(shell locate libwebsockets.so)
+#LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
+
+LIBCURL := $(shell echo  "int main(int c,char**v){}"| gcc -lcurl -xc -)
+LIBWEBSOCKETS := $(shell echo  "int main(int c,char**v){}"| gcc -lwebsockets -xc -)
+LIBMICROHTTPD := $(shell echo  "int main(int c,char**v){}"| gcc -lmicrohttpd -xc -)
+
+
+
 
 
 USER := $(shell whoami)
@@ -73,8 +80,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3561
-DEBUG_BUILD = 3902
+BUILD = 3562
+DEBUG_BUILD = 3903
 
 CSTD = c99
 
