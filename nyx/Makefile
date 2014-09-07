@@ -41,6 +41,7 @@ SYS := $(shell gcc -dumpmachine)
 
 ifneq (, $(findstring linux, $(SYS)))
 	PLATFORM_EXT = 
+	PLATFORM_LIB_PREFIX = lib
 	PLATFORM_LIB_EXT = .so
 	PLATFORM_NAME = Linux
 	PLATFORM_LIBS = -lm
@@ -91,6 +92,7 @@ ifneq (, $(findstring linux, $(SYS)))
 else ifneq (, $(findstring mingw, $(SYS)))
 	PLATFORM_NAME = Win32
 	PLATFORM_EXT = .exe
+	PLATFORM_LIB_PREFIX = 
 	PLATFORM_LIB_EXT = .dll
 	PLATFORM_LIBS = -lm
 	PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
@@ -155,8 +157,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 1101
-DEBUG_BUILD = 2226
+BUILD = 1102
+DEBUG_BUILD = 2230
 
 CSTD = c99
 
@@ -231,8 +233,8 @@ nyx_static_debug: $(NYX_DEBUG_OBJ)
 	$(AR) -rs libnyx.da ../libnode.da $(NYX_DEBUG_OBJ) 
 
 nyx_dynamic: $(NYX_OBJ)
-	$(CC) -DCREATELIB -shared ../node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o nyx$(PLATFORM_LIB_EXT)
-	strip nyx$(PLATFORM_LIB_EXT)	
+	$(CC) -DCREATELIB -shared ../$(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)
+	strip $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)	
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
@@ -243,7 +245,7 @@ nyx_dynamic: $(NYX_OBJ)
 
 clean:
 	$(BEGIN_NOTIFY)
-	rm -f nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/micohttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
+	rm -f $(PLATFORM_LIB_PREFIX)nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/micohttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

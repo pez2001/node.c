@@ -17,6 +17,7 @@ SYS := $(shell gcc -dumpmachine)
 
 ifneq (, $(findstring linux, $(SYS)))
 PLATFORM_EXT = 
+PLATFORM_LIB_PREFIX = lib
 PLATFORM_LIB_EXT = .so
 PLATFORM_NAME = Linux
 PLATFORM_LIBS = -lm
@@ -39,6 +40,7 @@ endif
 else ifneq (, $(findstring mingw, $(SYS)))
 PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
+PLATFORM_LIB_PREFIX = 
 PLATFORM_LIB_EXT = .dll
 PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll -lmicrohttpd.dll -lwebsockets.dll
 PLATFORM_LDFLAGS = -static -static-libgcc -static-libstdc++
@@ -79,8 +81,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3596
-DEBUG_BUILD = 3927
+BUILD = 3598
+DEBUG_BUILD = 3928
 
 CSTD = c99
 
@@ -190,8 +192,8 @@ node_static_debug: $(NODE_DEBUG_OBJ)
 	$(AR) -rs libnode.da $(NODE_DEBUG_OBJ)
 
 node_dynamic: $(NODE_OBJ)
-	$(CC) -DCREATELIB -shared $(NODE_OBJ) -o node$(PLATFORM_LIB_EXT)
-	strip node$(PLATFORM_LIB_EXT)	
+	$(CC) -DCREATELIB -shared $(NODE_OBJ) -o $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT)
+	strip $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT)	
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
