@@ -1,17 +1,35 @@
 
+LIBCURL := $(shell locate libcurl.so)
+LIBWEBSOCKETS := $(shell locate libwebsockets.so)
+LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
+
+
 USER := $(shell whoami)
 UNAME := $(shell uname)
 SYS := $(shell gcc -dumpmachine)
+
 
 ifneq (, $(findstring linux, $(SYS)))
 PLATFORM_EXT = 
 PLATFORM_LIB_EXT = .so
 PLATFORM_NAME = Linux
-PLATFORM_LIBS = -lm -lcurl -lmicrohttpd -lwebsockets
+PLATFORM_LIBS = -lm
 PLATFORM_LDFLAGS = 
 #-static
 PLATFORM_CFLAGS = -fPIC -D_XOPEN_SOURCE=700
 PLATFORM_DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -D_XOPEN_SOURCE=700
+
+ifneq ($LIBCURL, "")
+	PLATFORM_LIBS += -lcurl
+endif
+ifneq ($LIBWEBSOCKETS, "")
+	PLATFORM_LIBS += -lwebsockets
+endif
+ifneq ($LIBMICROHTTPD, "")
+	PLATFORM_LIBS += -lmicrohttpd
+endif
+
+
 else ifneq (, $(findstring mingw, $(SYS)))
 PLATFORM_NAME = Win32
 PLATFORM_EXT = .exe
@@ -21,11 +39,25 @@ PLATFORM_LDFLAGS = -static -static-libgcc -static-libstdc++
 PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 PLATFORM_DEBUG_CFLAGS = -DWIN32 
 #-DUSE_MEMORY_DEBUGGING
+
+ifneq ($LIBCURL, "")
+	PLATFORM_LIBS += -lcurl.dll
+endif
+ifneq ($LIBWEBSOCKETS, "")
+	PLATFORM_LIBS += -lwebsockets.dll
+endif
+ifneq ($LIBMICROHTTPD, "")
+	PLATFORM_LIBS += -lmicrohttpd.dll
+endif
+
+
 else ifneq (, $(findstring cygwin, $(SYS)))
  # Do cygwin things
 else
  # Do things for others
 endif
+
+
 
 
 #.PHONY: print_version
@@ -40,13 +72,12 @@ SUCCESS_NOTIFY =
 
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 4
-BUILD = 3555
-DEBUG_BUILD = 3896
+MINOR_VERSION = 5
+BUILD = 3559
+DEBUG_BUILD = 3900
 
 CSTD = c99
 
-#-DUSE_MEMORY_DEBUGGING
 #CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS) -lm
 #DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
 CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)

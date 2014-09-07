@@ -1,12 +1,30 @@
 
 USE_SOCKETS = True
-USE_CURL = True
-USE_WEBSOCKETS = True
 USE_HTTP = True
-USE_MICROHTTPD = True
-USE_CURSES = True
 USE_SYS = True
 USE_FILE = True
+
+
+
+USE_CURL = True
+USE_WEBSOCKETS = True
+USE_MICROHTTPD = True
+
+
+LIBCURL := $(shell locate libcurl.so)
+LIBWEBSOCKETS := $(shell locate libwebsockets.so)
+LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
+ifeq ($LIBCURL, "")
+	USE_CURL = False
+endif
+ifeq ($LIBWEBSOCKETS, "")
+	USE_WEBSOCKETS = False
+endif
+ifeq ($LIBMICROHTTPD, "")
+	USE_MICROHTTPD = False
+endif
+
+#USE_CURSES = True
 
 #USE_MEMORY_DEBUG = True
 
@@ -132,8 +150,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 1057
-DEBUG_BUILD = 2137
+BUILD = 1058
+DEBUG_BUILD = 2139
 
 CSTD = c99
 
