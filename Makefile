@@ -3,7 +3,9 @@
 #LIBWEBSOCKETS := $(shell locate libwebsockets.so)
 #LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
 
-LIBCURL = $(shell echo "int main(int c,char**v){}" | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+#LIBCURL = $(shell echo "int main(int c,char**v){}" | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+#LIBCURL = $(shell echo \\\#include <curl/curl.h> int main(int c,char**v){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
 LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
 LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
 
@@ -77,8 +79,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3578
-DEBUG_BUILD = 3917
+BUILD = 3594
+DEBUG_BUILD = 3926
 
 CSTD = c99
 
@@ -127,6 +129,7 @@ TOOLS_STARTER_OBJ = tools/starter/starter.o strings.o
 test: all
 	./unit_tests$(PLATFORM_EXT)
 
+
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
@@ -142,13 +145,6 @@ clean_all: clean libnyx_clean clean_debug clean_binaries all debug
 	$(SUCCESS_NOTIFY)
 
 all: node_static node_dynamic build_inc starter unit_tests debug libnyx nyxi
-	@echo -n "cu ret:["
-	@echo -n $(LIBCURL)
-	@echo "]"
-	@echo -n "lw ret:["
-	@echo -n $(LIBWEBSOCKETS)
-	@echo "]"
-
 	@echo "Compiling for "$(PLATFORM_NAME)
 	./build_inc$(PLATFORM_EXT) Makefile BUILD
 	$(SUCCESS_NOTIFY)
