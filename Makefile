@@ -188,7 +188,7 @@ starter: $(TOOLS_STARTER_OBJ)
 	$(CC) $(TOOLS_STARTER_OBJ) libnode.a -o starter
 
 starter_debug: $(TOOLS_STARTER_DEBUG_OBJ) 
-	$(CC) $(TOOLS_STARTER_DEBUG_OBJ) libnode.da -o starter_debug
+	$(CC) -m32 $(TOOLS_STARTER_DEBUG_OBJ) libnode.da -o starter_debug
 
 node_static: $(NODE_OBJ)
 	$(AR) -rs libnode.a $(NODE_OBJ)
