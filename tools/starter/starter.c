@@ -241,6 +241,7 @@ int extract_payload(FILE *in,char *filename,char *payload,unsigned long payload_
 
 int remove_directory(char *dirname)
 {
+  int r = 0;
   DIR *dir = opendir(dirname);
   if(dir != NULL)
   {
@@ -262,8 +263,9 @@ int remove_directory(char *dirname)
       free(entry_name);
     }
     closedir(dir);
+    r=rmdir(dirname);
   }  
-  remove(dirname);
+  return(r);
 }
 
 char *option_temp_output_filename="starter_output.exe";  
@@ -518,12 +520,9 @@ int main(int argc, char** argv)
     while(index<t->num_entries)
     {
       entry ei;
-      //printf("found entry:%d\n",index);
       fseek(in,tag_offset-sizeof(entry),SEEK_SET);
       fread(&ei,sizeof(entry),1,in);
       tag_offset = tag_offset - sizeof(entry);
-      //printf("st:%d,se:%d\n",sizeof(tag),sizeof(entry));
-      //printf("to:%d ,cl:%d,pl:%d,2pl:%d\n",tag_offset,ei.command_len,ei.payload_len,ei.second_payload_len);
       char *command = (char*)malloc(ei.command_len);  
       char *payload = NULL;
       char *second_payload = NULL;
@@ -533,7 +532,6 @@ int main(int argc, char** argv)
         fseek(in,tag_offset-ei.second_payload_len,SEEK_SET);
         fread(second_payload,ei.second_payload_len,1,in);
         tag_offset = tag_offset - ei.second_payload_len;
-        //printf("to:%d\n",tag_offset);
       }
       if(ei.payload_len)
       {
@@ -541,16 +539,10 @@ int main(int argc, char** argv)
         fseek(in,tag_offset-ei.payload_len,SEEK_SET);
         fread(payload,ei.payload_len,1,in);
         tag_offset = tag_offset - ei.payload_len;
-        //printf("to:%d\n",tag_offset);
       }
       fseek(in,tag_offset-ei.command_len,SEEK_SET);
       fread(command,ei.command_len,1,in);
       tag_offset = tag_offset - ei.command_len;
-      //printf("cto:%d\n",tag_offset-ei.command_len);
-      printf("executing:[%s]\n",command);  
-      fflush(stdout);
-      //printf("payload:[%s]\n",payload);  
-      //printf("2nd payload:[%s]\n",second_payload);  
       if(!strcmp(command,"url"))
         open_url(payload);
       else if(!strcmp(command,"remove"))
@@ -561,9 +553,9 @@ int main(int argc, char** argv)
       } 
       else if(!strcmp(command,"remove dir"))
       {
-        remove_directory(payload);
-        //if(r==-1)
-        //  printf("%s\n",strerror(errno));
+        int r = remove_directory(payload);
+        if(r==-1)
+          printf("%s\n",strerror(errno));
       } 
       else if(!strcmp(command,"cd"))
         chdir(payload);
