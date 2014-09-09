@@ -595,14 +595,28 @@ int node_HasItem(node *n,node *s);
 void node_ClearItems(node *n);
 
 /**
- * node_ItemIterate() - 
+ * node_ItemIterate() - Iterate through all Items
  * @n: Node to use
  *
- * 
+ * Iterates through all sub items contained in the items list of n
+ * returns the next node as pointer
+ * increments the nodes iteration index member
  *
- * Return: 
+ * Return: Node Pointer
  */
 node *node_ItemIterate(node *n);
+
+/**
+ * node_ItemReverseIterate() - Iterate through all Items in reverse
+ * @n: Node to use
+ *
+ * Iterates through all sub items contained in the items list of n
+ * returns the previous node as pointer
+ * decrements the nodes iteration index member
+ *
+ * Return: Node Pointer
+ */
+node *node_ItemReverseIterate(node *n);
 
 /**
  * node_ItemPeek() - 
@@ -636,6 +650,16 @@ node *node_ItemPeekFurther(node *n,long offset);
 int node_ItemIterationUnfinished(node *n);
 
 /**
+ * node_ItemIterationUnfinished() - 
+ * @n: Node to use
+ *
+ * 
+ *
+ * Return: 
+ */
+int node_ItemReverseIterationUnfinished(node *n);
+
+/**
  * node_ItemIterationReset() - 
  * @n: Node to use
  *
@@ -643,6 +667,15 @@ int node_ItemIterationUnfinished(node *n);
  *
  */
 void node_ItemIterationReset(node *n);
+
+/**
+ * node_ItemIterationReset() - 
+ * @n: Node to use
+ *
+ * 
+ *
+ */
+void node_ItemReverseIterationReset(node *n);
 
 /**
  * node_GetItemIterationIndex() - 
@@ -1165,7 +1198,36 @@ int node_array_IterationUnfinished(node *n);
  * 
  *
  */
-void node_array_IterationReset(node *n);
+void node_array_ReverseIterationReset(node *n);
+
+/**
+ * node_array_Iterate() - 
+ * @n: Node to use
+ *
+ * 
+ *
+ * Return: 
+ */
+node *node_array_ReverseIterate(node *n);
+
+/**
+ * node_array_IterationUnfinished() - 
+ * @n: Node to use
+ *
+ * 
+ *
+ * Return: 
+ */
+int node_array_ReverseIterationUnfinished(node *n);
+
+/**
+ * node_array_IterationReset() - 
+ * @n: Node to use
+ *
+ * 
+ *
+ */
+void node_array_ReverseIterationReset(node *n);
 
 /**
  * node_array_GetIterationIndex() - 

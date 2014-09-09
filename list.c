@@ -278,14 +278,31 @@ void *list_Iterate(list *l)
   return(r);
 }
 
+void *list_ReverseIterate(list *l)
+{
+  void *r = l->items[l->iteration_index];
+  l->iteration_index--;
+  return(r);
+}
+
 int list_IterationUnfinished(list *l)
 {
   return(l->iteration_index < l->num);
 }
 
+int list_ReverseIterationUnfinished(list *l)
+{
+  return(l->iteration_index >= 0);
+}
+
 void list_IterationReset(list *l)
 {
   l->iteration_index = 0;
+}
+
+void list_ReverseIterationReset(list *l)
+{
+  l->iteration_index = l->num-1;
 }
 
 long list_GetIterationIndex(list *l)

@@ -197,9 +197,9 @@ int execute_process2(char *executable,char *arguments)
 
 #endif
 
-
 int execute(char *executable, char**args)
 {
+  #ifndef WIN32
   int child_status=0;
   int pid = fork();
   if(pid == 0)
@@ -216,11 +216,11 @@ int execute(char *executable, char**args)
 
   }
   return(child_status);
+  #else
+
+  #endif
+
 }
-
-
-
-
 
 int open_url(char *url)
 {
@@ -239,21 +239,35 @@ int extract_payload(FILE *in,char *filename,char *payload,unsigned long payload_
   fclose(out);
 }
 
-
-int rename_file()
+int remove_directory(char *dirname)
 {
-
-
+  DIR *dir = opendir(dirname);
+  if(dir != NULL)
+  {
+    struct dirent *entry;
+    while((entry=readdir(dir))!=NULL)
+    {
+      if(!strcmp(entry->d_name,".") || !strcmp(entry->d_name,".."))
+        continue;
+      char *entry_name = str_Cat(dirname,"/");
+      entry_name = str_CatFree(entry_name,entry->d_name);
+      struct stat s;
+      stat(entry_name,&s);
+      if(S_ISDIR(s.st_mode))
+      //if(entry->d_type == DT_DIR)
+        remove_directory(entry_name);
+      else
+        remove(entry_name);
+      //printf("would del:[%s]\n",entry_name);
+      free(entry_name);
+    }
+    closedir(dir);
+  }  
+  remove(dirname);
 }
-
-int copy_file()
-{
-
-}
-
 
 char *option_temp_output_filename="starter_output.exe";  
-char *option_filename = NULL;
+//char *option_filename = NULL;
 
 char *option_manifest_filename = NULL;
 
@@ -266,6 +280,8 @@ int option_check_tag = 0;
 
 int option_use_manifest = 0;
 
+int optional_num = 0;
+
 int check_options(int argc, char **argv)
 {
   int c = 0;
@@ -274,9 +290,6 @@ int check_options(int argc, char **argv)
   {
     switch (c)
     {
-      /*case 'i':
-        interactive_mode = 1;
-        break;*/
       case 'r':
         option_rename_file = 1;
         break;
@@ -298,7 +311,6 @@ int check_options(int argc, char **argv)
       case 'o':
         option_temp_output_filename = optarg;
         break;
-
       case 'm':
         option_manifest_filename = optarg;
         break;
@@ -320,8 +332,9 @@ int check_options(int argc, char **argv)
         abort();
     }
   }
-  option_filename = argv[optind++];
-
+  optional_num = argc-optind;
+  printf("number of extra arguments:%d\n",optional_num);
+  //option_filename = argv[optind++];
 }
 
 int check_tagged_options(int argc, char **argv)
@@ -332,9 +345,6 @@ int check_tagged_options(int argc, char **argv)
   {
     switch (c)
     {
-      /*case 'i':
-        interactive_mode = 1;
-        break;*/
       case 'r':
         option_rename_file = 1;
         break;
@@ -374,34 +384,86 @@ int check_tagged_options(int argc, char **argv)
         abort();
     }
   }
-  option_filename = argv[optind++];
-
+  //option_filename = argv[optind++];
 }
 
+int parse_manifest(char *manifest_filename,FILE *output)
+{
+  printf("opening manifest: %s\n",manifest_filename);
+  fflush(stdout);
+  node *root = json_LoadFile(manifest_filename);
+  node *ec = node_GetItemByKey(root,"ExecutionChain");
+  printf("chain items:%d\n",node_array_GetNum(ec));
+  fflush(stdout);
+  node_array_ReverseIterationReset(ec);
+  while(node_array_ReverseIterationUnfinished(ec))
+  {
+    node *ci = node_array_ReverseIterate(ec);
+    char *command = node_GetString(node_GetItemByKey(ci,"Command"));
+    char *payload = node_GetString(node_GetItemByKey(ci,"Payload"));
+    char *payload_type = node_GetString(node_GetItemByKey(ci,"PayloadType"));
+    char *second_payload = node_GetString(node_GetItemByKey(ci,"SecondPayload"));
+    char *second_payload_type = node_GetString(node_GetItemByKey(ci,"SecondPayloadType"));
+    printf("command:%s\n",command);
+    unsigned long payload_len = 0;
+    unsigned long second_payload_len = 0;
 
+    if(!strcmp(payload_type,"File"))
+    {
+      FILE *in = fopen(payload,"rb+");
+      fseek(in,0,SEEK_END);
+      payload_len = ftell(in);
+      fseek(in,0,SEEK_SET);
+      payload = (char*)malloc(payload_len);
+      fread(payload,payload_len,1,in);
+      fclose(in);
+    }
+    else if(!strcmp(payload_type,"String"))
+    {
+      if(strlen(payload))
+        payload_len = strlen(payload)+1;
+    }
+    if(!strcmp(second_payload_type,"File"))
+    {
+      FILE *in = fopen(second_payload,"rb+");
+      fseek(in,0,SEEK_END);
+      second_payload_len = ftell(in);
+      fseek(in,0,SEEK_SET);
+      second_payload = (char*)malloc(second_payload_len);
+      fread(second_payload,second_payload_len,1,in);
+      fclose(in);
+    }
+    else if(!strcmp(second_payload_type,"String"))
+    {
+      if(strlen(second_payload))
+        second_payload_len = strlen(second_payload)+1;
+    }
+    //add_entry(nyx_rm_command,nyx_file,strlen(nyx_file)+1,NULL,0,out);
+    add_entry(command,payload,payload_len,second_payload,second_payload_len,output);
+    //free()
+  }
+  add_tag(node_array_GetNum(ec),output);
+  node_FreeTree(root);
+}
 
 int main(int argc, char** argv)
 {
   unsigned long exe_len = 0;
  
-  //printf("exe name:%s\n",argv[0]);
   FILE *in = fopen(argv[0],"rb");
   fseek(in,0,SEEK_END);
   exe_len = ftell(in);
-  //printf("file size: %d\n",exe_len);
   tag *t = read_tag(in,exe_len);
   if(t!=NULL)
   {
-    //printf("found tag(main)\n");
-    int is_mz = check_for_mz(in);
-    //if(is_mz)
-    //  printf("is mz (main)\n");
+    //int is_mz = check_for_mz(in);
     if(t->get_options)
     {
       check_tagged_options(argc,argv);
       if(option_check_tag)
       {
         printf("found tag\n");
+        fflush(stdout);
       }
       /*if(option_rename_file)
       {
@@ -410,6 +472,7 @@ int main(int argc, char** argv)
       }*/
       if(option_copy_file)
       {
+        char *option_filename = argv[optind];
         printf("copy to :%s\n",option_filename);
         remove(option_filename);
         FILE *out = fopen(option_filename,"ab+");
@@ -420,12 +483,14 @@ int main(int argc, char** argv)
       }
       if(option_delete_file)
       {
+        char *option_filename = argv[optind];
         printf("delete :%s\n",option_filename);
         remove(option_filename);
         return(0);
       }
       if(option_patch_file)
       {
+        char *option_filename = argv[optind];
         printf("patch to :%s\n",option_filename);
         remove(option_filename);
         FILE *out = fopen(option_filename,"ab+");
@@ -450,7 +515,6 @@ int main(int argc, char** argv)
 
     unsigned long index=0;
     unsigned long tag_offset = exe_len - sizeof(tag);
-    //printf("to:%d\n",tag_offset);
     while(index<t->num_entries)
     {
       entry ei;
@@ -484,12 +548,25 @@ int main(int argc, char** argv)
       tag_offset = tag_offset - ei.command_len;
       //printf("cto:%d\n",tag_offset-ei.command_len);
       printf("executing:[%s]\n",command);  
+      fflush(stdout);
       //printf("payload:[%s]\n",payload);  
       //printf("2nd payload:[%s]\n",second_payload);  
       if(!strcmp(command,"url"))
         open_url(payload);
       else if(!strcmp(command,"remove"))
-        remove(payload);
+      {
+        int r = remove(payload);
+        if(r==-1)
+          printf("%s\n",strerror(errno));
+      } 
+      else if(!strcmp(command,"remove dir"))
+      {
+        remove_directory(payload);
+        //if(r==-1)
+        //  printf("%s\n",strerror(errno));
+      } 
+      else if(!strcmp(command,"cd"))
+        chdir(payload);
       else if(!strcmp(command,"extract"))
       {
         remove(payload);
@@ -520,8 +597,9 @@ int main(int argc, char** argv)
     {
       printf("no starter tag found\n");
     }
-    if(option_copy_file)
+    if(option_copy_file && optional_num)
     {
+      char *option_filename = argv[optind];
       printf("copy to :%s\n",option_filename);
       remove(option_filename);
       FILE *out = fopen(option_filename,"ab+");
@@ -530,9 +608,9 @@ int main(int argc, char** argv)
       fclose(in);
       return(0);
     }
-
-    if(option_patch_file)
+    if(option_patch_file && optional_num)
     {
+      char *option_filename = argv[optind];
       printf("patch to :%s\n",option_filename);
       remove(option_filename);
       FILE *out = fopen(option_filename,"ab+");
@@ -543,57 +621,53 @@ int main(int argc, char** argv)
         spawnl(P_NOWAIT,option_filename,option_filename,"-d",argv[0],NULL);
       #else
       #endif
-
       return(0);
     }
-
-    if(option_delete_file)
+    if(option_delete_file && optional_num)
     {
+      char *option_filename = argv[optind];
       printf("delete :%s\n",option_filename);
       remove(option_filename);
       return(0);
     }
-
-    //char *command = "url";
-    char *command = option_filename;
-    //char *payload = "http://www.works.org/";
-    char *payload = argv[optind++];
-    char *second_payload = argv[optind++];
-    unsigned long payload_len = 0;
-    if(payload)
-      payload_len = strlen(payload)+1;
-    unsigned long second_payload_len = 0;
-    if(second_payload)
-      second_payload_len = strlen(second_payload)+1;
+    //prepare output file
     remove(option_temp_output_filename);
     FILE *out = fopen(option_temp_output_filename,"ab+");
     copy_itself_to_file(in,exe_len,out);
 
-    char *nyx_command = "extract";
-    char *nyx_rm_command = "remove";
-    char *nyx_file = "temp.nyx";
-
-    add_entry(nyx_rm_command,nyx_file,strlen(nyx_file)+1,NULL,0,out);
-
-    add_entry(command,payload,payload_len,second_payload,second_payload_len,out);
-
-    FILE *in_nyx = fopen("tests/nyx/websock_http.nyx","rb+");
-    fseek(in_nyx,0,SEEK_END);
-    unsigned long nyx_len = ftell(in_nyx);
-    fseek(in_nyx,0,SEEK_SET);
-    char *nyx = (char*)malloc(nyx_len);
-    fread(nyx,nyx_len,1,in_nyx);
-    fclose(in_nyx);
-    add_entry(nyx_command,nyx_file,strlen(nyx_file)+1,nyx,nyx_len,out);
-    free(nyx);
-
-    add_tag(3,out);
+    if(option_manifest_filename!=NULL)
+    {
+      parse_manifest(option_manifest_filename,out);
+    }
+    else
+    {
+      //just add the command line given
+      unsigned long second_payload_len = 0;
+      unsigned long payload_len = 0;
+      char *command = argv[optind++];
+      char *payload = argv[optind++];
+      if(payload)
+        payload_len = strlen(payload)+1;
+      char *second_payload = str_CreateEmpty();
+      char *temp_append = NULL;
+      while(optind<argc)
+      {
+        temp_append = argv[optind];
+        second_payload = str_CatFree(second_payload,temp_append);
+        optind++;
+        if(optind < argc)
+          second_payload = str_CatFree(second_payload," ");
+      }
+      second_payload_len = strlen(second_payload)+1;
+      //printf("just using the complete command line given:[%s] [%s] [%s]\n",command,payload,second_payload);
+      add_entry(command,payload,payload_len,second_payload,second_payload_len,out);
+      add_tag(1,out);
+    }
     fclose(out);
     fclose(in);
     #ifdef WIN32
       spawnl(P_NOWAIT,option_temp_output_filename,option_temp_output_filename,"-P",argv[0],NULL);
     #else
-
       //execute(option_temp_output_filename,)
     #endif
   }

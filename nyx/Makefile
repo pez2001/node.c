@@ -14,9 +14,9 @@ USE_MICROHTTPD = True
 #LIBCURL := $(shell locate libcurl.so)
 #LIBWEBSOCKETS := $(shell locate libwebsockets.so)
 #LIBMICROHTTPD := $(shell locate libmicrohttpd.so)
-LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
-LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
-LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
+LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
+LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 
 
 ifneq ($(LIBCURL), 0)
@@ -45,8 +45,8 @@ ifneq (, $(findstring linux, $(SYS)))
 	PLATFORM_LIB_EXT = .so
 	PLATFORM_NAME = Linux
 	PLATFORM_LIBS = -lm
-	PLATFORM_CFLAGS = -fPIC -D_XOPEN_SOURCE=700
-	PLATFORM_DEBUG_CFLAGS = -fPIC -D_XOPEN_SOURCE=700
+	PLATFORM_CFLAGS = -fPIC -DLINUX -D_XOPEN_SOURCE=700
+	PLATFORM_DEBUG_CFLAGS = -fPIC -DLINUX -D_XOPEN_SOURCE=700
 	PLATFORM_LDFLAGS = 
 	#-static
 	ifeq ($(USE_CURL),True)
@@ -96,8 +96,8 @@ else ifneq (, $(findstring mingw, $(SYS)))
 	PLATFORM_LIB_EXT = .dll
 	PLATFORM_LIBS = -lm
 	PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
+	PLATFORM_DEBUG_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 	PLATFORM_LDFLAGS = -static -static-libgcc
-	PLATFORM_DEBUG_CFLAGS = -DWIN32
 	ifeq ($(USE_CURL),True)
 		PLATFORM_LIBS += -lcurl.dll
 		PLATFORM_CFLAGS += -DUSE_CURL
@@ -157,8 +157,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 1107
-DEBUG_BUILD = 2240
+BUILD = 1132
+DEBUG_BUILD = 2290
 
 CSTD = c99
 

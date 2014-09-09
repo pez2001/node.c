@@ -11,14 +11,20 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/wait.h>
+#ifdef LINUX
+	#include <sys/wait.h>
+#endif
 #include <sched.h>
 #include <stddef.h>
+#include <dirent.h>
+#include <sys/stat.h>
+
 //#include <spawn.h>
 
 
 
 #include "../../strings.h"
+#include "../../imports/json.h"
 
 
 #ifdef WIN32

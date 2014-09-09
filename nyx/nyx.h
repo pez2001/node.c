@@ -125,7 +125,10 @@ node *get_member(node *obj,char *key);
 node *get_object(node *obj,char *key);
 node *get_member_non_recursive(node *obj,char *key);
 node *get_item(node *state,node *obj,node *key,BOOL append_new_item);
-int remove_item(node *obj,node *item);
+void remove_item(node *obj,node *item);
+
+long get_items_new_index(node *items);
+
 
 node *create_base_obj_layout(char *obj_name);
 node *create_class_object(void);

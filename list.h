@@ -44,7 +44,7 @@ extern "C"  {
 #endif
 
 #ifdef WIN32
-#define _WIN32_WINNT  0x501 
+//#define _WIN32_WINNT  0x501 
 #include "windows.h"
 #else
 #define BOOL int
@@ -114,13 +114,19 @@ void list_MoveDown(list *l, long index);
 
 void *list_Iterate(list *l);
 
+void *list_ReverseIterate(list *l);
+
 void list_IterationReset(list *l);
+
+void list_ReverseIterationReset(list *l);
 
 int list_IterationUnfinished(list *l);
 
-long list_GetIterationIndex(list *l);
-void list_SetIterationIndex(list *l,long iteration_index);
+int list_ReverseIterationUnfinished(list *l);
 
+long list_GetIterationIndex(list *l);
+
+void list_SetIterationIndex(list *l,long iteration_index);
 
 #ifdef __cplusplus
 } 

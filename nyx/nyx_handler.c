@@ -1422,7 +1422,6 @@ node *nyxh_replace(node *state,node *obj,node *block,node *parameters)
   node *value = create_class_instance(base_class);
   node *real_value = get_value(value);
   add_garbage(state,value);
-  long index = -1;
   if(node_GetItemsNum(parameters))
   {
     node *needle = node_GetItem(parameters,0);
@@ -1438,25 +1437,6 @@ node *nyxh_replace(node *state,node *obj,node *block,node *parameters)
       char *new_hay = str_Replace(chay,cneedle,cdiamond);
       node_SetString(real_value,new_hay);//TODO add setstringWithoutCopy
       free(new_hay);
-      /*if(!strlen(chay)||!strlen(cneedle))
-        return(value);
-      char *pos = strstr(chay,cneedle);
-      if(pos)
-      {
-        index = (long)(pos-chay);
-        unsigned long total_len = (strlen(chay)-strlen(cneedle))+strlen(cdiamond);
-        char *new_hay = (char*)malloc(total_len+1);
-        memset(new_hay+total_len,0,1);
-        if(index)
-          memcpy(new_hay,chay,index);
-        if(strlen(cdiamond))
-          memcpy(new_hay+index,cdiamond,strlen(cdiamond));
-        unsigned long remainder_len = total_len - index - strlen(cdiamond);
-        if(remainder_len)
-          memcpy(new_hay+index+strlen(cdiamond),chay+index+strlen(cneedle),remainder_len);
-        node_SetString(real_value,new_hay);//TODO add setstringWithoutCopy
-        free(new_hay);
-      } */
     }
   }
   else 

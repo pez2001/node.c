@@ -27,7 +27,7 @@
 void websockets_binding_open(node *state)
 {
   node *modules = get_modules(state);
-  node *base_class = get_base_class(state);
+  //node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *websockets = websockets_bind(modules);
   node *proxy = create_proxy_object(state,websockets,"websockets");

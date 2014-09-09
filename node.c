@@ -1249,6 +1249,21 @@ node *node_ItemIterate(node *n)
   return(list_Iterate(n->items));
 }
 
+node *node_ItemReverseIterate(node *n)
+{
+  return(list_ReverseIterate(n->items));
+}
+
+int node_ItemReverseIterationUnfinished(node *n)
+{
+  return(list_ReverseIterationUnfinished(n->items)); 
+}
+
+void node_ItemReverseIterationReset(node *n)
+{
+  list_ReverseIterationReset(n->items);
+}
+
 node *node_ItemPeek(node *n)
 {
   if(!list_IterationUnfinished(n->items))
@@ -1392,6 +1407,21 @@ int node_array_IterationUnfinished(node *n)
 void node_array_IterationReset(node *n)
 {
   list_IterationReset(((node_array*)(unsigned long)n->value)->nodes);
+}
+
+void node_array_ReverseIterationReset(node *n)
+{
+  list_ReverseIterationReset(((node_array*)(unsigned long)n->value)->nodes);
+}
+
+node *node_array_ReverseIterate(node *n)
+{
+  return((node*)list_ReverseIterate(((node_array*)(unsigned long)n->value)->nodes)); 
+}
+
+int node_array_ReverseIterationUnfinished(node *n)
+{
+  return(list_ReverseIterationUnfinished(((node_array*)(unsigned long)n->value)->nodes));
 }
 
 long node_array_GetIterationIndex(node *n)

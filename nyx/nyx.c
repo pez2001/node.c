@@ -500,7 +500,7 @@ void remove_member(node *obj,node *member)
   remove_obj_kv(members,member);
 }
 
-int remove_item(node *obj,node *item)
+void remove_item(node *obj,node *item)
 {
   node *items = node_GetItemByKey(obj,"items");
   remove_obj_kv(items,item);
@@ -1313,7 +1313,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
     if(execute_block)
     {
       node *block_parameters = node_GetItemByKey(obj,"nyx_parameters");
-      if(block_parameters!=NULL && node_GetItemsNum(block_parameters))
+      if(block_parameters!=NULL && node_GetItemsNum(block_parameters)) //TODO this just uses defined parameters
       {
         //printf("preparing function environment\n");
         //node_PrintTree(obj);

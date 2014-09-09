@@ -5,9 +5,9 @@
 
 #LIBCURL = $(shell echo "int main(int c,char**v){}" | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
 #LIBCURL = $(shell echo \\\#include <curl/curl.h> int main(int c,char**v){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
-LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
-LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
-LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null)
+LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
+LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
+LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 
 
 USER := $(shell whoami)
@@ -23,8 +23,8 @@ PLATFORM_NAME = Linux
 PLATFORM_LIBS = -lm
 PLATFORM_LDFLAGS = 
 #-static
-PLATFORM_CFLAGS = -fPIC -D_XOPEN_SOURCE=700
-PLATFORM_DEBUG_CFLAGS = -fPIC -DUSE_MEMORY_DEBUGGING -D_XOPEN_SOURCE=700
+PLATFORM_CFLAGS = -fPIC -DLINUX -D_XOPEN_SOURCE=700
+PLATFORM_DEBUG_CFLAGS = -fPIC -DUSE_MEMORY_DEBUGGING -DLINUX -D_XOPEN_SOURCE=700
 
 ifeq ($(LIBCURL), 0)
 	PLATFORM_LIBS += -lcurl
@@ -45,7 +45,7 @@ PLATFORM_LIB_EXT = .dll
 PLATFORM_LIBS = -lwsock32 -lws2_32 -lm -lcurl.dll -lmicrohttpd.dll -lwebsockets.dll
 PLATFORM_LDFLAGS = -static -static-libgcc -static-libstdc++
 PLATFORM_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
-PLATFORM_DEBUG_CFLAGS = -DWIN32 
+PLATFORM_DEBUG_CFLAGS = -DWIN32 -DWINVER=0x501 -D_WIN32_WINNT=0x0501
 #-DUSE_MEMORY_DEBUGGING
 
 ifeq ($(LIBCURL), 0)
@@ -81,8 +81,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3602
-DEBUG_BUILD = 3931
+BUILD = 3627
+DEBUG_BUILD = 3956
 
 CSTD = c99
 
@@ -121,10 +121,11 @@ TOOLS_BUILD_INC_BINS = build_inc$(PLATFORM_EXT)
 TOOLS_BUILD_INC_INCLUDE_FILES = tools/build_inc/build_inc.h
 TOOLS_BUILD_INC_OBJ = tools/build_inc/build_inc.o
 
-TOOLS_STARTER_FILES = tools/starter/starter.c strings.c
+TOOLS_STARTER_FILES = tools/starter/starter.c 
 TOOLS_STARTER_BINS = starter$(PLATFORM_EXT)
-TOOLS_STARTER_INCLUDE_FILES = tools/starter/starter.h strings.h
-TOOLS_STARTER_OBJ = tools/starter/starter.o strings.o
+TOOLS_STARTER_INCLUDE_FILES = tools/starter/starter.h 
+TOOLS_STARTER_OBJ = tools/starter/starter.o
+TOOLS_STARTER_DEBUG_OBJ = tools/starter/starter.do
 
 
 
@@ -135,7 +136,7 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc node_static_debug libnyx_debug unit_tests_debug nyxi_debug
+debug: build_inc node_static_debug libnyx_debug starter_debug unit_tests_debug nyxi_debug 
 	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 print_version:
@@ -184,8 +185,10 @@ build_inc: $(TOOLS_BUILD_INC_OBJ)
 	$(CC) $(TOOLS_BUILD_INC_OBJ) -o build_inc 
 
 starter: $(TOOLS_STARTER_OBJ) 
-	$(CC) $(TOOLS_STARTER_OBJ) -o starter
+	$(CC) $(TOOLS_STARTER_OBJ) libnode.a -o starter
 
+starter_debug: $(TOOLS_STARTER_DEBUG_OBJ) 
+	$(CC) $(TOOLS_STARTER_DEBUG_OBJ) libnode.da -o starter_debug
 
 node_static: $(NODE_OBJ)
 	$(AR) -rs libnode.a $(NODE_OBJ)
@@ -206,10 +209,10 @@ node_dynamic: $(NODE_OBJ)
 
 clean: libnyx_clean
 	$(BEGIN_NOTIFY)
-	rm -f node$(PLATFORM_LIB_EXT) *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do
+	rm -f $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do tools/starter/*.o
 
 clean_binaries:
-	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) nyxi$(PLATFORM_EXT) nyxi_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 
+	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) nyxi$(PLATFORM_EXT) nyxi_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) starter$(PLATFORM_EXT)
 
 clean_debug:
 	rm -f build_inc$(PLATFORM_EXT) nyxi_debug$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) *.do *.da 

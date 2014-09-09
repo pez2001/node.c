@@ -1,21 +1,25 @@
 {
-
-    "execution_chain" : [
+    "ExecutionChain" : [
             {
-            "Name" : "simple",
-            "VertexProgram": "
-                                void main()\n
-	                            {\n
-	                            \n	
-                                  gl_Position = gl_ProjectionMatrix * gl_ModelViewMatrix * gl_Vertex;\n
-	                            }\n
-	                          ",
-            "FragmentProgram": "
-                                void main()\n
-                                {\n	
-	                              gl_FragColor = gl_Color;\n
-                                }\n 
-                                "
+            "Command" : "extract",
+            "Payload": "temp.nyx",
+            "PayloadType": "String",
+            "SecondPayload": "tests/nyx/websock_http.nyx",
+            "SecondPayloadType": "File"
+            },
+            {
+            "Command" : "execute",
+            "Payload": "nyxi.exe",
+            "PayloadType": "String",
+            "SecondPayload": "temp.nyx",
+            "SecondPayloadType": "String"
+            },
+            {
+            "Command" : "remove",
+            "Payload": "temp.nyx",
+            "PayloadType": "String",
+            "SecondPayload": "",
+            "SecondPayloadType": "String"
             }
         ]
 }

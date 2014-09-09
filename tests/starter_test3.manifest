@@ -1,0 +1,18 @@
+{
+    "ExecutionChain" : [
+            {
+            "Command" : "execute",
+            "Payload": "nyxi.exe",
+            "PayloadType": "String",
+            "SecondPayload": "tests/nyx/print.nyx",
+            "SecondPayloadType": "String"
+            },
+            {
+            "Command" : "execute",
+            "Payload": "nyxi.exe",
+            "PayloadType": "String",
+            "SecondPayload": "tests/nyx/print.nyx",
+            "SecondPayloadType": "String"
+            }
+        ]
+}

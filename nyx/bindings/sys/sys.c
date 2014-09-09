@@ -66,9 +66,13 @@ void add_module(node *base_class,node *items,char *module_name)
 
 void sys_add_parameter(node *state,node *parameter)
 {
-  node *base_class = get_base_class(state);
+  //node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *sys = get_member(block_class,"sys");
+  sys = resolve_object(sys);//TODO check if this problem occurs elsewhere and check for other solutions (proxy was returned by get_member)
+  //node_PrintTree(sys);
+  //fflush(stdout);
+
   node *parameters = get_member(sys,"parameters");
   node *items = node_GetItemByKey(parameters,"items");
   reset_obj_refcount(parameter);

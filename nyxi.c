@@ -78,7 +78,8 @@ more kerneldoc comments
 redundancy reductions
 minor features adding (http)
 automatic test suite
-
+remove warnings
+review parameter handling
 
 
 

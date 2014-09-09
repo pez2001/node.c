@@ -101,9 +101,10 @@ node *file_close(node *state,node *obj,node *block,node *parameters)
   if(handle!=NULL)
   {
     FILE *fhandle = (FILE*)(unsigned long)node_GetValue(handle);
-    int ret = fclose(fhandle);
+    //int ret = fclose(fhandle);
+    fclose(fhandle);
     //if(ret)
-      return(obj);
+    return(obj);
       //value = get_true_class(state);
     //node_SetNull(handle);
   }

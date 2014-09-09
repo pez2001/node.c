@@ -28,7 +28,7 @@
 void microhttpd_binding_open(node *state)
 {
   node *modules = get_modules(state);
-  node *base_class = get_base_class(state);
+  //node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *microhttpd = microhttpd_bind(modules);
   node *proxy = create_proxy_object(state,microhttpd,"microhttpd");
@@ -131,13 +131,17 @@ node *microhttpd_service(node *state,node *obj,node *block,node *parameters)
     node *privates = node_GetItemByKey(pstate,"privates");
     node *nmhd_state = node_GetItemByKey(privates,"microhttpd.state");
     node *mhd_state = node_GetNode(nmhd_state);
-    node *read_block = node_GetItem(mhd_state,1);
+    //node *read_block = node_GetItem(mhd_state,1);
     node *daemon = node_GetItem(mhd_state,3);
     node *daemon_value = get_value(daemon);
     struct MHD_Daemon *d = (struct MHD_Daemon*)(unsigned long)node_GetValue(daemon_value);
-    unsigned long long mhd_timeout;
+    //unsigned long long mhd_timeout;
     struct timeval tv;
+    #ifdef WIN32
+    MHD_socket max;
+    #else
     int max;
+    #endif
     fd_set rs;
     fd_set ws;
     fd_set es;
