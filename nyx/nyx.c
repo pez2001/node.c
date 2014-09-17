@@ -606,7 +606,7 @@ node *get_member_part(node *obj,char *key)
       {
         printf("circular reference detected: %x (%s)\n",obj,get_obj_name(obj));
         fflush(stdout);
-        int x=1/0;
+        //int x=1/0;
       }
       node *sub_match=get_member_part(p,key);
       if(sub_match!=NULL)
@@ -748,8 +748,8 @@ node *create_class_instance(node *class_obj)
   return(child);
 }
 
-void free_obj(node *state,node *obj)
-{
+//void free_obj(node *state,node *obj)
+//{
   /*
   node *base_class_instance = node_GetItemByKey(obj,"base_class_instance");
   if(base_class_instance!=NULL && base_class_instance != state->base_class)
@@ -764,8 +764,8 @@ void free_obj(node *state,node *obj)
     free_obj(state,member);
   }
   */
-  node_FreeTree(obj);
-}
+//  node_FreeTree(obj);
+//}
 
 node *create_base_obj_layout(char *obj_name)
 {
@@ -779,13 +779,16 @@ node *create_base_obj_layout(char *obj_name)
   return(base);
 }
 
-
 //state,execution_obj,block
 void add_class_object_function(node *class,char *method_name,node*(*handler)(node*,node*,node*,node*))
 {
   node *method = create_base_obj_layout(method_name);
   set_obj_string(method,"type","function");
-  set_obj_ptr(method,"handler",(void*)handler);
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wpedantic"
+    set_obj_ptr(method,"handler",(void*)handler);
+  #pragma GCC diagnostic pop
+    
   inc_obj_refcount(method);
   add_member(class,method);
 }
@@ -1938,7 +1941,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             //printf("found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
             long token_len = strlen(node_GetString(token));
             char *found_name = get_obj_name(found_obj);
-            if(strlen(found_name)<token_len)
+            if((long)strlen(found_name)<token_len)
             {
               long found_name_len=strlen(found_name);
               use_preop=str_Sub(node_GetString(token),found_name_len,token_len-found_name_len);

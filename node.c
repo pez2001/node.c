@@ -235,6 +235,7 @@ void node_Free(node *n,BOOL free_value)
 {
   //printf("freeing node:%x\n",n);
   //node_PrintTree(n);
+  //node_Print(n,True,True);
   //fflush(stdout);
   //node_Print(n,True,True);
   if(free_value)
@@ -291,7 +292,7 @@ void node_FreeValue(unsigned char type,unsigned long long value)
          break;
     case NODE_TYPE_BINARY:
          if(((node_binary*)(unsigned long)value)!=NULL)
-           node_FreeBinary((node_binary*)(unsigned long)value,False); //TODO recheck freeing style
+           node_FreeBinary((node_binary*)(unsigned long)value,True);//False); //TODO recheck freeing style
          break;
     default:
          break;
@@ -733,19 +734,26 @@ node *node_Copy(node *n,BOOL copy_value)
   {
     list *l = list_Create(0,0);
     r = node_CreateFilled(n->parent,n->key,0,n->type,l);
-    node_SetDouble(r,node_GetDouble(n));
+    if(copy_value)
+      node_SetDouble(r,node_GetDouble(n));
   }
   else if(n->type == NODE_TYPE_FLOAT)
   {
     list *l = list_Create(0,0);
     r = node_CreateFilled(n->parent,n->key,0,n->type,l);
-    node_SetFloat(r,node_GetFloat(n));
+    if(copy_value)
+      node_SetFloat(r,node_GetFloat(n));
   }
   else
   {
-    unsigned long long v = node_CopyValue(n); 
     list *l = list_Copy(n->items);
-    r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+    if(copy_value)
+    {
+      unsigned long long v = node_CopyValue(n); 
+      r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+    }
+    else
+      r = node_CreateFilled(n->parent,n->key,0,n->type,l);
   }
   return(r);
 }
@@ -757,19 +765,26 @@ node *node_CopySub(node *n,BOOL copy_value)
   {
     list *l = list_Create(0,0);
     r = node_CreateFilled(n->parent,n->key,0,n->type,l);
-    node_SetDouble(r,node_GetDouble(n));
+    if(copy_value)
+      node_SetDouble(r,node_GetDouble(n));
   }
   else if(n->type == NODE_TYPE_FLOAT)
   {
     list *l = list_Create(0,0);
     r = node_CreateFilled(n->parent,n->key,0,n->type,l);
-    node_SetFloat(r,node_GetFloat(n));
+    if(copy_value)
+      node_SetFloat(r,node_GetFloat(n));
   }
   else
   {
-    unsigned long long v = node_CopyValue(n); 
     list *l = list_Create(0,0);
-    r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+    if(copy_value)
+    {
+      unsigned long long v = node_CopyValue(n); 
+      r = node_CreateFilled(n->parent,n->key,v,n->type,l);
+    }
+    else
+      r = node_CreateFilled(n->parent,n->key,0,n->type,l);
   }
   return(r);
 }
@@ -1154,7 +1169,7 @@ void node_SetSint64(node *n,long long ll)
 
 void node_InsertItem(node *n,node *s,long index)
 {
-  list_Insert(n->items,0,s);
+  list_Insert(n->items,index,s);
 }
 
 long node_AddItem(node *n,node *s)

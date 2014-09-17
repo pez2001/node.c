@@ -186,17 +186,6 @@ int mem_Close(void)
 	return(r);
 }
 
-void *mem_malloc_debug(unsigned long size, char *description)
-{
-	void *ptr = malloc_ptr(size);
-	if(size > mem_max_chunk_size)
-	{
-		mem_max_chunk_size = size;
-	}		
-	mem_AddChunk(ptr,size);
-	return(ptr);
-}
-
 void *mem_malloc(unsigned long size)
 {
 	void *ptr = malloc_ptr(size);
@@ -303,16 +292,6 @@ void mem_free(void *ptr)
 		//int x = 1/0;//my breakpoint style :-)
 	}
 }
-
-void *mem_copy(void *src)
-{
-	mem_chunk *chunk = mem_get_chunk(src);
-	void *tmp = (void*)malloc_ptr(chunk->size);
-	memcpy(tmp,src,chunk->size);
-	mem_AddChunk(tmp,chunk->size);
-	return(tmp);
-}
-
 
 #endif
 

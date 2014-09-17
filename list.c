@@ -197,9 +197,9 @@ void list_Clear(list *l)
 	l->num = 0;
 }
 
-unsigned long list_GetLen(list *l)
+long list_GetLen(list *l)
 {
-	unsigned long r = l->num;
+	long r = l->num;
 	return(r);
 }
 
@@ -243,7 +243,7 @@ BOOL list_Contains(list *l,void *obj)
 	return(0);
 }
 
-unsigned long list_GetIndex(list *l, void *obj)
+long list_GetIndex(list *l, void *obj)
 {
 	for(int i=0;i<l->num;i++)
 	{	
@@ -257,7 +257,7 @@ unsigned long list_GetIndex(list *l, void *obj)
 
 long list_RemoveItem(list *l, void *obj)
 {
-	unsigned long index = list_GetIndex(l,obj);
+	long index = list_GetIndex(l,obj);
 	if(index != -1)
 		list_Remove(l,index);
 	return(index);

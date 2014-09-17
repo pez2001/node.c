@@ -158,7 +158,7 @@ long str_MatchCount(char *a,char *b)
 
 char *str_Sub(char *a,long start,long len)
 {
-  if(a==NULL || strlen(a)<=start)
+  if(a==NULL || (long)strlen(a)<=start)
   {
   	return(str_CreateEmpty());
   }
@@ -167,7 +167,7 @@ char *str_Sub(char *a,long start,long len)
   {
     long e = start + len;
     l=len;
-    if(e>strlen(a))
+    if(e>(long)strlen(a))
       l = strlen(a) - start;
   }
   else

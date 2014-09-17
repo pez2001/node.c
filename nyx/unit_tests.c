@@ -191,8 +191,13 @@ void nyx_raw_tests2(void)
   printf("nyx tests 2 thru\n");
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 int main(int argc, char *argv[])
 {
   nyx_raw_tests();
   nyx_raw_tests2();
 }
+
+#pragma GCC diagnostic pop

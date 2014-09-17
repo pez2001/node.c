@@ -24,32 +24,6 @@
 
 #ifdef USE_SYS
 
-void sys_binding_open(node *state)
-{
-  srand(time(NULL));
-  node *modules = get_modules(state);
-  node *base_class = get_base_class(state);
-  node *block_class = get_block_class(state);
-  node *sys = sys_bind(base_class,modules);
-  node *proxy = create_proxy_object(state,sys,"sys");
-  inc_obj_refcount(sys);
-  add_member(block_class,proxy);
-  inc_obj_refcount(proxy);
-}
-
-void sys_binding_close(node *state)
-{
-
-}
-
-
-node *sys_bind(node *base_class,node *class)
-{
-  node *sys = sys_create_class_object(base_class);
-  add_member(class,sys);//TODO performance killer use a proxy to a static
-  inc_obj_refcount(sys);
-  return(sys);
-}
 
 void add_module(node *base_class,node *items,char *module_name)
 {
@@ -147,6 +121,36 @@ node *sys_create_class_object(node *base_class)
   return(base);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+void sys_binding_open(node *state)
+{
+  srand(time(NULL));
+  node *modules = get_modules(state);
+  node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *sys = sys_bind(base_class,modules);
+  node *proxy = create_proxy_object(state,sys,"sys");
+  inc_obj_refcount(sys);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void sys_binding_close(node *state)
+{
+
+}
+
+node *sys_bind(node *base_class,node *class)
+{
+  node *sys = sys_create_class_object(base_class);
+  add_member(class,sys);//TODO performance killer use a proxy to a static
+  inc_obj_refcount(sys);
+  return(sys);
+}
+
+
 node *sys_time(node *state,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
@@ -226,7 +230,7 @@ node *sys_execute(node *state,node *obj,node *block,node *parameters)
     if(node_GetType(real_command)==NODE_TYPE_STRING)
     {
       char *cc = node_GetString(real_command);
-      FILE *f = (FILE*)popen(cc,"rb");
+      FILE *f = (FILE*)popen(cc,"r");
       if(f!=NULL)
       {
         char *buf = (char*)malloc(100);
@@ -239,7 +243,7 @@ node *sys_execute(node *state,node *obj,node *block,node *parameters)
           memset(buf,0,100);
         }
         node_SetString(real_value,ret);
-        fclose(f);
+        pclose(f);
         free(ret);
         free(buf);
       }
@@ -401,8 +405,7 @@ node *sys_sleep(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-
-
+#pragma GCC diagnostic pop
 
 #endif
 

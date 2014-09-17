@@ -24,30 +24,6 @@
 
 #ifdef USE_WEBSOCKETS
 
-void websockets_binding_open(node *state)
-{
-  node *modules = get_modules(state);
-  //node *base_class = get_base_class(state);
-  node *block_class = get_block_class(state);
-  node *websockets = websockets_bind(modules);
-  node *proxy = create_proxy_object(state,websockets,"websockets");
-  inc_obj_refcount(websockets);
-  add_member(block_class,proxy);
-  inc_obj_refcount(proxy);
-}
-
-void websockets_binding_close(node *state)
-{
-
-}
-
-node *websockets_bind(node *class)
-{
-  node *websockets = websockets_create_class_object();
-  add_member(class,websockets);
-  inc_obj_refcount(websockets);
-  return(websockets);
-}
 
 node *websockets_create_class_object(void)
 {
@@ -113,19 +89,18 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
   node *found_prot = NULL;
   node *state = NULL;
   node *block = NULL;
-  node *daemon = NULL;
+  //node *daemon = NULL;
   node *daemon_obj = NULL;
   node *session_uid = NULL;
   long lsession_uid = 0;
   node *sessions_num = NULL;
   node *sessions = NULL;
-  node *broadcast_message = NULL;
   long lsessions_num = 0;
   if(wsi && wsd_state)
   {
     state = node_GetItem(wsd_state,0);
     block = node_GetItem(wsd_state,1);
-    daemon = node_GetItem(wsd_state,2);
+    //daemon = node_GetItem(wsd_state,2);
     node *protocols = node_GetItem(wsd_state,3);
     session_uid = node_GetItem(wsd_state,4);
     node *session_uid_value = node_GetItemByKey(session_uid,"value");
@@ -134,11 +109,10 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     sessions = node_GetItem(wsd_state,6);
     node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
     lsessions_num = node_GetSint32(sessions_num_value);
-    daemon_obj = node_GetItem(wsd_state,9);
-    //broadcast_message = node_GetItem(wsd_state,10);
+    //daemon_obj = node_GetItem(wsd_state,9);
 
     node *protocols_items = node_GetItemByKey(protocols,"items");
-    struct libwebsocket_protocols *prot = libwebsockets_get_protocol(wsi);
+    const struct libwebsocket_protocols *prot = libwebsockets_get_protocol(wsi);
     if(prot && prot->name)
     {
       node_ItemIterationReset(protocols_items);
@@ -147,14 +121,13 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *proto = node_ItemIterate(protocols_items);
         if(!strcmp(get_obj_name(proto),prot->name))
         {
-          //printf("found proto: %s : %d\n", get_obj_name(proto),reason);
           found_prot = proto;
         }
       }
     }
   }
 
-  switch (reason) 
+  switch(reason) 
   {
 
     case LWS_CALLBACK_HTTP:
@@ -196,28 +169,27 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         inc_obj_refcount(url_value);
         free(url);
         node_AddItem(parameters,pss->session);
-        node_AddItem(parameters,daemon_obj);
+        //node_AddItem(parameters,daemon_obj);
         node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
         //dec_obj_refcount(msg_value);
         dec_obj_refcount(prot_value);
         //add_garbage(state,msg_value);//TODO check if "just survives"
         add_garbage(state,prot_value);
+        dec_obj_refcount(url_value);
+        add_garbage(state,url_value);
         node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
         if( (node_GetType(ret_obj_value)==NODE_TYPE_STRING && strlen(node_GetString(ret_obj_value))) || (node_GetType(ret_obj_value)==NODE_TYPE_BINARY && node_GetBinaryLength(ret_obj_value)) )
         {
           //printf("returning http message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
           node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
+          reset_obj_refcount(ret_obj_copy);
           set_obj_string(ret_obj_copy,"name","message");
           add_member(pss->session,ret_obj_copy);
           inc_obj_refcount(ret_obj_copy);
         }
         libwebsocket_callback_on_writable(context, wsi);
       }
-
-      //libwebsocket_callback_on_writable(context, wsi);
       break;
-
-
 
     case LWS_CALLBACK_HTTP_BODY_COMPLETION:
       lwsl_notice("LWS_CALLBACK_HTTP_BODY_COMPLETION\n");
@@ -235,9 +207,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       }
       return(-1);
 
-  case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
-    if(found_prot)
-    {
+    case LWS_CALLBACK_FILTER_PROTOCOL_CONNECTION:
+      if(found_prot)
+      {
       int n;
       static const char *token_names[] = 
       {
@@ -292,7 +264,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
 
 
 
-      for(n=0;n<sizeof(token_names)/sizeof(token_names[0]);n++) 
+      for(n=0;n<(int)(sizeof(token_names)/sizeof(token_names[0]));n++) 
       {
         if (!lws_hdr_total_length(wsi, n))
           continue;
@@ -314,44 +286,50 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         }
         free(cookies);
       }
-    }
+      }
     break;
 
-  case LWS_CALLBACK_HTTP_WRITEABLE: 
-  case LWS_CALLBACK_SERVER_WRITEABLE:
+    case LWS_CALLBACK_HTTP_WRITEABLE: 
+    case LWS_CALLBACK_SERVER_WRITEABLE:
       {
         node *message = get_member(pss->session,"message");
         while(message)
         {
-          node *session_id = get_member(pss->session,"id");
-          node *session_id_value = node_GetItemByKey(session_id,"value");
+          //node *session_id = get_member(pss->session,"id");
+          //node *session_id_value = node_GetItemByKey(session_id,"value");
           node *session_privates = node_GetItemByKey(pss->session,"privates");
           node *http_only = node_GetItemByKey(session_privates,"is_http");
           node *message_value = node_GetItemByKey(message,"value");
-          char *me = NULL;
+          unsigned char *me = NULL;
           unsigned long me_len = 0;
           if(node_GetType(message_value)==NODE_TYPE_STRING)
           {
-            me = node_GetString(message_value);
-            me_len = strlen(me);
+            me = (unsigned char*)node_GetString(message_value);
+            me_len = strlen((char*)me);
           }
           else if(node_GetType(message_value)==NODE_TYPE_BINARY)
           {
-            me = node_GetBinary(message_value);
+            me = (unsigned char*)node_GetBinary(message_value);
             me_len = node_GetBinaryLength(message_value);
           }
           //printf("sending message now: [%s] to: %d\n",me,node_GetSint32(session_id_value));
           //fflush(stdout);
+          unsigned char *buf = (unsigned char*)malloc(LWS_SEND_BUFFER_PRE_PADDING + me_len + LWS_SEND_BUFFER_POST_PADDING);
+          memcpy(buf+LWS_SEND_BUFFER_PRE_PADDING,me,me_len);
+
           if(http_only)
-            n = libwebsocket_write(wsi, me, me_len, LWS_WRITE_HTTP);
+            //n = libwebsocket_write(wsi, me, me_len, LWS_WRITE_HTTP);
+            n = libwebsocket_write(wsi,buf+LWS_SEND_BUFFER_PRE_PADDING,me_len,LWS_WRITE_HTTP);
           else
-            n = libwebsocket_write(wsi, me, me_len, LWS_WRITE_TEXT);
+            //n = libwebsocket_write(wsi, me, me_len, LWS_WRITE_TEXT);
+            n = libwebsocket_write(wsi,buf+LWS_SEND_BUFFER_PRE_PADDING,me_len,LWS_WRITE_TEXT);
+          free(buf);
           if(n<0)
           {
             printf("ERROR %d writing to socket, hanging up\n", n);
             return(1);
           }
-          if(n<strlen(me))
+          if(n<(int)strlen((char*)me))
           {
             printf("Partial write\n");
             return(-1);
@@ -359,17 +337,16 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
           //node_FreeTree(pss->message);
           remove_member(pss->session,message);
           dec_obj_refcount(message);
+          //printf("removing message from queue:%x (%d)\n",message,get_obj_refcount(message));
           add_garbage(state,message);
-          //pss->message = NULL;
           message = get_member(pss->session,"message");          
         }
       }
       break;
 
-  case LWS_CALLBACK_ESTABLISHED:
-    //printf("init pss: %x ,message: %x\n",pss,pss->message);
-    if(found_prot && pss->session==NULL)
-    {
+    case LWS_CALLBACK_ESTABLISHED:
+      if(found_prot && pss->session==NULL)
+      {
       printf("found prot in establish callback : %d,num:%d\n",lsession_uid,lsessions_num);
       lsession_uid++;
       node *session_uid_value = node_GetItemByKey(session_uid,"value");
@@ -378,31 +355,29 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
       node_SetSint32(sessions_num_value,lsessions_num);
       pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
-    }
-    break;
+      }
+      break;
 
-  case LWS_CALLBACK_CLOSED:
-  case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
-    //printf("closed pss: %x ,message: %x\n",pss,pss->message);
-    if(found_prot)
-    {
+    case LWS_CALLBACK_CLOSED:
+    case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
+      if(found_prot)
+      {
       //printf("found prot in closed callback : %d,num:%d\n",lsession_uid,lsessions_num);
       lsessions_num--;
       node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
       node_SetSint32(sessions_num_value,lsessions_num);
       delete_session(state,sessions,pss->session);
-    }
-    break;
+      }
+      break;
 
-
-
-  case LWS_CALLBACK_RECEIVE:
-    if(len>1024) { //TODO use some variable
+    case LWS_CALLBACK_RECEIVE:
+      if(len>1024) 
+      { //TODO use some variable
       lwsl_err("Server received packet bigger than %u, hanging up\n", 1024);
       return(1);
-    }
-    if(found_prot)
-    {
+      }
+      if(found_prot)
+      {
       node *parameters = create_obj("parameters");
       node *base_class = get_base_class(state);
       
@@ -431,8 +406,8 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       */
       node_AddItem(parameters,pss->session);
       inc_obj_refcount(pss->session);
-      node_AddItem(parameters,daemon_obj);
-      inc_obj_refcount(daemon_obj);
+      //node_AddItem(parameters,daemon_obj);
+      //inc_obj_refcount(daemon_obj);
 
       node_AddItem(parameters,sessions);
       inc_obj_refcount(sessions);
@@ -450,7 +425,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
 
       dec_obj_refcount(pss->session);
       dec_obj_refcount(sessions);
-      dec_obj_refcount(daemon_obj);
+      //dec_obj_refcount(daemon_obj);
       //printf("recv gc\n");
       //fflush(stdout);
       //node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
@@ -469,33 +444,58 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         //inc_obj_refcount(ret_obj);
       }
       libwebsocket_callback_on_writable(context, wsi);
-    }
-
-    break;
-  default:
-    break;
+      }
+      break;
+    default:
+      break;
   }
-
   return(0);
 }
   
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+void websockets_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  //node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *websockets = websockets_bind(modules);
+  node *proxy = create_proxy_object(state,websockets,"websockets");
+  inc_obj_refcount(websockets);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void websockets_binding_close(node *state)
+{
+}
+
+node *websockets_bind(node *class)
+{
+  node *websockets = websockets_create_class_object();
+  add_member(class,websockets);
+  inc_obj_refcount(websockets);
+  return(websockets);
+}
+
 
 node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
 {
   //printf("broadcasting\n");
   node *value = get_true_class(state);
   node *wsd_state = node_GetNode(get_value(obj));
-  node *daemon = node_GetItem(wsd_state,2);
-  node *daemon_value = node_GetItemByKey(daemon,"value");
+  //node *daemon = node_GetItem(wsd_state,2);
+  //node *daemon_value = node_GetItemByKey(daemon,"value");
   node *state_protocols = node_GetItem(wsd_state,3);
-  node *session_uid = node_GetItem(wsd_state,4);
-  node *sessions_num = node_GetItem(wsd_state,5);
+  //node *session_uid = node_GetItem(wsd_state,4);
+  //node *sessions_num = node_GetItem(wsd_state,5);
   node *sessions = node_GetItem(wsd_state,6);
-  node *daemon_info = node_GetItem(wsd_state,7);
-  node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
+  //node *daemon_info = node_GetItem(wsd_state,7);
+  //node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
   node *daemon_prots = node_GetItem(wsd_state,8);
   node *daemon_prots_value = node_GetItemByKey(daemon_prots,"value");
-  struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
+  //struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
 
   node *protocol = node_GetItem(parameters,0);
   node *protocol_value = node_GetItemByKey(protocol,"value");
@@ -513,7 +513,7 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
     node *state_protocol_value = node_GetItemByKey(state_protocol,"name");
     //printf("checking protocols:%s,%s\n",node_GetString(state_protocol_value),node_GetString(protocol_value));
     //fflush(stdout);
-    struct libwebsocket_protocols *cprot = prots;
+    struct libwebsocket_protocols *cprot =(struct libwebsocket_protocols *)prots;
     if(!strcmp(node_GetString(state_protocol_value),node_GetString(protocol_value)))
     {
       //printf("now broadcasting:[%s]\n",node_GetString(message_value));
@@ -529,8 +529,8 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
       while(node_ItemIterationUnfinished(sessions_items))
       {
         node *session = node_ItemIterate(sessions_items);
-        node *session_uid = get_member(session,"id");
-        node *session_uid_value = get_value(session_uid);
+        //node *session_uid = get_member(session,"id");
+        //node *session_uid_value = get_value(session_uid);
         node *session_prot = get_member(session,"protocol");
         node *session_prot_value = get_value(session_prot);
         //printf("comparing session_prot: [%s] against prot: [%s]\n",node_GetString(session_prot_value),node_GetString(protocol_value));
@@ -563,17 +563,17 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
   //printf("broadcasting_other\n");
   node *value = get_true_class(state);
   node *wsd_state = node_GetNode(get_value(obj));
-  node *daemon = node_GetItem(wsd_state,2);
-  node *daemon_value = node_GetItemByKey(daemon,"value");
+  //node *daemon = node_GetItem(wsd_state,2);
+  //node *daemon_value = node_GetItemByKey(daemon,"value");
   node *state_protocols = node_GetItem(wsd_state,3);
-  node *session_uid = node_GetItem(wsd_state,4);
-  node *sessions_num = node_GetItem(wsd_state,5);
+  //node *session_uid = node_GetItem(wsd_state,4);
+  //node *sessions_num = node_GetItem(wsd_state,5);
   node *sessions = node_GetItem(wsd_state,6);
-  node *daemon_info = node_GetItem(wsd_state,7);
-  node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
+  //node *daemon_info = node_GetItem(wsd_state,7);
+  //node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
   node *daemon_prots = node_GetItem(wsd_state,8);
   node *daemon_prots_value = node_GetItemByKey(daemon_prots,"value");
-  struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
+  //struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
 
   node *protocol = node_GetItem(parameters,0);
   node *protocol_value = node_GetItemByKey(protocol,"value");
@@ -592,7 +592,7 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
     node *state_protocol = node_ItemIterate(state_protocols_items);
     node *state_protocol_value = node_GetItemByKey(state_protocol,"name");
     //printf("checking protocols:%s,%s\n",node_GetString(state_protocol_value),node_GetString(protocol_value));
-    struct libwebsocket_protocols *cprot = prots;
+    struct libwebsocket_protocols *cprot = (struct libwebsocket_protocols *)prots;
     if(!strcmp(node_GetString(state_protocol_value),node_GetString(protocol_value)))
     {
       //printf("now broadcasting:[%s]\n",node_GetString(message_value));
@@ -615,8 +615,8 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
         
         if(!strcmp(node_GetString(protocol_value),node_GetString(session_prot_value)) && luid != lskip_uid)
         {
-          printf("sending message to uid: %d (skip:%d)\n",luid,lskip_uid);
-          fflush(stdout);
+          //printf("sending message to uid: %d (skip:%d)\n",luid,lskip_uid);
+          //fflush(stdout);
           add_member(session,broadcast_message);
           inc_obj_refcount(broadcast_message);
           libwebsocket_callback_on_writable_all_protocol(cprot);
@@ -636,22 +636,22 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
   return(value);
 }
 
-node *websockets_send(node *state,node *obj,node *block,node *parameters)
+node *websockets_send(node *state,node *obj,node *block,node *parameters) //TODO check if empty parameters can use a static node (saves a lot of mallocs)
 {
   //printf("send\n");
   node *value = get_true_class(state);
   node *wsd_state = node_GetNode(get_value(obj));
-  node *daemon = node_GetItem(wsd_state,2);
-  node *daemon_value = node_GetItemByKey(daemon,"value");
+  //node *daemon = node_GetItem(wsd_state,2);
+  //node *daemon_value = node_GetItemByKey(daemon,"value");
   node *state_protocols = node_GetItem(wsd_state,3);
-  node *session_uid = node_GetItem(wsd_state,4);
-  node *sessions_num = node_GetItem(wsd_state,5);
+  //node *session_uid = node_GetItem(wsd_state,4);
+  //node *sessions_num = node_GetItem(wsd_state,5);
   node *sessions = node_GetItem(wsd_state,6);
-  node *daemon_info = node_GetItem(wsd_state,7);
-  node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
+  //node *daemon_info = node_GetItem(wsd_state,7);
+  //node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
   node *daemon_prots = node_GetItem(wsd_state,8);
   node *daemon_prots_value = node_GetItemByKey(daemon_prots,"value");
-  struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
+  //struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
 
   node *protocol = node_GetItem(parameters,0);
   node *protocol_value = node_GetItemByKey(protocol,"value");
@@ -670,7 +670,7 @@ node *websockets_send(node *state,node *obj,node *block,node *parameters)
     node *state_protocol = node_ItemIterate(state_protocols_items);
     node *state_protocol_value = node_GetItemByKey(state_protocol,"name");
     //printf("checking protocols:%s,%s\n",node_GetString(state_protocol_value),node_GetString(protocol_value));
-    struct libwebsocket_protocols *cprot = prots;
+    struct libwebsocket_protocols *cprot = (struct libwebsocket_protocols *)prots;
     if(!strcmp(node_GetString(state_protocol_value),node_GetString(protocol_value)))
     {
       //printf("now broadcasting:[%s]\n",node_GetString(message_value));
@@ -678,7 +678,6 @@ node *websockets_send(node *state,node *obj,node *block,node *parameters)
       node *broadcast_message = create_class_instance(base_class);
       set_obj_string(broadcast_message,"name","message");
       set_obj_string(broadcast_message,"value",node_GetString(message_value));
-      reset_obj_refcount(broadcast_message);//TODO remove these after create_class_instance
       //node_AddItem(wsd_state,broadcast_message);//3
       node *sessions_items = node_GetItemByKey(sessions,"items");
       node_ItemIterationReset(sessions_items);
@@ -690,26 +689,26 @@ node *websockets_send(node *state,node *obj,node *block,node *parameters)
         long luid = node_GetSint32(session_uid_value);
         if(luid == lsend_uid)
         {
-          printf("sending message to uid: %d (send:%d)\n",luid,lsend_uid);
-          fflush(stdout);
+          //printf("sending message to uid: %d (send:%d)(%x)\n",luid,lsend_uid,broadcast_message);
+          //fflush(stdout);
           add_member(session,broadcast_message);
           inc_obj_refcount(broadcast_message);
+          //printf("vx:%x ,%x\n",node_GetString(message_value),node_GetString(get_value(broadcast_message)));
+          //printf("message refcount:%d\n",get_obj_refcount(broadcast_message));
           libwebsocket_callback_on_writable_all_protocol(cprot);
         }
       }
 
       libwebsocket_callback_on_writable_all_protocol(cprot);
-      node_RemoveItem(wsd_state,broadcast_message);
-      dec_obj_refcount(broadcast_message);
-      add_garbage(state,broadcast_message);
+      //node_RemoveItem(wsd_state,broadcast_message);
+      //dec_obj_refcount(broadcast_message);
+      //add_garbage(state,broadcast_message);
 
     }
     prots+=sizeof(struct libwebsocket_protocols);
   }
   return(value);
 }
-
-
 
 node *websockets_start(node *state,node *obj,node *block,node *parameters)
 {
@@ -740,14 +739,14 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters)
     while(node_ItemIterationUnfinished(protocols_items))
     {
       node *proto = node_ItemIterate(protocols_items);
-      struct libwebsocket_protocols *cprot = lws_prot;
+      struct libwebsocket_protocols *cprot = (struct libwebsocket_protocols *)lws_prot;
       cprot->name = str_Copy(get_obj_name(proto));
       //cprot->name = get_obj_name(proto);
       cprot->callback = callback_nyx_websockets;
       cprot->per_session_data_size = sizeof(struct per_session_data_nyx);
       lws_prot+=sizeof(struct libwebsocket_protocols);
     }
-    struct libwebsocket_protocols *cprot = lws_prot;
+    struct libwebsocket_protocols *cprot = (struct libwebsocket_protocols *)lws_prot;
     cprot->name = NULL;
     cprot->callback = NULL;
     cprot->per_session_data_size = 0;
@@ -796,16 +795,16 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters)
     node_AddItem(wsd_state,daemon_prots);//8
     inc_obj_refcount(daemon_prots);
 
-    node_AddItem(wsd_state,value);//9 ->this/self
-    inc_obj_refcount(value);
+    //node_AddItem(wsd_state,value);//9 ->this/self
+    //inc_obj_refcount(value);
     //inc_obj_refcount(value);
 
-   
+    lws_set_log_level(0,NULL);   
     struct lws_context_creation_info *info=(struct lws_context_creation_info *)malloc(sizeof(struct lws_context_creation_info));
     struct libwebsocket_context *context;
     memset(info,0,sizeof(struct lws_context_creation_info));
     info->port = node_GetSint32(port_value);
-    info->protocols = lws_prots;
+    info->protocols = (struct libwebsocket_protocols *)lws_prots;
     info->extensions = libwebsocket_get_internal_extensions();
     info->gid = -1;
     info->uid = -1;
@@ -839,9 +838,14 @@ node *websockets_stop(node *state,node *obj,node *block,node *parameters)
   node *daemon_info_value = node_GetItemByKey(daemon_info,"value");
   node *daemon_prots = node_GetItem(wsd_state,8);
   node *daemon_prots_value = node_GetItemByKey(daemon_prots,"value");
+  //node *daemon_self = node_GetItem(wsd_state,9);
+
   struct libwebsocket_context *context = (struct libwebsocket_context *)node_GetValue(daemon_value);
   libwebsocket_context_destroy(context);
   
+  //dec_obj_refcount(daemon_self);
+  //add_garbage(state,daemon_self);
+  //printf("self refs: %d\n",get_obj_refcount(daemon_self));
   dec_obj_refcount(daemon);//TODO move into add_garbage
   add_garbage(state,daemon);
   dec_obj_refcount(state_protocols);
@@ -857,26 +861,28 @@ node *websockets_stop(node *state,node *obj,node *block,node *parameters)
   dec_obj_refcount(daemon_prots);
   add_garbage(state,daemon_prots);
   
+  //TODO check if it leaks now
   char *prots = (char*)node_GetUser(daemon_prots_value);
   node *state_protocols_items = node_GetItemByKey(state_protocols,"items");
   long prots_num = node_GetItemsNum(state_protocols_items);
   long prots_i = 0;
   while(prots_i<=prots_num-1)
   {
-    struct libwebsocket_protocols *cprot = prots;
-    free(cprot->name);
+    struct libwebsocket_protocols *cprot = (struct libwebsocket_protocols *)prots;
+    free((void*)cprot->name);
     prots+=sizeof(struct libwebsocket_protocols);
     prots_i++;
   }
-
+    
   
-  free(node_GetValue(daemon_info_value));
-  free(node_GetValue(daemon_prots_value));
+  free((void*)node_GetValue(daemon_info_value));
+  free((void*)node_GetValue(daemon_prots_value));
 
 
   node_ClearItems(wsd_state);
   node_FreeTree(wsd_state);
   node_SetUser(get_value(obj),NULL);
+  //node_PrintTree(obj);
   return(value);
 }
 
@@ -888,9 +894,10 @@ node *websockets_service(node *state,node *obj,node *block,node *parameters)
   node *daemon_value = node_GetItemByKey(daemon,"value");
   struct libwebsocket_context *context = (struct libwebsocket_context*)node_GetValue(daemon_value);
   libwebsocket_service(context,10);
-  //set_obj_string(value,"name","success");
   return(value);
 }
+
+#pragma GCC diagnostic pop
 
 #endif
 

@@ -24,6 +24,25 @@
 
 #ifdef USE_HTTP
 
+
+node *file_create_class_object(node *base_class)
+{
+  //node *base = create_base_obj_layout("file");
+  node *base = create_class_instance(base_class);
+  set_obj_string(base,"name","file");
+  //add_class_object_function(base,"=",nyxh_assign);
+  add_class_object_function(base,"readallbytes",file_readallbytes);
+  add_class_object_function(base,"writeallbytes",file_writeallbytes);
+  add_class_object_function(base,"readall",file_readall);
+  add_class_object_function(base,"writeall",file_writeall);
+  add_class_object_function(base,"open",file_open);
+  add_class_object_function(base,"close",file_close);
+  return(base);
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 void file_binding_open(node *state)
 {
   node *modules = get_modules(state);
@@ -47,21 +66,6 @@ node *file_bind(node *base_class,node *class)
   add_member(class,file);
   inc_obj_refcount(file);
   return(file);
-}
-
-node *file_create_class_object(node *base_class)
-{
-  //node *base = create_base_obj_layout("file");
-  node *base = create_class_instance(base_class);
-  set_obj_string(base,"name","file");
-  //add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"readallbytes",file_readallbytes);
-  add_class_object_function(base,"writeallbytes",file_writeallbytes);
-  add_class_object_function(base,"readall",file_readall);
-  add_class_object_function(base,"writeall",file_writeall);
-  add_class_object_function(base,"open",file_open);
-  add_class_object_function(base,"close",file_close);
-  return(base);
 }
 
 node *file_open(node *state,node *obj,node *block,node *parameters)
@@ -224,6 +228,7 @@ node *file_writeall(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
+#pragma GCC diagnostic pop
 
 #endif
 

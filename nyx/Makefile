@@ -137,7 +137,8 @@ else ifneq (, $(findstring mingw, $(SYS)))
 	endif
 	ifeq ($(USE_MEMORY_DEBUG),True)
 		#PLATFORM_CFLAGS += -DUSE_MEMORY_DEBUGGING
-		PLATFORM_DEBUG_CFLAGS += -DUSE_MEMORY_DEBUGGING
+		PLATFORM_DEBUG_CFLAGS += 
+		#-DUSE_MEMORY_DEBUGGING
 	endif
 
 else ifneq (, $(findstring cygwin, $(SYS)))
@@ -157,23 +158,27 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 1132
-DEBUG_BUILD = 2290
+BUILD = 1587
+DEBUG_BUILD = 2704
 
-CSTD = c99
+CSTD = -std=c99
+#-std=c99
 
 #-DUSE_MEMORY_DEBUGGING
 #CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS) -lm
 #DEBUG_CFLAGS = -DUSE_MEMORY_DEBUGGING -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) -lm
-CFLAGS= -W -w -Os -std=$(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)
-DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
+CFLAGS= -Wall -Wextra -W -w -Os $(CSTD) -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) $(PLATFORM_CFLAGS)
+DEBUG_CFLAGS = -Wall -Wextra -Wformat=0 -pedantic -fbounds-check -Wuninitialized -O0 -g3 -Wall $(CSTD) -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
+#
+#-Wstrict-prototypes
 #DEBUG_CFLAGS = -m32 -g3 -O0 -Wall -pedantic -Wstrict-prototypes -std=$(CSTD) -fbounds-check -Wuninitialized -DUSE_DEBUGGING -DBUILD=$(BUILD) -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DDEBUG_BUILD=$(DEBUG_BUILD) $(PLATFORM_DEBUG_CFLAGS)
 LDFLAGS= $(PLATFORM_LIBS) $(PLATFORM_LDFLAGS)
 # -static-libstdc++
-DEBUG_LDFLAGS = -m32 $(LDFLAGS)
+#DEBUG_LDFLAGS = -m32 $(LDFLAGS)
+DEBUG_LDFLAGS = $(LDFLAGS)
 
 CC=gcc
-AR=ar
+AR=ar -c
 LD=ld
 
 NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c bindings/websockets/websockets.c bindings/sockets/sockets.c bindings/http/http.c bindings/sys/sys.c bindings/file/file.c
@@ -194,6 +199,61 @@ TOOLS_BUILD_INC_INCLUDE_FILES = tools/build_inc/build_inc.h
 TOOLS_BUILD_INC_OBJ = tools/build_inc/build_inc.o
 
 
+.PHONY: all
+
+all:
+	$(MAKE) library && $(MAKE) compile_end || $(MAKE) compile_failed
+
+.PHONY: debug
+
+debug:
+	$(MAKE) library_debug && $(MAKE) compile_debug_end || $(MAKE) compile_failed
+
+
+.PHONY: compile_start
+
+compile_start: 
+	@echo "====================================================="
+	@echo ":::::::::::::: Compiling nyx for $(PLATFORM_NAME) ::::::::::::::"
+	#@echo "====================================================="
+	@$(BEGIN_NOTIFY)
+
+.PHONY: compile_debug_start
+
+compile_debug_start: 
+	@echo "====================================================="
+	@echo ":::::::::: Compiling nyx (DEBUG) for $(PLATFORM_NAME) ::::::::::"
+	#@echo "====================================================="
+	@$(BEGIN_NOTIFY)
+
+.PHONY: compile_end
+
+compile_end:
+	@echo "====================================================="
+	@echo "::::::::: Compilation of nyx was SUCCESSFUL :::::::::"
+	@echo "====================================================="
+	@./build_inc$(PLATFORM_EXT) Makefile BUILD
+	@$(SUCCESS_NOTIFY)
+
+.PHONY: compile_debug_end
+
+compile_debug_end:
+	@echo "====================================================="
+	@echo "::::: Compilation of nyx (DEBUG) was SUCCESSFUL :::::"
+	@echo "====================================================="
+	@./build_inc$(PLATFORM_EXT) Makefile BUILD
+	@$(SUCCESS_NOTIFY)
+
+.PHONY: compile_failed
+
+compile_failed:
+	@echo "====================================================="
+	@echo "::::::::::::: Compilation of nyx FAILED :::::::::::::"
+	@echo "====================================================="
+	@$(FAILED_NOTIFY)
+
+
+
 print_version:
 	@echo -n "$(BUILD)"
 
@@ -203,22 +263,16 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: build_inc nyx_static_debug unit_tests_debug
-	./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
+library_debug: compile_debug_start build_inc nyx_static_debug unit_tests_debug
+	@./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 clean_all: clean clean_debug clean_binaries all 
-	@echo "Compiling for "$(PLATFORM_NAME)
-	./build_inc$(PLATFORM_EXT) Makefile BUILD
-	$(SUCCESS_NOTIFY)
 
-all: build_inc nyx_static nyx_dynamic unit_tests debug 
-	@echo "Compiling for "$(PLATFORM_NAME)
-	./build_inc$(PLATFORM_EXT) Makefile BUILD
-	$(SUCCESS_NOTIFY)
+library: compile_start build_inc nyx_static nyx_dynamic unit_tests debug 
 
 unit_tests: nyx_static $(UT_OBJ) 
 	$(CC) $(UT_OBJ) libnyx.a ../libnode.a $(LDFLAGS) -o unit_tests 
-	strip ./unit_tests$(PLATFORM_EXT)
+	@strip ./unit_tests$(PLATFORM_EXT)
 
 unit_tests_debug: nyx_static_debug $(UT_DEBUG_OBJ) 
 	$(CC) $(UT_DEBUG_OBJ) libnyx.da ../libnode.da $(DEBUG_LDFLAGS) -o unit_tests_debug 
@@ -234,7 +288,7 @@ nyx_static_debug: $(NYX_DEBUG_OBJ)
 
 nyx_dynamic: $(NYX_OBJ)
 	$(CC) -DCREATELIB -shared ../$(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)
-	strip $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)	
+	@strip $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)	
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
@@ -245,7 +299,7 @@ nyx_dynamic: $(NYX_OBJ)
 
 clean:
 	$(BEGIN_NOTIFY)
-	rm -f $(PLATFORM_LIB_PREFIX)nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/micohttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
+	rm -f $(PLATFORM_LIB_PREFIX)nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/microhttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

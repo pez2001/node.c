@@ -22,6 +22,8 @@
 
 #include "nyx_handler.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 node *nyxh_pre_add(node *state,node *obj,node *block,node *parameters)//TODO
 {
@@ -739,6 +741,7 @@ node *nyxh_assign(node *state,node *obj,node *block,node *parameters)
     { 
       value = obj;
       clean_move(state,value,node_GetItem(parameters,0));
+      reset_obj_refcount(value);
     }
 
     if(parent)
@@ -2055,7 +2058,7 @@ node *nyxh_eval(node *state,node *obj,node *block,node *parameters)
   node *nyx_block = node_GetItemByKey(nyx_stream,"nyx_block");
   node_RemoveItem(nyx_stream,nyx_block);
   node_FreeTree(nyx_stream);
-  node *value = create_block_class_instance(base_class,nyx_block);
+  node *value = create_block_class_instance(state,nyx_block);
   set_obj_node(value,"anonymous_block_parent",block);
   add_garbage(state,value);
   node_FreeTree(nyx_block);
@@ -2093,6 +2096,8 @@ node *nyxh_test(node *state,node *obj,node *block,node *parameters)
     printf("no p!\n");
   return(value);
 }
+
+#pragma GCC diagnostic pop
 
 
 

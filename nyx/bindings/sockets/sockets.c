@@ -24,6 +24,28 @@
 
 #ifdef USE_SOCKETS
 
+node *sockets_create_class_object(void)
+{
+  node *base = create_base_obj_layout("socket");
+  add_class_object_function(base,"=",nyxh_assign);
+  add_class_object_function(base,"open",sockets_open);
+  add_class_object_function(base,"close",sockets_close);
+  add_class_object_function(base,"write",sockets_write);
+  add_class_object_function(base,"read",sockets_read);
+  add_class_object_function(base,"set_address",sockets_set_address);
+  add_class_object_function(base,"connect",sockets_connect);
+  node *sock_dgram_const = create_base_obj_layout("SOCK_DGRAM");
+  node *sock_stream_const = create_base_obj_layout("SOCK_STREAM");
+  add_member(base,sock_dgram_const);
+  inc_obj_refcount(sock_dgram_const);
+  add_member(base,sock_stream_const);
+  inc_obj_refcount(sock_stream_const);
+  return(base);
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 void sockets_binding_open(node *state)
 {
   #ifdef WIN32
@@ -31,7 +53,6 @@ void sockets_binding_open(node *state)
     WSAStartup(MAKEWORD(2, 2),&wsaData);
   #endif
   node *modules = get_modules(state);
-  node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *sockets = sockets_bind(modules);
   node *proxy = create_proxy_object(state,sockets,"socket");
@@ -53,25 +74,6 @@ node *sockets_bind(node *class)
   add_member(class,sockets);
   inc_obj_refcount(sockets);
   return(sockets);
-}
-
-node *sockets_create_class_object(void)
-{
-  node *base = create_base_obj_layout("socket");
-  add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"open",sockets_open);
-  add_class_object_function(base,"close",sockets_close);
-  add_class_object_function(base,"write",sockets_write);
-  add_class_object_function(base,"read",sockets_read);
-  add_class_object_function(base,"set_address",sockets_set_address);
-  add_class_object_function(base,"connect",sockets_connect);
-  node *sock_dgram_const = create_base_obj_layout("SOCK_DGRAM");
-  node *sock_stream_const = create_base_obj_layout("SOCK_STREAM");
-  add_member(base,sock_dgram_const);
-  inc_obj_refcount(sock_dgram_const);
-  add_member(base,sock_stream_const);
-  inc_obj_refcount(sock_stream_const);
-  return(base);
 }
 
 node *sockets_open(node *state,node *obj,node *block,node *parameters)
@@ -403,6 +405,8 @@ node *sockets_write(node *state,node *obj,node *block,node *parameters)
   }
   return(value);
 }
+
+#pragma GCC diagnostic pop
 
 #endif
 

@@ -40,28 +40,31 @@ Create Starter Executables.\n\
 */
 
 
-void write_data(void *data,unsigned long len,unsigned long offset,FILE *out)
+int write_data(void *data,unsigned long len,unsigned long offset,FILE *out)
 {
   fseek(out,offset,SEEK_SET);
-  fwrite(data,len,1,out);
+  return(fwrite(data,len,1,out));
 }
 
-void append_data(void *data,unsigned long len,FILE *out)
+int append_data(void *data,unsigned long len,FILE *out)
 {
-  fwrite(data,len,1,out);
+  return(fwrite(data,len,1,out));
 }
 
 int copy_itself_to_file(FILE *in,unsigned long len,FILE *out)
 {
+  int r;
   fseek(in,0,SEEK_SET);
   char *data = (char*)malloc(len);
   fread(data,len,1,in);
-  append_data(data,len,out);
+  r=append_data(data,len,out);
   free(data);
+  return(r);
 }
 
 int add_entry(char *command,char *payload,unsigned long payload_len,char *second_payload,unsigned long second_payload_len,FILE *out)
 {
+  int r;
   entry e;
   e.command_len = strlen(command)+1;
   e.payload_len = payload_len;
@@ -71,23 +74,26 @@ int add_entry(char *command,char *payload,unsigned long payload_len,char *second
   if(payload_len)
   {
     //printf("entry payload:[%s]:%d\n",payload,payload_len);
-    append_data(payload,payload_len,out);
+    r=append_data(payload,payload_len,out);
   }
   if(second_payload_len)
   {
     //printf("entry second payload:[%s]:%d\n",second_payload,second_payload_len);
-    append_data(second_payload,second_payload_len,out);
+    r=append_data(second_payload,second_payload_len,out);
   }
-  append_data(&e,sizeof(entry),out);
+  r=append_data(&e,sizeof(entry),out);
+  return(r);
 }
 
 int add_tag(unsigned long num_entries,FILE *out)
 {
+  int r;
   tag t;
   t.magic=123456;
   t.num_entries = num_entries;
   t.get_options = 1;
-  append_data(&t,sizeof(tag),out);
+  r=append_data(&t,sizeof(tag),out);
+  return(r);
 }
 
 int check_for_mz(FILE *in)
@@ -124,9 +130,8 @@ tag *read_tag(FILE *in,unsigned long len)
 int update_tag(FILE *in,unsigned long len,tag *t)
 {
   fseek(in,len-sizeof(tag),SEEK_SET);
-  fwrite(t,sizeof(tag),1,in);
+  return(fwrite(t,sizeof(tag),1,in));
 }
-
 
 int execute_popen(char *command)
 {
@@ -217,9 +222,19 @@ int execute(char *executable, char**args)
   }
   return(child_status);
   #else
-
+  char *args_string = str_CreateEmpty();
+  char *arg = args;
+  while(arg!=NULL)
+  {
+    args_string = str_CatFree(args_string,arg);
+    arg++;
+    if(arg!=NULL)
+      args_string = str_CatFree(args_string," ");
+  }
+  int r = execute_process2(executable,args_string);
+  free(args_string);
+  return(r);
   #endif
-
 }
 
 int open_url(char *url)
@@ -227,16 +242,19 @@ int open_url(char *url)
   #ifdef WIN32
     execute_shell("open",url);
   #else
-    
+    char **args = (char**)&url;
+    execute("xdg-open",args);
   #endif
-
+  return(1);
 }
 
-int extract_payload(FILE *in,char *filename,char *payload,unsigned long payload_len)
+int extract_payload(char *filename,char *payload,unsigned long payload_len)
 {
+  int r;
   FILE *out = fopen(filename,"ab+");
-  append_data(payload,payload_len,out);
+  r=append_data(payload,payload_len,out);
   fclose(out);
+  return(r);
 }
 
 int remove_directory(char *dirname)
@@ -269,7 +287,6 @@ int remove_directory(char *dirname)
 }
 
 char *option_temp_output_filename="starter_output.exe";  
-//char *option_filename = NULL;
 
 char *option_manifest_filename = NULL;
 
@@ -279,7 +296,6 @@ int option_copy_file = 0;
 int option_patch_file = 0;
 int option_execute_file = 0;
 int option_check_tag = 0;
-
 int option_use_manifest = 0;
 
 int optional_num = 0;
@@ -287,7 +303,6 @@ int optional_num = 0;
 int check_options(int argc, char **argv)
 {
   int c = 0;
-  int ret = 0;
   while ((c = getopt (argc, argv, "m:trdxcPo:hp")) != -1)
   {
     switch (c)
@@ -335,14 +350,12 @@ int check_options(int argc, char **argv)
     }
   }
   optional_num = argc-optind;
-  printf("number of extra arguments:%d\n",optional_num);
-  //option_filename = argv[optind++];
+  return(1);
 }
 
 int check_tagged_options(int argc, char **argv)
 {
   int c = 0;
-  int ret = 0;
   while ((c = getopt (argc, argv, "trdxmcPo:hp")) != -1)
   {
     switch (c)
@@ -386,7 +399,7 @@ int check_tagged_options(int argc, char **argv)
         abort();
     }
   }
-  //option_filename = argv[optind++];
+  return(1);
 }
 
 int parse_manifest(char *manifest_filename,FILE *output)
@@ -441,11 +454,20 @@ int parse_manifest(char *manifest_filename,FILE *output)
         second_payload_len = strlen(second_payload)+1;
     }
     //add_entry(nyx_rm_command,nyx_file,strlen(nyx_file)+1,NULL,0,out);
-    add_entry(command,payload,payload_len,second_payload,second_payload_len,output);
+    if(!add_entry(command,payload,payload_len,second_payload,second_payload_len,output))
+    {
+      node_FreeTree(root);
+      return(0);
+    }
     //free()
   }
-  add_tag(node_array_GetNum(ec),output);
+  if(!add_tag(node_array_GetNum(ec),output))
+  {
+    node_FreeTree(root);
+    return(0);
+  }
   node_FreeTree(root);
+  return(1);
 }
 
 int main(int argc, char** argv)
@@ -515,7 +537,7 @@ int main(int argc, char** argv)
       }
     }
 
-    unsigned long index=0;
+    unsigned int index=0;
     unsigned long tag_offset = exe_len - sizeof(tag);
     while(index<t->num_entries)
     {
@@ -562,7 +584,7 @@ int main(int argc, char** argv)
       else if(!strcmp(command,"extract"))
       {
         remove(payload);
-        extract_payload(in,payload,second_payload,ei.second_payload_len);
+        extract_payload(payload,second_payload,ei.second_payload_len);
       }
       else if(!strcmp(command,"execute"))
       {

@@ -9,6 +9,7 @@ println(s[0]);
 println("string len:",len(s));
 
 s=sys.execute("ls -a");
+println("s:"+s);
 words = s.split(" \n");
 
 ??(i=0,{i<len(words)},{println(words[i]);i=i+1},{},1);

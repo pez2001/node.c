@@ -1,9 +1,9 @@
 index.file = file.open("websocket-html/index.html","rb"); 
-index.html = index.file.readall();
+index.html = index.file.readall().close();
 copco.file = file.open("websocket-html/copco display.png","rb"); 
-copco.data = copco.file.readallbytes();
+copco.data = copco.file.readallbytes().close();
 fav.file = file.open("websocket-html/logo_draft.ico","rb"); 
-fav.data = fav.file.readallbytes();
+fav.data = fav.file.readallbytes().close();
 
 rooms=[];
 
@@ -188,6 +188,7 @@ echo_call=
 			(sendid!=myid).do({
 				println("sending message:"+message+" to:"+sendid);
 				daemon.send(prot,message,sendid);
+				println("sent message:"+message+" to:"+sendid);
 			});
 		});
 		/*daemon.broadcast_other(arguments["protocol"],arguments["session"].uname+" ("+room+") : "+arguments["message"],arguments["session"].id);*/

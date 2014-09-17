@@ -24,31 +24,8 @@
 
 #ifdef USE_CURL
 
-void curl_binding_open(node *state)
-{
-  node *modules = get_modules(state);
-  node *base_class = get_base_class(state);
-  node *block_class = get_block_class(state);
-  node *curl = curl_bind(modules);
-  node *proxy = create_proxy_object(state,curl,"curl");
-  inc_obj_refcount(curl);
-  add_member(block_class,proxy);
-  inc_obj_refcount(proxy);
-}
-
-void curl_binding_close(node *state)
-{
-
-}
 
 
-node *curl_bind(node *class)
-{
-  node *curl = curl_create_class_object();
-  add_member(class,curl);
-  inc_obj_refcount(curl);
-  return(curl);
-}
 
 node *curl_create_class_object(void)
 {
@@ -78,6 +55,34 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   //node *read_obj = 
   execute_obj(state,read_block,block,parameters,True,False,True);
   return((size*nmemb));
+}
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
+void curl_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  node *block_class = get_block_class(state);
+  node *curl = curl_bind(modules);
+  node *proxy = create_proxy_object(state,curl,"curl");
+  inc_obj_refcount(curl);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void curl_binding_close(node *state)
+{
+
+}
+
+
+node *curl_bind(node *class)
+{
+  node *curl = curl_create_class_object();
+  add_member(class,curl);
+  inc_obj_refcount(curl);
+  return(curl);
 }
 
 node *curl_get(node *state,node *obj,node *block,node *parameters)
@@ -115,6 +120,9 @@ node *curl_get(node *state,node *obj,node *block,node *parameters)
   }
   return(value);
 }
+
+#pragma GCC diagnostic pop
+
 
 #endif
 

@@ -59,14 +59,9 @@ int mem_DebugHeapWalk(int show_leaked);
 
 void *mem_malloc(unsigned long size);
 
-void *mem_malloc_debug(unsigned long size, char *description);
-
 void *mem_realloc(void *ptr, unsigned long size);
 
-//void *mem_copy(void *src);
-
 void mem_free(void *ptr);
-
 
 #ifdef __cplusplus
 } 

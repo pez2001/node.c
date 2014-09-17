@@ -23,10 +23,29 @@
 #include "http.h"
 
 #ifdef USE_HTTP
+
+
+node *http_create_class_object(void)
+{
+  node *base = create_base_obj_layout("http");
+  add_class_object_function(base,"=",nyxh_assign);
+  add_class_object_function(base,"parse_answer",http_parse_answer);
+  add_class_object_function(base,"parse_url",http_parse_url);
+  add_class_object_function(base,"create_response",http_create_request);
+  add_class_object_function(base,"create_request",http_create_request);
+  add_class_object_function(base,"parse_cookies",http_parse_cookies);
+  add_class_object_function(base,"query",http_query);
+  return(base);
+}
+
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+ 
 void http_binding_open(node *state)
 {
   node *modules = get_modules(state);
-  node *base_class = get_base_class(state);
+  //node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *http = http_bind(modules);
   node *proxy = create_proxy_object(state,http,"http");
@@ -48,18 +67,6 @@ node *http_bind(node *class)
   return(http);
 }
 
-node *http_create_class_object(void)
-{
-  node *base = create_base_obj_layout("http");
-  add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"parse_answer",http_parse_answer);
-  add_class_object_function(base,"parse_url",http_parse_url);
-  add_class_object_function(base,"create_response",http_create_request);
-  add_class_object_function(base,"create_request",http_create_request);
-  add_class_object_function(base,"parse_cookies",http_parse_cookies);
-  add_class_object_function(base,"query",http_query);
-  return(base);
-}
 
 node *http_create_response(node *state,node *obj,node *block,node *parameters)
 {
@@ -97,7 +104,7 @@ node *http_create_request(node *state,node *obj,node *block,node *parameters)
   set_obj_string(value,"name","http.request");
   add_garbage(state,value);
   node *real_value = get_value(value);
-  /*"GET /aluria/client/clients.json HTTP/1.1\r\nHost: openstrike.de\r\nUser-Agent: Mozilla/4.0\r\nAccept: * /*\r\nConnection: close\r\n\r\n"*/
+  /*"GET /aluria/client/clients.json HTTP/1.1\r\nHost: openstrike.de\r\nUser-Agent: Mozilla/4.0\r\nAccept: * / *\r\nConnection: close\r\n\r\n"*/
   char *request = str_CreateEmpty();
   if(node_GetItemsNum(parameters))
   {
@@ -459,6 +466,9 @@ node *http_query(node *state,node *obj,node *block,node *parameters)
   http_append_query_array(state,value);
   return(value);
 }
+
+
+#pragma GCC diagnostic pop
 
 
 #endif

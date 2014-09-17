@@ -25,31 +25,6 @@
 
 #ifdef USE_MICROHTTPD
 
-void microhttpd_binding_open(node *state)
-{
-  node *modules = get_modules(state);
-  //node *base_class = get_base_class(state);
-  node *block_class = get_block_class(state);
-  node *microhttpd = microhttpd_bind(modules);
-  node *proxy = create_proxy_object(state,microhttpd,"microhttpd");
-  inc_obj_refcount(microhttpd);
-  add_member(block_class,proxy);
-  inc_obj_refcount(proxy);
-}
-
-void microhttpd_binding_close(node *state)
-{
-
-}
-
-node *microhttpd_bind(node *class)
-{
-  node *httpd = microhttpd_create_class_object();
-  add_member(class,httpd);
-  inc_obj_refcount(httpd);
-  return(httpd);
-}
-
 node *microhttpd_create_class_object(void)
 {
   node *base = create_base_obj_layout("microhttpd");
@@ -59,6 +34,9 @@ node *microhttpd_create_class_object(void)
   add_class_object_function(base,"stop",microhttpd_stop);
   return(base);
 }
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
 
 int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *url,const char *method,const char *version,const char *upload_data, size_t *upload_data_size, void **ptr)
 {
@@ -116,11 +94,38 @@ int microhttpd_answer(void *cls,struct MHD_Connection *connection,const char *ur
   add_garbage(state,version_value);
 
 
-  response = MHD_create_response_from_buffer(strlen(me),(void *)me,MHD_RESPMEM_PERSISTENT);
+  
+  response = MHD_create_response_from_buffer(strlen(me),(void *)me,MHD_RESPMEM_MUST_COPY);//MHD_RESPMEM_PERSISTENT
   ret = MHD_queue_response(connection,MHD_HTTP_OK,response);
   MHD_destroy_response(response);
   return(ret);
 }
+
+void microhttpd_binding_open(node *state)
+{
+  node *modules = get_modules(state);
+  //node *base_class = get_base_class(state);
+  node *block_class = get_block_class(state);
+  node *microhttpd = microhttpd_bind(modules);
+  node *proxy = create_proxy_object(state,microhttpd,"microhttpd");
+  inc_obj_refcount(microhttpd);
+  add_member(block_class,proxy);
+  inc_obj_refcount(proxy);
+}
+
+void microhttpd_binding_close(node *state)
+{
+
+}
+
+node *microhttpd_bind(node *class)
+{
+  node *httpd = microhttpd_create_class_object();
+  add_member(class,httpd);
+  inc_obj_refcount(httpd);
+  return(httpd);
+}
+
 
 node *microhttpd_service(node *state,node *obj,node *block,node *parameters)
 {
@@ -231,6 +236,9 @@ node *microhttpd_stop(node *state,node *obj,node *block,node *parameters)
   }
   return(value);
 }
+
+#pragma GCC diagnostic pop
+
 
 #endif
 

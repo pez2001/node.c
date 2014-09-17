@@ -35,7 +35,7 @@ void ptr_tests(void)
   list_Insert(p,0,(void*)2);
   list_Insert(p,0,(void*)1);
   for(unsigned int i = 0; i < list_GetLen(p); i++)
-    printf("%d ", (int)list_Get(p,i));
+    printf("%d ", (long)list_Get(p,i));
   list_Pop(p);
   list_Pop(p);
   printf("\n");
@@ -46,9 +46,9 @@ void ptr_tests(void)
   list_Push(p, (void*)4);
   printf("push(1,2,3,4):\n");
   for(unsigned int i = 0; i < list_GetLen(p); i++)
-    printf("%d ", (int)list_Get(p,i));
+    printf("%d ", (long)list_Get(p,i));
   printf("\n");
-  int x =(int)list_Pop(p);
+  int x =(long)list_Pop(p);
 
   printf("pop(): %d\n", x);
   list_Push(p,  (void*)5);
@@ -56,31 +56,31 @@ void ptr_tests(void)
   for(unsigned int i = 0; i < list_GetLen(p); i++)
     printf("%d ", list_Get(p,i));
   printf("\n");
-  int r = (int)list_Remove(p, 2);
+  long r = (long)list_Remove(p, 2);
 
 	printf("remove(2): %d\n", r);
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ",(int)list_Get(p,i));
+		printf("%d ",(long)list_Get(p,i));
 	printf("\ninserting\n");
 	list_Insert(p, 3, (void*)66);
 	printf("insert 3,66:\n");
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ",(int)list_Get(p,i));
+		printf("%d ",(long)list_Get(p,i));
 	printf("\ninserting\n");
   list_Insert(p, 0, (void*)99);
 	printf("insert 0,99:\n");
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ",(int)list_Get(p,i));
+		printf("%d ",(long)list_Get(p,i));
 	printf("\n");
 	list_Set(p, 1,(void*)22);
 	printf("set 1,22:\n");
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ",(int)list_Get(p,i));
+		printf("%d ",(long)list_Get(p,i));
 	printf("\n");
 	list_Queue(p, (void*)88);
 	printf("queue(88):\n");
 	for(unsigned int i = 0; i < list_GetLen(p); i++)
-		printf("%d ",(int)list_Get(p,i));
+		printf("%d ",(long)list_Get(p,i));
 	printf("\n");
 
 	list_Clear(p);
@@ -89,7 +89,7 @@ void ptr_tests(void)
 		list_Push(p, (void*)1);
 	for(unsigned int i = 0; i < 20000; i++)
 		list_Pop(p);
-	printf("first:%d \n", (int)list_Pop(p));
+	printf("first:%d \n", (long)list_Pop(p));
 	printf("top:%d\n", list_GetLen(p));
 
 	for(unsigned int i = 0; i < 20000; i++)
@@ -112,13 +112,13 @@ void ptr_tests2(void)
   list_Push(p, (void*)4);
   printf("push(1,2,3,4):\n");
   for(unsigned int i = 0; i < list_GetLen(p); i++)
-    printf("%d ", (int)list_Get(p,i));
+    printf("%d ", (long)list_Get(p,i));
   printf("\n");
 
   list_Remove(p, 0);
   list_Remove(p, 1);
   for(unsigned int i = 0; i < list_GetLen(p); i++)
-    printf("%d ", list_Get(p,i));
+    printf("%d ", (long)list_Get(p,i));
   printf("\n");
   list_Close(p);
   printf("ptr tests 2 thru\n");
@@ -699,6 +699,9 @@ void nyx_tests2(void)
   printf("nyx tests 2 thru\n");
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 int main(int argc, char *argv[])
 {
   mem_tests();
@@ -712,3 +715,5 @@ int main(int argc, char *argv[])
   //hashing_tests();
   //json_speed_tests();
 }
+
+#pragma GCC diagnostic pop

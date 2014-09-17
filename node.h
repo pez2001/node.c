@@ -1198,7 +1198,7 @@ int node_array_IterationUnfinished(node *n);
  * 
  *
  */
-void node_array_ReverseIterationReset(node *n);
+void node_array_IterationReset(node *n);
 
 /**
  * node_array_Iterate() - 

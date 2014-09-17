@@ -61,7 +61,7 @@ typedef struct
 {
 	void **items; 
 	long num;
-        long iteration_index;
+    long iteration_index;
 	unsigned char flags;
 } list;
 
@@ -88,13 +88,13 @@ void *list_Remove(list *l, long index);
 
 long list_RemoveItem(list *l, void *obj);
 
-unsigned long list_GetIndex(list *l, void *obj);
+long list_GetIndex(list *l, void *obj);
 
 void list_Clear(list *l);
 
 void list_SetLen(list *l,long len);
 
-unsigned long list_GetLen(list *l);
+long list_GetLen(list *l);
 
 void *list_Get(list *l, long index);
 

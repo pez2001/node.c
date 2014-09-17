@@ -21,7 +21,6 @@
  */
 
 #include "nyxi.h"
-
 const char *nyxi_helpmsg = "Usage: nyxi [OPTION]... [INPUT FILE] [...]\n\
 Execute nyx script Files.\n\
 \n\
@@ -84,47 +83,6 @@ review parameter handling
 
 
 */
-
-
-volatile int done=0;
-
-void sig_handler(int sig)//,siginfo_t *siginfo,void *context)
-{
-  //printf("signo:%d\n",sig);
-  //printf("signo:%d\n",siginfo->si_signo);
-  //printf("sigcode:%d\n",siginfo->si_code);
-  done=1;
-}
-
-//struct termios *setup_terminal()
-//#define _O_U16TEXT 0x20000
-void setup_terminal(void)
-{
-    //struct termios old;
-    //struct termios new;
-    //sigaction(sig_handler,0);
-    //signal(SIGABRT,sig_handler);
-    //signal(SIGTERM,sig_handler);
-    signal(SIGINT,sig_handler);
-    //_setmode(_fileno(stdout), _O_U16TEXT);
-    //signal(1,sig_handler);
-    //signal(3,sig_handler);
-    //signal(20,sig_handler);
-    //signal(sig_handler,0);
-    //setvbuf(stdout,NULL,_IONBUF,0);
-    //tcgetattr(0,&old);
-    //new = old;
-    //new.c_cc[VEOF] = 3;
-    //new.c_cc[VINTR] = 4;
-    //tcsetattr(0,TCSANOW,&new);
-    //return(old);
-}
-
-//void close_terminal(struct termios *old)
-void close_terminal(void)
-{
-  //tcsettr(0,TCSANOW,old);
-}
 
 
 int main(int argc, char** argv)
@@ -202,14 +160,13 @@ int main(int argc, char** argv)
   }*/
   else //read from stdin
   {
-    setup_terminal();
     node *blocks=node_GetItemByKey(state,"blocks");
     char *buf =(char*)malloc(100);
     char *tmp_get=NULL;
     node *ret_obj=NULL;
     set_obj_string(state,"script_filename","STDIN");
     set_obj_string(state,"interpreter_filename",argv[0]);
-    while((tmp_get=fgets(buf,100,stdin))!=NULL && !done && ((long)(tmp_get)!=EOF))
+    while((tmp_get=fgets(buf,100,stdin))!=NULL && ((long)(tmp_get)!=EOF))
     {
       nyx_stream = nyx_LoadString(buf);
       if(nyx_stream!=NULL)
@@ -250,7 +207,6 @@ int main(int argc, char** argv)
           node_FreeTree(nyx_stream);
       }
     }
-    close_terminal();
     close_nyx(state);
     return(0);
   }

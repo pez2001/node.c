@@ -33,7 +33,7 @@
 #include <fcntl.h>
 
 #include <libwebsockets.h>
-#include <private-libwebsockets.h>
+//#include <private-libwebsockets.h>
 
 void websockets_binding_open(node *state);
 void websockets_binding_close(node *state);

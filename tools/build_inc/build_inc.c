@@ -33,8 +33,8 @@ int main(int argc, char *argv[])
 		return(1);
 	}
 
-	printf("Makefile filename:%s\n",argv[1]);
-	printf("Makefile variable to increment:%s\n",argv[2]);
+	//printf("Makefile filename:%s\n",argv[1]);
+	//printf("Makefile variable to increment:%s\n",argv[2]);
 	FILE *f = fopen(argv[1],"r");
 	FILE *o = fopen("Makefile.new","w");
 	while(!feof(f))
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 			}
 			
 			count++;
-			printf("Incremented %s = %d\n",&line,count);
+			//printf("Incremented %s = %d\n",&line,count);
 			//int count = 
 			//count++;
 			fprintf(o,"%s = %d\n",argv[2],count);

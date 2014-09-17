@@ -48,7 +48,7 @@ typedef struct _entry
 typedef struct _tag
 {
   int magic;
-  int num_entries;
+  unsigned int num_entries;
   int get_options;
 } tag;
 

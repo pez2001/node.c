@@ -1,0 +1,11 @@
+
+println("testing eval function");
+r=eval("hi=\"test\";println(\"works\");")();
+println("hi:"+hi);
+println("r:"+r);
+
+e=eval("hi=\"changed\";println(\"works 2\");");
+println("hi2:"+hi);
+e();
+println("hi3:"+hi);
+println("hi in e:"+e.hi);
