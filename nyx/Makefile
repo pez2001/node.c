@@ -158,8 +158,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 1587
-DEBUG_BUILD = 2704
+BUILD = 1786
+DEBUG_BUILD = 2809
 
 CSTD = -std=c99
 #-std=c99
@@ -207,14 +207,14 @@ all:
 .PHONY: debug
 
 debug:
-	$(MAKE) library_debug && $(MAKE) compile_debug_end || $(MAKE) compile_failed
+	$(MAKE) library_debug && $(MAKE) compile_debug_end || $(MAKE) compile_debug_failed
 
 
 .PHONY: compile_start
 
 compile_start: 
 	@echo "====================================================="
-	@echo ":::::::::::::: Compiling nyx for $(PLATFORM_NAME) ::::::::::::::"
+	@echo "::::::::::::::\033[33m Compiling nyx for $(PLATFORM_NAME)\033[0m ::::::::::::::"
 	#@echo "====================================================="
 	@$(BEGIN_NOTIFY)
 
@@ -222,7 +222,7 @@ compile_start:
 
 compile_debug_start: 
 	@echo "====================================================="
-	@echo ":::::::::: Compiling nyx (DEBUG) for $(PLATFORM_NAME) ::::::::::"
+	@echo "::::::::::\033[93m Compiling nyx (DEBUG) for $(PLATFORM_NAME)\033[0m ::::::::::"
 	#@echo "====================================================="
 	@$(BEGIN_NOTIFY)
 
@@ -230,7 +230,7 @@ compile_debug_start:
 
 compile_end:
 	@echo "====================================================="
-	@echo "::::::::: Compilation of nyx was SUCCESSFUL :::::::::"
+	@echo ":::::::::\033[32m Compilation of nyx was SUCCESSFUL\033[0m :::::::::"
 	@echo "====================================================="
 	@./build_inc$(PLATFORM_EXT) Makefile BUILD
 	@$(SUCCESS_NOTIFY)
@@ -239,7 +239,7 @@ compile_end:
 
 compile_debug_end:
 	@echo "====================================================="
-	@echo "::::: Compilation of nyx (DEBUG) was SUCCESSFUL :::::"
+	@echo ":::::\033[32m Compilation of nyx (DEBUG) was SUCCESSFUL\033[0m :::::"
 	@echo "====================================================="
 	@./build_inc$(PLATFORM_EXT) Makefile BUILD
 	@$(SUCCESS_NOTIFY)
@@ -248,7 +248,15 @@ compile_debug_end:
 
 compile_failed:
 	@echo "====================================================="
-	@echo "::::::::::::: Compilation of nyx FAILED :::::::::::::"
+	@echo ":::::::::::::\033[91m Compilation of nyx FAILED\033[0m :::::::::::::"
+	@echo "====================================================="
+	@$(FAILED_NOTIFY)
+
+.PHONY: compile_debug_failed
+
+compile_debug_failed:
+	@echo "====================================================="
+	@echo ":::::::::\033[91m Compilation of nyx (DEBUG) FAILED\033[0m :::::::::"
 	@echo "====================================================="
 	@$(FAILED_NOTIFY)
 
@@ -268,7 +276,7 @@ library_debug: compile_debug_start build_inc nyx_static_debug unit_tests_debug
 
 clean_all: clean clean_debug clean_binaries all 
 
-library: compile_start build_inc nyx_static nyx_dynamic unit_tests debug 
+library: compile_start build_inc nyx_static nyx_dynamic unit_tests
 
 unit_tests: nyx_static $(UT_OBJ) 
 	$(CC) $(UT_OBJ) libnyx.a ../libnode.a $(LDFLAGS) -o unit_tests 

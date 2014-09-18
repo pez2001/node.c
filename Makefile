@@ -77,8 +77,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 5
-BUILD = 3802
-DEBUG_BUILD = 4129
+BUILD = 3981
+DEBUG_BUILD = 4227
 
 CSTD = -std=c99
 #-std c99
@@ -128,25 +128,33 @@ TOOLS_STARTER_OBJ = tools/starter/starter.o
 TOOLS_STARTER_DEBUG_OBJ = tools/starter/starter.do
 
 
+
+
+def: clean all debug
+
 .PHONY: all
 
 all:
 	$(MAKE) library && $(MAKE) compile_end || $(MAKE) compile_failed
 
+.PHONY: debug
+
+debug:
+	$(MAKE) library_debug && $(MAKE) compile_debug_end || $(MAKE) compile_debug_failed
+
+
 .PHONY: compile_start
 
 compile_start: 
 	@echo "====================================================="
-	@echo ":::::::::::: Compiling node.c for $(PLATFORM_NAME) :::::::::::::"
-	#@echo "====================================================="
+	@echo "::::::::::::\033[34m Compiling node.c for $(PLATFORM_NAME)\033[0m :::::::::::::"
 	@$(BEGIN_NOTIFY)
 
 .PHONY: compile_debug_start
 
 compile_debug_start: 
 	@echo "====================================================="
-	@echo ":::::::: Compiling node.c (DEBUG) for $(PLATFORM_NAME) :::::::::"
-	#@echo "====================================================="
+	@echo "::::::::\033[36m Compiling node.c (DEBUG) for $(PLATFORM_NAME)\033[0m :::::::::"
 	@$(BEGIN_NOTIFY)
 
 
@@ -154,17 +162,36 @@ compile_debug_start:
 
 compile_end:
 	@echo "====================================================="
-	@echo ":::::::::: Compilation of node.c SUCCESSFUL :::::::::"
+	@echo "::::::::::\033[32m Compilation of node.c SUCCESSFUL\033[0m :::::::::"
 	@echo "====================================================="
 	@./build_inc$(PLATFORM_EXT) Makefile BUILD
 	@./build_inc$(PLATFORM_EXT) README.md BUILD
 	@$(SUCCESS_NOTIFY)
 
+.PHONY: compile_debug_end
+
+compile_debug_end:
+	@echo "====================================================="
+	@echo "::::::\033[32m Compilation of node.c (DEBUG) SUCCESSFUL\033[0m :::::"
+	@echo "====================================================="
+	@./build_inc$(PLATFORM_EXT) Makefile BUILD
+	@./build_inc$(PLATFORM_EXT) README.md BUILD
+	@$(SUCCESS_NOTIFY)
+
+
 .PHONY: compile_failed
 
 compile_failed:
 	@echo "====================================================="
-	@echo "::::::::::: Compilation of node.c FAILED ::::::::::::"
+	@echo ":::::::::::\033[31m Compilation of node.c FAILED\033[0m ::::::::::::"
+	@echo "====================================================="
+	@$(FAILED_NOTIFY)
+
+.PHONY: compile_debug_failed
+
+compile_debug_failed:
+	@echo "====================================================="
+	@echo ":::::::\033[31m Compilation of node.c (DEBUG) FAILED\033[0m ::::::::"
 	@echo "====================================================="
 	@$(FAILED_NOTIFY)
 
@@ -176,14 +203,14 @@ test: all
 test_debug: debug
 	@./unit_tests_debug$(PLATFORM_EXT)
 	
-debug: compile_debug_start build_inc node_static_debug libnyx_debug starter_debug unit_tests_debug nyxi_debug 
+library_debug: compile_debug_start build_inc node_static_debug starter_debug libnyx_debug nyxi_debug unit_tests_debug
 	@./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 #	@echo "Compiling for "$(PLATFORM_NAME)
 #	./build_inc$(PLATFORM_EXT) Makefile BUILD
 #	$(SUCCESS_NOTIFY)
 
-library: compile_start node_static node_dynamic build_inc starter unit_tests debug libnyx nyxi
+library: compile_start node_static node_dynamic build_inc starter libnyx nyxi unit_tests 
 
 print_version:
 	@echo -n "$(BUILD)"
@@ -219,7 +246,7 @@ nyxi: node_static libnyx $(NYXI_OBJ)
 	$(CC) $(NYXI_OBJ) nyx/libnyx.a libnode.a $(LDFLAGS) -o nyxi 
 	@strip ./nyxi$(PLATFORM_EXT)
 
-nyxi_debug: node_static_debug libnyx $(NYXI_DEBUG_OBJ) 
+nyxi_debug: node_static_debug libnyx_debug $(NYXI_DEBUG_OBJ) 
 	$(CC) $(NYXI_DEBUG_OBJ) nyx/libnyx.da libnode.da $(DEBUG_LDFLAGS) -o nyxi_debug 
 
 build_inc: $(TOOLS_BUILD_INC_OBJ) 

@@ -2068,10 +2068,16 @@ node *nyxh_eval(node *state,node *obj,node *block,node *parameters)
 
 node *nyxh_test(node *state,node *obj,node *block,node *parameters)
 {
+  printf("obj:%s\n",get_obj_name(obj));
   node *value = get_true_class(state);
-  node *m = get_object(parameters,"m");
-  node *p = get_object(parameters,"p");
-  node *o = get_object(parameters,"o");
+  //node *m = get_object(parameters,"m");
+  //node *p = get_object(parameters,"p");
+  //node *o = get_object(parameters,"o");
+  node *obj_members = node_GetItemByKey(obj,"members");
+  node *m = get_object(obj_members,"m");
+  node *p = get_object(obj_members,"p");
+  node *o = get_object(obj_members,"o");
+
   node *mv = NULL;
   if(m)
     mv = get_value(m);

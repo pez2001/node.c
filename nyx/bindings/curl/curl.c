@@ -113,6 +113,7 @@ node *curl_get(node *state,node *obj,node *block,node *parameters)
     curl_easy_setopt(curl_handle,CURLOPT_WRITEDATA,curl_state);
     curl_easy_perform(curl_handle);
     curl_easy_cleanup(curl_handle);
+    curl_global_cleanup();
     node_ClearItems(curl_state);
     node_Free(curl_state,True);
     dec_obj_refcount(read_block);

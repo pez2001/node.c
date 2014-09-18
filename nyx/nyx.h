@@ -91,7 +91,7 @@ typedef node *(*nyx_function_handler)(node*,node*,node*,node*);
 /*basic object handling*/
 node *create_obj(char *name);
 void add_obj_kv(node *obj,node *kv);
-void remove_obj_kv(node *obj,node *kv);
+int remove_obj_kv(node *obj,node *kv);
 void add_obj_string(node *obj,char *key,char *string);
 void add_obj_int(node *obj,char *key,long i);
 void add_obj_float(node *obj,char *key,double d);
@@ -120,7 +120,7 @@ void add_private(node *obj,node *private);
 void remove_private(node *obj,node *private);
 
 void add_member(node *obj,node *member);
-void remove_member(node *obj,node *member);
+int remove_member(node *obj,node *member);
 node *get_member(node *obj,char *key);
 node *get_object(node *obj,char *key);
 node *get_member_non_recursive(node *obj,char *key);

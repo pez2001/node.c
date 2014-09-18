@@ -1,13 +1,14 @@
 get(u="top")=
 {
 	println("u:["+u+"]");
+	println("b:"+b);
+	println("object:"+object);
 };
 
 get();
 get("none");
 get(u="tack");
 println("top u:"+u);
-
 u="test";
 get(u=u);
 ui="next";
@@ -15,3 +16,32 @@ get(u=ui);
 
 
 
+get(b="beta");
+c="cin";
+get(c);
+get();
+c="cin2";
+get(c,b="alpha");
+get();
+
+get(1,2,3,4);
+
+get.object="works too";
+get();
+
+
+get2()=
+{
+	println("n1:",n1);	
+	println("n2:",n2);	
+};
+
+get2(n1="hallo",n2="welt");
+
+n1="hello";
+n2="world";
+get2(n1:=n1,n2:=n2);
+
+na="cafe";
+nb="latte";
+get2(n1=na,n2=nb);
