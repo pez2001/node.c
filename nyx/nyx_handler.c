@@ -73,12 +73,9 @@ node *nyxh_pre_not(node *state,node *self,node *obj,node *block,node *parameters
 node *nyxh_pre_at(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = NULL;
-  //printf("getting global for: %s\n",get_obj_name(obj));
   value = get_member(block,get_obj_name(obj));
   if(value==NULL)
     value = search_block_path_for_member(block,get_obj_name(obj));
-  //if(value==NULL)
-  //  printf("none found\n");
   if(value==NULL)
     value = obj;
   return(value);
@@ -1470,7 +1467,6 @@ node *nyxh_replace(node *state,node *self,node *obj,node *block,node *parameters
 
   return(value);
 }
-
 
 node *nyxh_index_of(node *state,node *self,node *obj,node *block,node *parameters)
 {

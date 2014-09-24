@@ -3,6 +3,7 @@ USE_SOCKETS = True
 USE_HTTP = True
 USE_SYS = True
 USE_FILE = True
+USE_MARSHAL = True
 
 
 
@@ -81,6 +82,11 @@ ifneq (, $(findstring linux, $(SYS)))
 		PLATFORM_CFLAGS += -DUSE_SYS
 		PLATFORM_DEBUG_CFLAGS += -DUSE_SYS
 	endif
+	ifeq ($(USE_MARSHAL),True)
+		PLATFORM_LIBS += -ldl
+		PLATFORM_CFLAGS += -DUSE_MARSHAL
+		PLATFORM_DEBUG_CFLAGS += -DUSE_MARSHAL
+	endif
 	ifeq ($(USE_FILE),True)
 		PLATFORM_CFLAGS += -DUSE_FILE
 		PLATFORM_DEBUG_CFLAGS += -DUSE_FILE
@@ -127,6 +133,10 @@ else ifneq (, $(findstring mingw, $(SYS)))
 		PLATFORM_CFLAGS += -DUSE_HTTP
 		PLATFORM_DEBUG_CFLAGS += -DUSE_HTTP
 	endif
+	ifeq ($(USE_MARSHAL),True)
+		PLATFORM_CFLAGS += -DUSE_MARSHAL
+		PLATFORM_DEBUG_CFLAGS += -DUSE_MARSHAL
+	endif
 	ifeq ($(USE_SYS),True)
 		PLATFORM_CFLAGS += -DUSE_SYS
 		PLATFORM_DEBUG_CFLAGS += -DUSE_SYS
@@ -157,9 +167,9 @@ SUCCESS_NOTIFY =
 
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 6
-BUILD = 2120
-DEBUG_BUILD = 2976
+MINOR_VERSION = 7
+BUILD = 2183
+DEBUG_BUILD = 3009
 
 CSTD = -std=c99
 #-std=c99
@@ -181,11 +191,11 @@ CC=gcc
 AR=ar -c
 LD=ld
 
-NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c bindings/websockets/websockets.c bindings/sockets/sockets.c bindings/http/http.c bindings/sys/sys.c bindings/file/file.c
-NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o bindings/websockets/websockets.o bindings/sockets/sockets.o bindings/http/http.o bindings/sys/sys.o bindings/file/file.o
+NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c bindings/websockets/websockets.c bindings/sockets/sockets.c bindings/http/http.c bindings/sys/sys.c bindings/file/file.c bindings/marshal/marshal.c
+NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o bindings/websockets/websockets.o bindings/sockets/sockets.o bindings/http/http.o bindings/sys/sys.o bindings/file/file.o bindings/marshal/marshal.o
 NYX_BINS = nyx$(PLATFORM_EXT)
-NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do bindings/websockets/websockets.do bindings/sockets/sockets.do bindings/http/http.do bindings/sys/sys.do bindings/file/file.do
-NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h bindings/websockets/websockets.h  bindings/sockets/sockets.h bindings/http/http.h bindings/sys/sys.h bindings/file/file.h
+NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do bindings/websockets/websockets.do bindings/sockets/sockets.do bindings/http/http.do bindings/sys/sys.do bindings/file/file.do bindings/marshal/marshal.do
+NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h bindings/websockets/websockets.h  bindings/sockets/sockets.h bindings/http/http.h bindings/sys/sys.h bindings/file/file.h bindings/marshal/marshal.h
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o
@@ -307,7 +317,7 @@ nyx_dynamic: $(NYX_OBJ)
 
 clean:
 	$(BEGIN_NOTIFY)
-	rm -f $(PLATFORM_LIB_PREFIX)nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/microhttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o
+	rm -f $(PLATFORM_LIB_PREFIX)nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/microhttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o bindings/marshal/*.o bindings/marshal/*.do
 
 clean_binaries:
 	rm -f unit_tests$(PLATFORM_EXT) unit_tests_debug$(PLATFORM_EXT) build_inc$(PLATFORM_EXT) 

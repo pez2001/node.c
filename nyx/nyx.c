@@ -2291,6 +2291,9 @@ void open_modules(node *state)
   #ifdef USE_FILE
     file_binding_open(state);
   #endif
+  #ifdef USE_MARSHAL
+    marshal_binding_open(state);
+  #endif
   #ifdef USE_SOCKETS
     sockets_binding_open(state);
   #endif
@@ -2315,6 +2318,9 @@ void close_modules(node *state)
   #endif
   #ifdef USE_FILE
     file_binding_close(state);
+  #endif
+  #ifdef USE_MARSHAL
+    marshal_binding_close(state);
   #endif
   #ifdef USE_SOCKETS
     sockets_binding_close(state);

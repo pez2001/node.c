@@ -61,6 +61,10 @@
 #include "bindings/file/file.h"
 #endif
 
+#ifdef USE_MARSHAL
+#include "bindings/marshal/marshal.h"
+#endif
+
 #ifdef USE_HTTP
 #include "bindings/http/http.h"
 #endif

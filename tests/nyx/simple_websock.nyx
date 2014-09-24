@@ -7,10 +7,9 @@ running=1;
 
 http_call={
 	println("serving request:",arguments["protocol"]);
-	println("running:"+@running);
 	url = arguments["url"];
 	println("serving url:["+url+"]");
-	msg=(@index).html;
+	msg=@index.html;
 	type="text/html";
 	(url=="/status").do({@msg = "actual chat server status";@daemon.broadcast("echo","someone is watching the status");});
 	(url=="/stop").do({@msg = "stopping server";@running=0;});

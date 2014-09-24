@@ -38,14 +38,12 @@ node *http_create_class_object(void)
   return(base);
 }
 
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
  
 void http_binding_open(node *state)
 {
   node *modules = get_modules(state);
-  //node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *http = http_bind(modules);
   node *proxy = create_proxy_object(state,http,"http");
@@ -66,7 +64,6 @@ node *http_bind(node *class)
   inc_obj_refcount(http);
   return(http);
 }
-
 
 node *http_create_response(node *state,node *self,node *obj,node *block,node *parameters)
 {

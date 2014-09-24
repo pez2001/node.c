@@ -1,4 +1,5 @@
 
+LIBDL = $(shell echo \\\#include \<dlfcn.h\>\\n int main\(int c,char**v\){} | gcc -ldl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){} | gcc -lcurl -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
@@ -29,6 +30,10 @@ ifeq ($(LIBWEBSOCKETS), 0)
 endif
 ifeq ($(LIBMICROHTTPD), 0)
 	PLATFORM_LIBS += -lmicrohttpd
+endif
+
+ifeq ($(LIBDL), 0)
+	PLATFORM_LIBS += -ldl
 endif
 
 
@@ -76,9 +81,9 @@ SUCCESS_NOTIFY =
 
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 5
-BUILD = 4315
-DEBUG_BUILD = 4394
+MINOR_VERSION = 6
+BUILD = 4372
+DEBUG_BUILD = 4420
 
 CSTD = -std=c99
 #-std c99

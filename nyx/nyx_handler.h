@@ -23,14 +23,6 @@
 #ifndef NYX_HANDLER_H
 #define NYX_HANDLER_H
 
-//#define _XOPEN_SOURCE
-
-//#ifndef _GNU_SOURCE
-//#define _GNU_SOURCE
-//#endif
-//#define _XOPEN_SOURCE 500
-//#define _BSD_SOURCE
-//#define _POSIX_C_SOURCE 3
 
 
 #include "nyx.h"
