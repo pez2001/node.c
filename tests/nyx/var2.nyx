@@ -1,0 +1,5 @@
+i="hello world";
+println(i);
+{println(@i);}();
+f()={println(@i);};
+f();

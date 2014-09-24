@@ -151,7 +151,7 @@ node *sys_bind(node *base_class,node *class)
 }
 
 
-node *sys_time(node *state,node *obj,node *block,node *parameters)
+node *sys_time(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -178,7 +178,7 @@ unsigned long rand_unbiased(unsigned long max)
 }
 
 
-node *sys_random(node *state,node *obj,node *block,node *parameters)
+node *sys_random(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -196,7 +196,7 @@ node *sys_random(node *state,node *obj,node *block,node *parameters)
 }
 
 
-node *sys_name(node *state,node *obj,node *block,node *parameters)
+node *sys_name(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -209,14 +209,14 @@ node *sys_name(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sys(node *state,node *obj,node *block,node *parameters)
+node *sys(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = sys_create_class_object(state);
   add_garbage(state,value);
   return(value);
 }
 
-node *sys_execute(node *state,node *obj,node *block,node *parameters)
+node *sys_execute(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //execute an external program and returns the output
   node *base_class = get_base_class(state);
@@ -254,7 +254,7 @@ node *sys_execute(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sys_change_working_directory(node *state,node *obj,node *block,node *parameters)
+node *sys_change_working_directory(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_true_class(state);
   if(node_GetItemsNum(parameters))
@@ -267,7 +267,7 @@ node *sys_change_working_directory(node *state,node *obj,node *block,node *param
   return(value);
 }
 
-node *sys_working_directory(node *state,node *obj,node *block,node *parameters)
+node *sys_working_directory(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -286,7 +286,7 @@ node *sys_working_directory(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sys_interpreter_version(node *state,node *obj,node *block,node *parameters)
+node *sys_interpreter_version(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -315,7 +315,7 @@ node *sys_interpreter_version(node *state,node *obj,node *block,node *parameters
   return(value);
 }
 
-node *sys_interpreter_filename(node *state,node *obj,node *block,node *parameters)
+node *sys_interpreter_filename(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *interpreter_filename = node_GetItemByKey(state,"interpreter_filename");
@@ -331,7 +331,7 @@ node *sys_interpreter_filename(node *state,node *obj,node *block,node *parameter
   return(value);
 }
 
-node *sys_script_filename(node *state,node *obj,node *block,node *parameters)
+node *sys_script_filename(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *script_filename = node_GetItemByKey(state,"script_filename");
@@ -347,7 +347,7 @@ node *sys_script_filename(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sys_exit(node *state,node *obj,node *block,node *parameters)
+node *sys_exit(node *state,node *self,node *obj,node *block,node *parameters)
 {
   set_obj_string(state,"block_flag","exit");
   if(node_GetItemsNum(parameters)>0)
@@ -364,7 +364,7 @@ node *sys_exit(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sys_dump(node *state,node *obj,node *block,node *parameters)
+node *sys_dump(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //dumps the whole interpreter state as json
   node *base_class = get_base_class(state);
@@ -390,7 +390,7 @@ node *sys_dump(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sys_sleep(node *state,node *obj,node *block,node *parameters)
+node *sys_sleep(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_true_class(state);
   node *time_par = node_GetItem(parameters,0);

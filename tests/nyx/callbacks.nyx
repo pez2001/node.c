@@ -1,0 +1,25 @@
+top="hello world";
+cb()={println("cb:"+@top+" ,t:"+top)};
+cb();
+cb()={a="test";println("a:"+a)};
+cb();
+
+cb()={println("a:"+a)};
+cb.a="test2";
+cb();
+cb2=cb;
+cb2.a="test3";
+cb2();
+cb();
+cb3:=cb;
+cb3.a="test4";
+cb3();
+cb2();
+
+cb2.a="test5";
+ar=[cb];
+cb4=ar[0];
+cb4();
+
+ar[0].a="test6";
+ar[0]();

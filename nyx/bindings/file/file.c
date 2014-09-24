@@ -68,7 +68,7 @@ node *file_bind(node *base_class,node *class)
   return(file);
 }
 
-node *file_open(node *state,node *obj,node *block,node *parameters)
+node *file_open(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //returns io stream object
   node *filename = NULL;
@@ -94,7 +94,7 @@ node *file_open(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *file_close(node *state,node *obj,node *block,node *parameters)
+node *file_close(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //close a file
   node *value = get_false_class(state);
@@ -121,7 +121,7 @@ node *file_close(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *file_writeallbytes(node *state,node *obj,node *block,node *parameters)
+node *file_writeallbytes(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //writes binary blob to file 
   node *value = get_false_class(state);
@@ -146,7 +146,7 @@ node *file_writeallbytes(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *file_readallbytes(node *state,node *obj,node *block,node *parameters)
+node *file_readallbytes(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //returns binary blob with all file content
   node *base_class = get_base_class(state);
@@ -174,7 +174,7 @@ node *file_readallbytes(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *file_readall(node *state,node *obj,node *block,node *parameters)
+node *file_readall(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //returns string with all file content
   node *base_class = get_base_class(state);
@@ -203,7 +203,7 @@ node *file_readall(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *file_writeall(node *state,node *obj,node *block,node *parameters)
+node *file_writeall(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //writes string to file 
   node *value = get_false_class(state);

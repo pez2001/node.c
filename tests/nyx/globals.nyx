@@ -1,0 +1,23 @@
+func()=
+{
+    i=12;
+    println("i:"+i);
+
+};
+
+i=10;
+func();
+println("top i:"+i);
+
+func2()=
+{
+    works=i;
+    println("works:"+works);
+    get_block().parent().i=15;
+    works=55;
+    println("i2:"+i);
+};
+
+func2();
+
+println("top2 i:"+i);

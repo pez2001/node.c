@@ -1,16 +1,19 @@
-test();
+/*test();
 test("none","two");
 test(m="tack",p="tick");
 println("top m:"+m);
-println("top p:"+p);
+println("top p:"+p);*/
+/*
 u="test";
 i="testi";
 io="testio";
-test(m=u,p=i,o=io);
-m="next";
+test(p=i,m=u,o=io);
+m2="next";
+test(m=u,p=io);
+test(m:=u,p:=io);
+test(m=m2);
+*/
+m="hallo";
 test(m=m);
-
-test(m:u,p:i,o:io);
-
 
 

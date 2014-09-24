@@ -36,7 +36,7 @@ void curl_binding_close(node *state);
 
 node *curl_bind(node *class);
 node *curl_create_class_object(void);
-node *curl_get(node *state,node *obj,node *block,node *parameters);
+node *curl_get(node *state,node *self,node *obj,node *block,node *parameters);
 #endif
 
 #endif

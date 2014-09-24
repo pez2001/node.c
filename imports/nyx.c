@@ -112,13 +112,15 @@ void nyx_SetNode(node *n,char *value_string,int is_value_string)
 
 int nyx_is_in_key_space(char c)
 {
-  if(c>=48 &&c<=57) /*number*/
+  if(c>=48 &&c<=57) /*numbers*/
     return(1);
-  if(c>=63 && c<=90) /*? to Z */
+  if(c>=65 && c<=90) /*A to Z */
     return(1);
   if(c>=97 && c<=122) /*a to z*/
     return(1);
-  if(c==95) /* _ , */   //c==38=& 
+  if(c==95) /* _ */  
+    return(1);
+  if(c==63) /* ? */
     return(1);
   return(0);
 }

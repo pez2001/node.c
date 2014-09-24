@@ -54,6 +54,7 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   node_AddItem(parameters,value);
   //node *read_obj = 
   execute_obj(state,read_block,block,parameters,True,False,True);
+  //execute_obj(state,read_block,block,parameters,True,True,True);
   return((size*nmemb));
 }
 
@@ -85,7 +86,7 @@ node *curl_bind(node *class)
   return(curl);
 }
 
-node *curl_get(node *state,node *obj,node *block,node *parameters)
+node *curl_get(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);

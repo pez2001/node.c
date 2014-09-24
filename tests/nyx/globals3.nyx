@@ -1,0 +1,47 @@
+func()={println("args:"+arguments[0])};
+func("hi1");
+func(a)={println("a:"+a)};
+func("hi2");
+
+
+func2(a)={println("a2:"+a)};
+func2("hi3");
+test("m":"hi4");
+m="hi5";
+test(m);
+print("no m:");test();
+
+func(b,c)={println("b:"+b+" c:"+c)};
+func("hi6","hi7");
+print("0 0:");func();
+func()={println("sub m 0:"+m);};
+func();
+
+func(b="test")={println("b:"+b)};
+func("hi8");
+print("test:");func();
+func("b":"hi9");
+a.id="hi10";
+println("a.id:"+a.id);
+a.id="hi11";
+func()={println("@a.id:"+(@a).id)};
+func();
+a="hi12";
+println("@a:"+@a);
+a="hi13";
+{println("{@a}:"+@a)}();
+
+b="failed";
+{@b="hi14";}();
+println("b:"+b);
+{@(b)="hi15";}();
+println("b:"+b);
+{(@b)="hi16";}();
+println("b:"+b);
+
+{@a.id="hi17";}();
+println("@a.id:"+a.id);
+a.id="hi18";
+1.do({println("@a.id:"+@a.id);});
+{a.id="hi19";}();
+println("a.id:"+a.id);

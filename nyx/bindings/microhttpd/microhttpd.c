@@ -127,7 +127,7 @@ node *microhttpd_bind(node *class)
 }
 
 
-node *microhttpd_service(node *state,node *obj,node *block,node *parameters)
+node *microhttpd_service(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_true_class(state);
   if(node_GetItemsNum(parameters))
@@ -179,7 +179,7 @@ node *microhttpd_service(node *state,node *obj,node *block,node *parameters)
 }
 
 
-node *microhttpd_start(node *state,node *obj,node *block,node *parameters)
+node *microhttpd_start(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -210,7 +210,7 @@ node *microhttpd_start(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *microhttpd_stop(node *state,node *obj,node *block,node *parameters)
+node *microhttpd_stop(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_false_class(state);
   if(node_GetItemsNum(parameters))

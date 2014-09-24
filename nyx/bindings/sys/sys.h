@@ -51,21 +51,21 @@ node *sys_create_class_object(node *base_class);
 
 void sys_add_parameter(node *state,node *parameter);
 
-node *sys(node *state,node *obj,node *block,node *parameters);
+node *sys(node *state,node *self,node *obj,node *block,node *parameters);
 
 
-node *sys_random(node *state,node *obj,node *block,node *parameters);
-node *sys_name(node *state,node *obj,node *block,node *parameters);
-node *sys_working_directory(node *state,node *obj,node *block,node *parameters);
-node *sys_change_working_directory(node *state,node *obj,node *block,node *parameters);
-node *sys_execute(node *state,node *obj,node *block,node *parameters);
-node *sys_dump(node *state,node *obj,node *block,node *parameters);
-node *sys_time(node *state,node *obj,node *block,node *parameters);
-node *sys_sleep(node *state,node *obj,node *block,node *parameters);
-node *sys_interpreter_version(node *state,node *obj,node *block,node *parameters);
-node *sys_interpreter_filename(node *state,node *obj,node *block,node *parameters);
-node *sys_script_filename(node *state,node *obj,node *block,node *parameters);
-node *sys_exit(node *state,node *obj,node *block,node *parameters);
+node *sys_random(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_name(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_working_directory(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_change_working_directory(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_execute(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_dump(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_time(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_sleep(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_interpreter_version(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_interpreter_filename(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_script_filename(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_exit(node *state,node *self,node *obj,node *block,node *parameters);
 #endif
 
 #endif

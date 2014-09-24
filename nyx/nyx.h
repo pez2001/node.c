@@ -86,7 +86,7 @@ typedef struct _nyx_module
 } nyx_module;
 
 
-typedef node *(*nyx_function_handler)(node*,node*,node*,node*);
+typedef node *(*nyx_function_handler)(node*,node *,node*,node*,node*);
 
 /*basic object handling*/
 node *create_obj(char *name);
@@ -108,7 +108,7 @@ node *get_value(node *obj);
 void set_obj_ptr(node *obj,char *key,void *n);
 
 /*class handling internal*/
-void add_class_object_function(node *class,char *method_name,node*(*handler)(node*,node*,node*,node*));
+void add_class_object_function(node *class,char *method_name,node*(*handler)(node*,node*,node*,node*,node*));
 
 char *state_to_json(node *state);
 
@@ -147,6 +147,8 @@ node *resolve_object(node *obj);
 
 void clean_move(node *state,node *dst,node *src);
 
+
+void dump_object_tree(node *obj);
 
 
 long get_last_index(node *items);

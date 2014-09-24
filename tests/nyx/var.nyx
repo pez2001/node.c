@@ -1,0 +1,15 @@
+i="hello world";
+println("simple def print: "+i="hi");
+println("simple print: "+i);
+i="hello world";
+println("simple print2: "+i);
+{println("anon global block print: "+@i);}();
+{println("anon block print: "+i);}();
+f={println("defined func print: "+@i);};
+f();
+f2={println("defined func non global print: "+i);};
+f2();
+f3(a)={println("func par print: "+a);};
+f3(i);
+f4(a)={println("func par global print: "+@a);};
+f4(i);

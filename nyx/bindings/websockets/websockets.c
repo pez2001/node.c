@@ -480,7 +480,7 @@ node *websockets_bind(node *class)
 }
 
 
-node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
+node *websockets_broadcast(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //printf("broadcasting\n");
   node *value = get_true_class(state);
@@ -558,7 +558,7 @@ node *websockets_broadcast(node *state,node *obj,node *block,node *parameters)
 
 //TODO add checks for true and false lists
 
-node *websockets_broadcast_other(node *state,node *obj,node *block,node *parameters)
+node *websockets_broadcast_other(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //printf("broadcasting_other\n");
   node *value = get_true_class(state);
@@ -636,7 +636,7 @@ node *websockets_broadcast_other(node *state,node *obj,node *block,node *paramet
   return(value);
 }
 
-node *websockets_send(node *state,node *obj,node *block,node *parameters) //TODO check if empty parameters can use a static node (saves a lot of mallocs)
+node *websockets_send(node *state,node *self,node *obj,node *block,node *parameters) //TODO check if empty parameters can use a static node (saves a lot of mallocs)
 {
   //printf("send\n");
   node *value = get_true_class(state);
@@ -710,7 +710,7 @@ node *websockets_send(node *state,node *obj,node *block,node *parameters) //TODO
   return(value);
 }
 
-node *websockets_start(node *state,node *obj,node *block,node *parameters)
+node *websockets_start(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -821,7 +821,7 @@ node *websockets_start(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *websockets_stop(node *state,node *obj,node *block,node *parameters)
+node *websockets_stop(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //printf("stopping daemon");
   //fflush(stdout);
@@ -886,7 +886,7 @@ node *websockets_stop(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *websockets_service(node *state,node *obj,node *block,node *parameters)
+node *websockets_service(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_true_class(state);
   node *wsd_state = node_GetNode(get_value(obj));

@@ -35,12 +35,12 @@ void file_binding_close(node *state);
 
 node *file_bind(node *base_class,node *class);
 node *file_create_class_object(node *base_class);
-node *file_writeall(node *state,node *obj,node *block,node *parameters);
-node *file_readall(node *state,node *obj,node *block,node *parameters);
-node *file_writeallbytes(node *state,node *obj,node *block,node *parameters);
-node *file_readallbytes(node *state,node *obj,node *block,node *parameters);
-node *file_close(node *state,node *obj,node *block,node *parameters);
-node *file_open(node *state,node *obj,node *block,node *parameters);
+node *file_writeall(node *state,node *self,node *obj,node *block,node *parameters);
+node *file_readall(node *state,node *self,node *obj,node *block,node *parameters);
+node *file_writeallbytes(node *state,node *self,node *obj,node *block,node *parameters);
+node *file_readallbytes(node *state,node *self,node *obj,node *block,node *parameters);
+node *file_close(node *state,node *self,node *obj,node *block,node *parameters);
+node *file_open(node *state,node *self,node *obj,node *block,node *parameters);
 
 #endif
 

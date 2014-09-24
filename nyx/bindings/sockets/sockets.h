@@ -52,14 +52,14 @@ void sockets_binding_close(node *state);
 
 node *sockets_bind(node *class);
 node *sockets_create_class_object(void);
-node *sockets_open(node *state,node *obj,node *block,node *parameters);
-//node *sockets_bind(node *state,node *obj,node *block,node *parameters);
-node *sockets_connect(node *state,node *obj,node *block,node *parameters);
-node *sockets_close(node *state,node *obj,node *block,node *parameters);
-node *sockets_set_address(node *state,node *obj,node *block,node *parameters);
-//node *sockets_is_connected(node *state,node *obj,node *block,node *parameters);
-node *sockets_read(node *state,node *obj,node *block,node *parameters);
-node *sockets_write(node *state,node *obj,node *block,node *parameters);
+node *sockets_open(node *state,node *self,node *obj,node *block,node *parameters);
+//node *sockets_bind(node *state,node *self,node *obj,node *block,node *parameters);
+node *sockets_connect(node *state,node *self,node *obj,node *block,node *parameters);
+node *sockets_close(node *state,node *self,node *obj,node *block,node *parameters);
+node *sockets_set_address(node *state,node *self,node *obj,node *block,node *parameters);
+//node *sockets_is_connected(node *state,node *self,node *obj,node *block,node *parameters);
+node *sockets_read(node *state,node *self,node *obj,node *block,node *parameters);
+node *sockets_write(node *state,node *self,node *obj,node *block,node *parameters);
 #endif
 
 #endif

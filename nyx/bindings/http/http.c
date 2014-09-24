@@ -68,7 +68,7 @@ node *http_bind(node *class)
 }
 
 
-node *http_create_response(node *state,node *obj,node *block,node *parameters)
+node *http_create_response(node *state,node *self,node *obj,node *block,node *parameters)
 {
 
   /*
@@ -97,7 +97,7 @@ node *http_create_response(node *state,node *obj,node *block,node *parameters)
 }
 
 
-node *http_create_request(node *state,node *obj,node *block,node *parameters)
+node *http_create_request(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
@@ -139,13 +139,13 @@ node *http_create_request(node *state,node *obj,node *block,node *parameters)
 }
 
 
-node *http_parse_cookies(node *state,node *obj,node *block,node *parameters)
+node *http_parse_cookies(node *state,node *self,node *obj,node *block,node *parameters)
 {
 
 }
 
 
-node *http_parse_url(node *state,node *obj,node *block,node *parameters)
+node *http_parse_url(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value2 = NULL;
@@ -306,7 +306,7 @@ node *http_parse_url(node *state,node *obj,node *block,node *parameters)
 }
 
 
-node *http_parse_answer(node *state,node *obj,node *block,node *parameters)
+node *http_parse_answer(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
   node *value2 = NULL;
@@ -445,7 +445,7 @@ void http_append_query_array(node *state,node *value)
   free(val);
 }
 
-node *http_query(node *state,node *obj,node *block,node *parameters)
+node *http_query(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //returns http query vars as array
   node *base_class = get_base_class(state);

@@ -1,0 +1,10 @@
+get()=
+{
+	println("n1:",n1);	
+};
+get(n1="hallo");
+
+n1="hello";
+get(n1:=n1);
+na="cafe";
+get(n1=na);

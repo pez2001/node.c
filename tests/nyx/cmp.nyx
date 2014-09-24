@@ -1,0 +1,6 @@
+i=10;
+?({@i},{@i--;w=@i;println("w:"+w);println("@:"+@i);},{println("fine");},1);
+
+println("loop2 non global");
+i=10;
+?({i},{i--;println(i);},{println("fine");},1);

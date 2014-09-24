@@ -76,7 +76,7 @@ node *sockets_bind(node *class)
   return(sockets);
 }
 
-node *sockets_open(node *state,node *obj,node *block,node *parameters)
+node *sockets_open(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //returns socket stream object
   node *base_class = get_base_class(state);
@@ -132,7 +132,7 @@ node *sockets_open(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sockets_close(node *state,node *obj,node *block,node *parameters)
+node *sockets_close(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //close a socket
   node *value = get_false_class(state);
@@ -159,7 +159,7 @@ node *sockets_close(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sockets_set_address(node *state,node *obj,node *block,node *parameters)
+node *sockets_set_address(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //set address of stream object
   node *value = get_false_class(state);
@@ -192,7 +192,7 @@ node *sockets_set_address(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sockets_connect(node *state,node *obj,node *block,node *parameters)
+node *sockets_connect(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //connect stream object to some host and port
   node *value = get_false_class(state);
@@ -311,7 +311,7 @@ node *sockets_connect(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sockets_read(node *state,node *obj,node *block,node *parameters)
+node *sockets_read(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //returns string with data received
   node *base_class = get_base_class(state);
@@ -366,7 +366,7 @@ node *sockets_read(node *state,node *obj,node *block,node *parameters)
   return(value);
 }
 
-node *sockets_write(node *state,node *obj,node *block,node *parameters)
+node *sockets_write(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //writes string to socket
   node *value = get_true_class(state);

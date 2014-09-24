@@ -1,0 +1,13 @@
+get()=
+{
+	println("n1:",n1);	
+	println("n2:",n2);
+	n4=22;	
+};
+
+get(n1="hallo",n2="welt");
+na="cafe";
+nb="latte";
+get(n1=na,n2=nb);
+println("sn4:"+get.n4);
+get(n1=nb,n2=na);

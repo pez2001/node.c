@@ -1,0 +1,11 @@
+cb()={println("works")};
+ar=[cb];
+ar[0]();
+
+a=((10*4)+4)+(4*5);
+println("a:"+a);
+
+/*ar[1]=cb;
+b=ar[1];
+ar[1]();
+b();*/

@@ -40,13 +40,13 @@ void websockets_binding_close(node *state);
 
 node *websockets_bind(node *class);
 node *websockets_create_class_object(void);
-node *websockets_start(node *state,node *obj,node *block,node *parameters);
-node *websockets_stop(node *state,node *obj,node *block,node *parameters);
-node *websockets_service(node *state,node *obj,node *block,node *parameters);
+node *websockets_start(node *state,node *self,node *obj,node *block,node *parameters);
+node *websockets_stop(node *state,node *self,node *obj,node *block,node *parameters);
+node *websockets_service(node *state,node *self,node *obj,node *block,node *parameters);
 
-node *websockets_broadcast(node *state,node *obj,node *block,node *parameters);
-node *websockets_broadcast_other(node *state,node *obj,node *block,node *parameters);
-node *websockets_send(node *state,node *obj,node *block,node *parameters);
+node *websockets_broadcast(node *state,node *self,node *obj,node *block,node *parameters);
+node *websockets_broadcast_other(node *state,node *self,node *obj,node *block,node *parameters);
+node *websockets_send(node *state,node *self,node *obj,node *block,node *parameters);
 
 #endif
 
