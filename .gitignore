@@ -3,6 +3,8 @@ debug.txt
 *.so
 *.o
 *.do
+*.ao
+*.dao
 *.da
 *.a
 *.dll
