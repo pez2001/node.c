@@ -168,8 +168,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 7
-BUILD = 2843
-DEBUG_BUILD = 3341
+BUILD = 2844
+DEBUG_BUILD = 3342
 
 CSTD = -std=c99
 #-std=c99
@@ -192,10 +192,10 @@ AR=ar -c
 LD=ld
 
 NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c bindings/websockets/websockets.c bindings/sockets/sockets.c bindings/http/http.c bindings/sys/sys.c bindings/file/file.c bindings/marshal/marshal.c bindings/marshal/marshal_ABI_amd64.s
-NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o bindings/websockets/websockets.o bindings/sockets/sockets.o bindings/http/http.o bindings/sys/sys.o bindings/file/file.o bindings/marshal/marshal.ao bindings/marshal/marshal_ABI_amd64.o
+NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o bindings/websockets/websockets.o bindings/sockets/sockets.o bindings/http/http.o bindings/sys/sys.o bindings/file/file.o bindings/marshal/marshal.o bindings/marshal/marshal_ABI_amd64.ao
 #bindings/marshal/marshal_ABI_amd64.ao
 NYX_BINS = nyx$(PLATFORM_EXT)
-NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do bindings/websockets/websockets.do bindings/sockets/sockets.do bindings/http/http.do bindings/sys/sys.do bindings/file/file.do bindings/marshal/marshal.dao bindings/marshal/marshal_ABI_amd64.do
+NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do bindings/websockets/websockets.do bindings/sockets/sockets.do bindings/http/http.do bindings/sys/sys.do bindings/file/file.do bindings/marshal/marshal.do bindings/marshal/marshal_ABI_amd64.dao
 NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h bindings/websockets/websockets.h  bindings/sockets/sockets.h bindings/http/http.h bindings/sys/sys.h bindings/file/file.h bindings/marshal/marshal.h bindings/marshal/marshal_ABI_amd64.h
 
 UT_FILES = unit_tests.c

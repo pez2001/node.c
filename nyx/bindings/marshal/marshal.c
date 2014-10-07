@@ -491,7 +491,7 @@ node *marshal_call_function_pre_best(node *state,node *self,node *obj,node *bloc
 }
 */
 
-node *marshal_call_function(node *state,node *self,node *obj,node *block,node *parameters)
+node *marshal_call_function2(node *state,node *self,node *obj,node *block,node *parameters)
 {
   unsigned long long pars_num = (unsigned long long)node_GetItemsNum(parameters);  
   node *privates = node_GetItemByKey(self,"privates");

@@ -1,4 +1,4 @@
-#	.file	"marshal_ABI_amd64.c"
+	.file	"marshal_ABI_amd64.c"
 	.section	.rodata
 .LC0:
 	.string	"privates"
@@ -21,396 +21,429 @@ marshal_call_function:
 	.cfi_offset 6, -16
 	movq	%rsp, %rbp
 	.cfi_def_cfa_register 6
-	subq	$224, %rsp
-	movq	%rdi, -184(%rbp)
-	movq	%rsi, -192(%rbp)
-	movq	%rdx, -200(%rbp)
-	movq	%rcx, -208(%rbp)
-	movq	%r8, -216(%rbp)
-	movq	-216(%rbp), %rax
+	pushq	%rbx
+	subq	$264, %rsp
+	.cfi_offset 3, -24
+	movq	%rdi, -232(%rbp)
+	movq	%rsi, -240(%rbp)
+	movq	%rdx, -248(%rbp)
+	movq	%rcx, -256(%rbp)
+	movq	%r8, -264(%rbp)
+	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
 	call	node_GetItemsNum
-	movq	%rax, -48(%rbp)
-	movq	-192(%rbp), %rax
+	movq	%rax, -88(%rbp)
+	movq	-240(%rbp), %rax
 	movl	$.LC0, %esi
 	movq	%rax, %rdi
 	call	node_GetItemByKey
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
+	movq	%rax, -96(%rbp)
+	movq	-96(%rbp), %rax
 	movl	$.LC1, %esi
 	movq	%rax, %rdi
 	call	node_GetItemByKey
-	movq	%rax, -64(%rbp)
-	movq	-192(%rbp), %rax
+	movq	%rax, -104(%rbp)
+	movq	-240(%rbp), %rax
 	movl	$.LC2, %esi
 	movq	%rax, %rdi
 	call	get_member
-	movq	%rax, -72(%rbp)
-	movq	$0, -8(%rbp)
-	cmpq	$0, -72(%rbp)
+	movq	%rax, -112(%rbp)
+	movq	$0, -24(%rbp)
+	cmpq	$0, -112(%rbp)
 	je	.L2
-	movq	-72(%rbp), %rax
+	movq	-112(%rbp), %rax
 	movq	%rax, %rdi
 	call	resolve_object
 	movq	%rax, %rdi
 	call	get_value
 	movq	%rax, %rdi
 	call	node_GetSint32
-	movq	%rax, -8(%rbp)
+	movq	%rax, -24(%rbp)
 .L2:
-	movq	-64(%rbp), %rax
+	movq	-104(%rbp), %rax
 	movq	%rax, %rdi
 	call	node_GetValue
-	movq	%rax, -80(%rbp)
-	movq	$0, -88(%rbp)
-	movq	$0, -96(%rbp)
-	movq	$0, -16(%rbp)
-	movq	$0, -24(%rbp)
+	movq	%rax, -120(%rbp)
+	movq	$0, -128(%rbp)
+	movq	$0, -136(%rbp)
 	movq	$0, -32(%rbp)
 	movq	$0, -40(%rbp)
-	movq	-48(%rbp), %rax
+	movq	$0, -48(%rbp)
+	movq	$0, -56(%rbp)
+	movq	$0, -64(%rbp)
+	movq	$0, -72(%rbp)
+	movq	$0, -80(%rbp)
+	movq	$0, -144(%rbp)
+	movq	$0, -152(%rbp)
+	movq	-88(%rbp), %rax
+	movq	%rax, %rdi
+	call	malloc
+	movq	%rax, -160(%rbp)
+	movq	-88(%rbp), %rax
 	salq	$3, %rax
 	movq	%rax, %rdi
 	call	malloc
-	movq	%rax, -104(%rbp)
-	movq	-48(%rbp), %rax
-	salq	$3, %rax
+	movq	%rax, -168(%rbp)
+	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	malloc
-	movq	%rax, -112(%rbp)
-	movq	-48(%rbp), %rax
-	salq	$3, %rax
-	movq	%rax, %rdi
-	call	malloc
-	movq	%rax, -120(%rbp)
-	movq	-216(%rbp), %rax
-	movq	%rax, %rdi
-	call	node_ItemIterationReset
+	call	node_ItemReverseIterationReset
 	jmp	.L3
-.L8:
-	movq	-216(%rbp), %rax
+.L6:
+	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_ItemIterate
-	movq	%rax, -128(%rbp)
-	movq	-128(%rbp), %rax
+	call	node_ItemReverseIterate
+	movq	%rax, -176(%rbp)
+	movq	-176(%rbp), %rax
 	movq	%rax, %rdi
 	call	get_value
-	movq	%rax, -136(%rbp)
-	movq	-136(%rbp), %rax
+	movq	%rax, -184(%rbp)
+	movq	-184(%rbp), %rax
 	movq	%rax, %rdi
 	call	node_GetUint64
-	movq	%rax, -144(%rbp)
-	movq	-136(%rbp), %rax
+	movq	%rax, -192(%rbp)
+	movq	-184(%rbp), %rax
 	movq	%rax, %rdi
 	call	node_GetType
 	cmpb	$3, %al
 	jne	.L4
-	cmpq	$8, -16(%rbp)
-	jg	.L5
-	movq	-16(%rbp), %rax
-	leaq	0(,%rax,8), %rdx
-	movq	-120(%rbp), %rax
-	addq	%rax, %rdx
-	movq	-144(%rbp), %rax
-	movq	%rax, (%rdx)
-	addq	$1, -16(%rbp)
-	jmp	.L3
-.L5:
-	movq	-32(%rbp), %rax
-	leaq	0(,%rax,8), %rdx
-	movq	-104(%rbp), %rax
-	addq	%rax, %rdx
-	movq	-144(%rbp), %rax
-	movq	%rax, (%rdx)
-	addq	$1, -32(%rbp)
-	jmp	.L3
+	movq	-56(%rbp), %rdx
+	movq	-160(%rbp), %rax
+	addq	%rdx, %rax
+	movb	$1, (%rax)
+	addq	$1, -64(%rbp)
+	jmp	.L5
 .L4:
-	cmpq	$6, -24(%rbp)
-	jg	.L7
-	movq	-24(%rbp), %rax
+	movq	-56(%rbp), %rdx
+	movq	-160(%rbp), %rax
+	addq	%rdx, %rax
+	movb	$0, (%rax)
+.L5:
+	movq	-56(%rbp), %rax
 	leaq	0(,%rax,8), %rdx
-	movq	-112(%rbp), %rax
+	movq	-168(%rbp), %rax
 	addq	%rax, %rdx
-	movq	-144(%rbp), %rax
+	movq	-192(%rbp), %rax
 	movq	%rax, (%rdx)
-	addq	$1, -24(%rbp)
-	jmp	.L3
-.L7:
-	movq	-32(%rbp), %rax
-	leaq	0(,%rax,8), %rdx
-	movq	-104(%rbp), %rax
-	addq	%rax, %rdx
-	movq	-144(%rbp), %rax
-	movq	%rax, (%rdx)
-	addq	$1, -32(%rbp)
+	addq	$1, -56(%rbp)
 .L3:
-	movq	-216(%rbp), %rax
+	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_ItemIterationUnfinished
+	call	node_ItemReverseIterationUnfinished
 	testl	%eax, %eax
-	jne	.L8
+	jne	.L6
+	movq	-64(%rbp), %rax
+	movq	-88(%rbp), %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
+	movq	%rax, -144(%rbp)
+	movq	-64(%rbp), %rax
+	subq	$8, %rax
+	movq	%rax, -72(%rbp)
+	movq	-144(%rbp), %rax
+	subq	$6, %rax
+	movq	%rax, -80(%rbp)
+	cmpq	$0, -72(%rbp)
+	jns	.L7
+	movq	$0, -72(%rbp)
+.L7:
+	cmpq	$0, -80(%rbp)
+	jns	.L8
+	movq	$0, -80(%rbp)
+.L8:
+	movq	-80(%rbp), %rdx
+	movq	-72(%rbp), %rax
+	addq	%rdx, %rax
+	movq	%rax, -152(%rbp)
 #APP
-# 83 "marshal_ABI_amd64.c" 1
+# 78 "marshal_ABI_amd64.c" 1
 	movq %rsp,%rax
 	
 # 0 "" 2
 #NO_APP
-	movq	%rax, -96(%rbp)
-	cmpq	$0, -32(%rbp)
-	je	.L9
-	movq	-32(%rbp), %rax
+	movq	%rax, -136(%rbp)
+	movq	-64(%rbp), %rax
+	subq	$1, %rax
+	movq	%rax, -32(%rbp)
+	movq	-144(%rbp), %rax
 	subq	$1, %rax
 	movq	%rax, -40(%rbp)
-	jmp	.L10
-.L11:
-	movq	-40(%rbp), %rax
-	leaq	-1(%rax), %rdx
-	movq	%rdx, -40(%rbp)
-	leaq	0(,%rax,8), %rdx
-	movq	-104(%rbp), %rax
+	movq	-152(%rbp), %rax
+	cqto
+	shrq	$63, %rdx
 	addq	%rdx, %rax
-	movq	(%rax), %rax
+	andl	$1, %eax
+	subq	%rdx, %rax
+	cmpq	$1, %rax
+	jne	.L9
 #APP
-# 94 "marshal_ABI_amd64.c" 1
-	pushq %rax
+# 88 "marshal_ABI_amd64.c" 1
+	subq $8,%rsp
 	
 # 0 "" 2
 #NO_APP
-.L10:
-	cmpq	$0, -40(%rbp)
-	jns	.L11
 .L9:
-	cmpq	$0, -16(%rbp)
-	jle	.L12
-	movq	-120(%rbp), %rax
+	jmp	.L10
+.L29:
+	movq	-48(%rbp), %rax
+	leaq	0(,%rax,8), %rbx
+	movq	-168(%rbp), %rax
+	addq	%rbx, %rax
+	movq	(%rax), %rax
+	movq	%rax, -200(%rbp)
+	movq	-48(%rbp), %rbx
+	movq	-160(%rbp), %rax
+	addq	%rbx, %rax
+	movzbl	(%rax), %eax
+	testb	%al, %al
+	je	.L11
+	cmpq	$0, -32(%rbp)
+	jne	.L12
+	movq	-200(%rbp), %rax
 #APP
-# 98 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm0
+# 96 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm0
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L12:
-	cmpq	$1, -16(%rbp)
-	jle	.L14
-	movq	-120(%rbp), %rax
-	addq	$8, %rax
+	cmpq	$1, -32(%rbp)
+	jne	.L14
+	movq	-200(%rbp), %rax
 #APP
-# 100 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm1
+# 98 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm1
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L14:
-	cmpq	$2, -16(%rbp)
-	jle	.L15
-	movq	-120(%rbp), %rax
-	addq	$16, %rax
+	cmpq	$2, -32(%rbp)
+	jne	.L15
+	movq	-200(%rbp), %rax
 #APP
-# 102 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm2
+# 100 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm2
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L15:
-	cmpq	$3, -16(%rbp)
-	jle	.L16
-	movq	-120(%rbp), %rax
-	addq	$24, %rax
+	cmpq	$3, -32(%rbp)
+	jne	.L16
+	movq	-200(%rbp), %rax
 #APP
-# 104 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm3
+# 102 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm3
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L16:
-	cmpq	$4, -16(%rbp)
-	jle	.L17
-	movq	-120(%rbp), %rax
-	addq	$32, %rax
+	cmpq	$4, -32(%rbp)
+	jne	.L17
+	movq	-200(%rbp), %rax
 #APP
-# 106 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm4
+# 104 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm4
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L17:
-	cmpq	$5, -16(%rbp)
-	jle	.L18
-	movq	-120(%rbp), %rax
-	addq	$40, %rax
+	cmpq	$5, -32(%rbp)
+	jne	.L18
+	movq	-200(%rbp), %rax
 #APP
-# 108 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm5
+# 106 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm5
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L18:
-	cmpq	$6, -16(%rbp)
-	jle	.L19
-	movq	-120(%rbp), %rax
-	addq	$48, %rax
+	cmpq	$6, -32(%rbp)
+	jne	.L19
+	movq	-200(%rbp), %rax
 #APP
-# 110 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm6
+# 108 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm6
 	
 # 0 "" 2
 #NO_APP
 	jmp	.L13
 .L19:
-	cmpq	$7, -16(%rbp)
-	jle	.L13
-	movq	-120(%rbp), %rax
-	addq	$56, %rax
+	cmpq	$7, -32(%rbp)
+	jne	.L20
+	movq	-200(%rbp), %rax
+#APP
+# 110 "marshal_ABI_amd64.c" 1
+	movq %rax, %xmm7
+	
+# 0 "" 2
+#NO_APP
+	jmp	.L13
+.L20:
+	movq	-200(%rbp), %rax
 #APP
 # 112 "marshal_ABI_amd64.c" 1
-	movsd (%rax), %xmm7
+	pushq %rax
 	
 # 0 "" 2
 #NO_APP
 .L13:
-	cmpq	$0, -24(%rbp)
-	jle	.L20
-	movq	-112(%rbp), %rax
-#APP
-# 116 "marshal_ABI_amd64.c" 1
-	movq (%rax),%rdi
-	
-# 0 "" 2
-#NO_APP
+	subq	$1, -32(%rbp)
 	jmp	.L21
-.L20:
-	cmpq	$1, -24(%rbp)
-	jle	.L22
-	movq	-112(%rbp), %rax
-	addq	$8, %rax
+.L11:
+	cmpq	$0, -40(%rbp)
+	jne	.L22
+	movq	-200(%rbp), %rax
 #APP
 # 118 "marshal_ABI_amd64.c" 1
-	movq (%rax),%rsi
+	movq %rax,%rdi
 	
 # 0 "" 2
 #NO_APP
-	jmp	.L21
+	jmp	.L23
 .L22:
-	cmpq	$2, -24(%rbp)
-	jle	.L23
-	movq	-112(%rbp), %rax
-	addq	$16, %rax
+	cmpq	$1, -40(%rbp)
+	jne	.L24
+	movq	-200(%rbp), %rax
 #APP
 # 120 "marshal_ABI_amd64.c" 1
-	movq (%rax),%rdx
+	movq %rax,%rsi
 	
 # 0 "" 2
 #NO_APP
-	jmp	.L21
-.L23:
-	cmpq	$3, -24(%rbp)
-	jle	.L24
-	movq	-112(%rbp), %rax
-	addq	$24, %rax
+	jmp	.L23
+.L24:
+	cmpq	$2, -40(%rbp)
+	jne	.L25
+	movq	-200(%rbp), %rax
 #APP
 # 122 "marshal_ABI_amd64.c" 1
-	movq (%rax),%rcx
-	
-# 0 "" 2
-#NO_APP
-	jmp	.L21
-.L24:
-	cmpq	$4, -24(%rbp)
-	jle	.L25
-	movq	-112(%rbp), %rax
-	addq	$32, %rax
-#APP
-# 124 "marshal_ABI_amd64.c" 1
-	movq (%rax),%r8
-	
-# 0 "" 2
-#NO_APP
-	jmp	.L21
-.L25:
-	cmpq	$5, -24(%rbp)
-	jle	.L21
-	movq	-112(%rbp), %rax
-	addq	$40, %rax
-#APP
-# 126 "marshal_ABI_amd64.c" 1
-	movq (%rax),%r9
-	
-# 0 "" 2
-#NO_APP
-.L21:
-#	movq	-48(%rbp), %rdx
-	movq	-80(%rbp), %rax
-#APP
-# 129 "marshal_ABI_amd64.c" 1
-#	movq %rdx,%rax
-	call %rax
 	movq %rax,%rdx
 	
 # 0 "" 2
 #NO_APP
-	movq	%rdx, -88(%rbp)
-	movq	-96(%rbp), %rax
+	jmp	.L23
+.L25:
+	cmpq	$3, -40(%rbp)
+	jne	.L26
+	movq	-200(%rbp), %rax
 #APP
-# 137 "marshal_ABI_amd64.c" 1
+# 124 "marshal_ABI_amd64.c" 1
+	movq %rax,%rcx
+	
+# 0 "" 2
+#NO_APP
+	jmp	.L23
+.L26:
+	cmpq	$4, -40(%rbp)
+	jne	.L27
+	movq	-200(%rbp), %rax
+#APP
+# 126 "marshal_ABI_amd64.c" 1
+	movq %rax,%r8
+	
+# 0 "" 2
+#NO_APP
+	jmp	.L23
+.L27:
+	cmpq	$5, -40(%rbp)
+	jne	.L28
+	movq	-200(%rbp), %rax
+#APP
+# 128 "marshal_ABI_amd64.c" 1
+	movq %rax,%r9
+	
+# 0 "" 2
+#NO_APP
+	jmp	.L23
+.L28:
+	movq	-200(%rbp), %rax
+#APP
+# 132 "marshal_ABI_amd64.c" 1
+	pushq %rax
+	
+# 0 "" 2
+#NO_APP
+.L23:
+	subq	$1, -40(%rbp)
+.L21:
+	addq	$1, -48(%rbp)
+.L10:
+	movq	-48(%rbp), %rax
+	cmpq	-88(%rbp), %rax
+	jb	.L29
+	cmpq	$8, -64(%rbp)
+	jle	.L30
+	movq	$8, -64(%rbp)
+.L30:
+	movq	-64(%rbp), %rax
+	movq	-120(%rbp), %rbx
+#APP
+# 142 "marshal_ABI_amd64.c" 1
+	call %rbx
+	
+# 0 "" 2
+#NO_APP
+	movq	%rax, -128(%rbp)
+	movq	-136(%rbp), %rax
+#APP
+# 151 "marshal_ABI_amd64.c" 1
 	movq %rax,%rsp
 	
 # 0 "" 2
 #NO_APP
-	movq	-184(%rbp), %rax
+	movq	-232(%rbp), %rax
 	movq	%rax, %rdi
 	call	get_base_class
-	movq	%rax, -152(%rbp)
-	movq	-152(%rbp), %rax
+	movq	%rax, -208(%rbp)
+	movq	-208(%rbp), %rax
 	movq	%rax, %rdi
 	call	create_class_instance
-	movq	%rax, -160(%rbp)
-	movq	-160(%rbp), %rax
+	movq	%rax, -216(%rbp)
+	movq	-216(%rbp), %rax
 	movl	$.LC3, %edx
 	movl	$.LC4, %esi
 	movq	%rax, %rdi
 	call	set_obj_string
-	movq	-160(%rbp), %rdx
-	movq	-184(%rbp), %rax
+	movq	-216(%rbp), %rdx
+	movq	-232(%rbp), %rax
 	movq	%rdx, %rsi
 	movq	%rax, %rdi
 	call	add_garbage
-	movq	-160(%rbp), %rax
+	movq	-216(%rbp), %rax
 	movq	%rax, %rdi
 	call	get_value
-	movq	%rax, -168(%rbp)
-	movq	-88(%rbp), %rdx
-	movq	-168(%rbp), %rax
+	movq	%rax, -224(%rbp)
+	movq	-128(%rbp), %rdx
+	movq	-224(%rbp), %rax
 	movq	%rdx, %rsi
 	movq	%rax, %rdi
 	call	node_SetUint64
-	movq	-168(%rbp), %rax
+	movq	-224(%rbp), %rax
 	movl	$10, %esi
 	movq	%rax, %rdi
 	call	node_SetType
-	cmpq	$1, -8(%rbp)
-	jne	.L26
-	movq	-168(%rbp), %rax
+	cmpq	$1, -24(%rbp)
+	jne	.L31
+	movq	-224(%rbp), %rax
 	movl	$3, %esi
 	movq	%rax, %rdi
 	call	node_SetType
-.L26:
-	movq	-104(%rbp), %rax
-	movq	%rax, %rdi
-	call	free
-	movq	-112(%rbp), %rax
-	movq	%rax, %rdi
-	call	free
-	movq	-120(%rbp), %rax
-	movq	%rax, %rdi
-	call	free
+.L31:
 	movq	-160(%rbp), %rax
-	leave
+	movq	%rax, %rdi
+	call	free
+	movq	-168(%rbp), %rax
+	movq	%rax, %rdi
+	call	free
+	movq	-216(%rbp), %rax
+	addq	$264, %rsp
+	popq	%rbx
+	popq	%rbp
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
