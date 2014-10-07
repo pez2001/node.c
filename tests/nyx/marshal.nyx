@@ -1,1 +1,54 @@
-marshal.test();
+
+
+marshal.libs.libc=marshal.open_lib("libc.so.6");
+marshal.libs.libc.printf=marshal.load_function(marshal.libs.libc,"printf");
+
+r=marshal.libs.libc.printf("1:%d\n",1);
+r=marshal.libs.libc.printf("1:%d,2:%d\n",1,2);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d\n",1,2,3);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d\n",1,2,3,4);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d,5:%d\n",1,2,3,4,5);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d,5:%d,6:%d\n",1,2,3,4,5,6);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d,5:%d,6:%d,7:%d\n",1,2,3,4,5,6,7);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d,5:%d,6:%d,7:%d,8:%d\n",1,2,3,4,5,6,7,8);
+
+
+marshal.libs.libc.printf("printf2:[%s]\n","Hallo Welt!");
+r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0);
+r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f,8:%f\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0);
+r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f,8:%f,9:%f\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0);
+r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f,8:%f,9:%f,10:%f\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0);
+
+
+println("println:["+12.0+"]");
+marshal.libs.libc.printf("printf:[%f]\n",13.0);
+
+r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0);
+println("printf ret:"+r);
+
+/*r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f,8:%f,9:%f\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0);
+println("printf ret:"+r);*/
+/*
+r=marshal.libs.libc.printf("1:%f,2:%f,3:%f,4:%f,5:%f,6:%f,7:%f,8:%f,9:%f,10:%s\n",1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,"hallo welt");
+*/
+
+/*r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d,5:%d\n",1,2,3,4,5);
+println("printf ret:"+r);
+r=marshal.libs.libc.printf("1:%d,2:%d,3:%d,4:%d,5:%d,6:%d,7:%d\n",1,2,3,4,5,6,7);
+println("printf2 ret:"+r);
+marshal.libs.libc.printf("printf:[%s%d]\n","Hallo Welt:",12);
+marshal.libs.libc.printf("Hallo Welt!\n");
+*/
+marshal.close_lib(marshal.libs.libc);
+
+
+
+marshal.libs.libm=marshal.open_lib("libm.so.6");
+marshal.libs.libm.pow=marshal.load_function(marshal.libs.libm,"pow");
+marshal.libs.libm.pow.return_type = marshal.DOUBLE;
+println("rt:"+marshal.libs.libm.pow.return_type);
+println("now calling pow:"+10.0);
+r=marshal.libs.libm.pow(10.0,3.0);
+println("pow ret:"+r);
+marshal.close_lib(marshal.libs.libm);
+

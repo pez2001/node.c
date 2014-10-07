@@ -77,7 +77,12 @@ node *nyxh_pre_at(node *state,node *self,node *obj,node *block,node *parameters)
   if(value==NULL)
     value = search_block_path_for_member(block,get_obj_name(obj));
   if(value==NULL)
+  {
+    //printf("global not found for:%x %s\n",obj,get_obj_name(obj));
     value = obj;
+  }
+  //else
+  //  printf("found global:%x %s\n",value,get_obj_name(value));
   return(value);
 }
 
@@ -751,6 +756,7 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
     else
     { 
       value = obj;
+      //printf("clean move\n");
       clean_move(state,value,node_GetItem(parameters,0));
       reset_obj_refcount(value);
       /*node *anon = node_GetItemByKey(value,"anonymous_block_parent");

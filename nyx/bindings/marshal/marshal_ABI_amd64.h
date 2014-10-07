@@ -20,31 +20,15 @@
  *
  */
 
-#ifndef BINDING_MARSHAL_H
-#define BINDING_MARSHAL_H
+#ifndef BINDING_MARSHAL_ABI_AMD64_H
+#define BINDING_MARSHAL_ABI_AMD65_H
 
 #include "../../nyx.h"
 
 
 #ifdef USE_MARSHAL
 
-#include "marshal_ABI_amd64.h"
-
-#include <stdio.h>
-#include <dlfcn.h>
- 
-void marshal_binding_open(node *state);
-void marshal_binding_close(node *state);
-
-node *marshal_bind(node *state,node *class);
-node *marshal_create_class_object(node *state);
-
-node *marshal_open_module(node *state,node *self,node *obj,node *block,node *parameters);
-node *marshal_close_module(node *state,node *self,node *obj,node *block,node *parameters);
-node *marshal_open_library(node *state,node *self,node *obj,node *block,node *parameters);
-node *marshal_close_library(node *state,node *self,node *obj,node *block,node *parameters);
-node *marshal_load_function(node *state,node *self,node *obj,node *block,node *parameters);
-node *marshal_test(node *state,node *self,node *obj,node *block,node *parameters);
+node *marshal_call_function(node *state,node *self,node *obj,node *block,node *parameters);
 
 #endif
 

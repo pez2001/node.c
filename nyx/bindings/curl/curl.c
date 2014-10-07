@@ -52,7 +52,10 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   set_obj_string(value,"name","data");
   node *parameters = create_obj("parameters");
   node_AddItem(parameters,value);
+  //printf("curl data handler callback\n");
+  //node_PrintTree(value);
   //node *read_obj = 
+  //node_PrintTree(read_block);
   execute_obj(state,read_block,block,parameters,True,False,True);
   //execute_obj(state,read_block,block,parameters,True,True,True);
   return((size*nmemb));
@@ -96,7 +99,6 @@ node *curl_get(node *state,node *self,node *obj,node *block,node *parameters)
   {
     node *nurl = node_GetItem(parameters,0);
     node *read_block = node_GetItem(parameters,1);
-
     node *url_value=get_value(nurl);
     CURL *curl_handle;
     node *curl_state = create_obj("curl_state");

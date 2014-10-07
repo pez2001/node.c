@@ -876,75 +876,76 @@ int node_GetInt(node *n)
 
 float node_GetFloat(node *n)
 {
-    //return((float)n->value);
-    float *fp = (float*)&(n->value);
-    return(*fp);
+  //return((float)n->value);
+  float *fp = (float*)&(n->value);
+  return(*fp);
 }
 
 double node_GetDouble(node *n)
 {
-    double *dp = (double*)&(n->value);
-    return(*dp);
+  double *dp = (double*)&(n->value);
+  return(*dp);
 }
 
 unsigned char node_GetUint8(node *n)
 {
-    return((unsigned char)n->value);
+  return((unsigned char)n->value);
 }
 
 unsigned short node_GetUint16(node *n)
 {
-    return((unsigned short)n->value);
+  return((unsigned short)n->value);
 }
 
 unsigned long node_GetUint32(node *n)
 {
-    return((unsigned long)n->value);
+  return((unsigned long)n->value);
 }
 
 unsigned long long node_GetUint64(node *n)
 {
-    return((unsigned long long)n->value);
+  //return((unsigned long long)n->value);
+  return(n->value);
 }
 
 node *node_GetNode(node *n)
 {
-    return((node*)(unsigned long)n->value);
+  return((node*)(unsigned long)n->value);
 }
 
 char node_GetSint8(node *n)
 {
-    return((char)n->value);
+  return((char)n->value);
 }
 
 short node_GetSint16(node *n)
 {
-    return((short)n->value);
+  return((short)n->value);
 }
 
 long node_GetSint32(node *n)
 {
-    return((long)n->value);
+  return((long)n->value);
 }
 
 long long node_GetSint64(node *n)
 {
-    return((long long)n->value);
+  return((long long)n->value);
 }
 
 char *node_GetString(node *n)
 {
-    return((char*)(unsigned long)n->value);
+  return((char*)(unsigned long)n->value);
 }
 
 int node_GetBool(node *n)
 {
-    return((unsigned char)n->value);
+  return((unsigned char)n->value);
 }
 
 void *node_GetUser(node *n)
 {
-    return((void*)(unsigned long)n->value);
+  return((void*)(unsigned long)n->value);
 }
 
 void node_SetUser(node *n,void *user)

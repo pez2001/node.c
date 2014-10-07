@@ -1,0 +1,6 @@
+?("curl".in(sys.modules),{println("curl supported")},{println("curl not supported");sys.exit(1)},0);
+content="";
+callback={@content=@content+arguments["data"]};
+curl.get("http://localhost/",callback);
+j=http.parse_answer(content)["body"];
+println("content:",j);

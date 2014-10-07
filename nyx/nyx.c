@@ -786,9 +786,10 @@ void add_class_object_function(node *class,char *method_name,node*(*handler)(nod
 {
   node *method = create_base_obj_layout(method_name);
   set_obj_string(method,"type","function");
+  node *privates = node_GetItemByKey(method,"privates");
   #pragma GCC diagnostic push
   #pragma GCC diagnostic ignored "-Wpedantic"
-    set_obj_ptr(method,"handler",(void*)handler);
+    set_obj_ptr(privates,"handler",(void*)handler);
   #pragma GCC diagnostic pop
     
   inc_obj_refcount(method);
@@ -1114,6 +1115,7 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   //set_obj_string(base,"name",obj_name);
   
   node *src_value = node_CopyTree(get_value(src),True,True);
+  //node_PrintTree(src_value);
   set_obj_value(dst,src_value);
 
   node *dst_il_block = node_GetItemByKey(dst,"nyx_block");
@@ -1372,9 +1374,10 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
   }
   else if(!strcmp(get_obj_type(obj),"function"))
   {
-    //if(execute_block)
-    //{
-      node *handler = node_GetItemByKey(obj,"handler");
+    if(execute_block)
+    {
+      node *privates = node_GetItemByKey(obj,"privates");
+      node *handler = node_GetItemByKey(privates,"handler");
       if(handler!=NULL)
       {
         //node *(*real_handler)(node*,node*,node*,node*) = (nyx_function_handler)node_GetValue(handler);
@@ -1386,11 +1389,11 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
         node *parent = node_GetParent(node_GetParent(obj));
         value = real_handler(state,obj,parent,block,pars);
       }
-    //}
-    //else
-    //{
-    //  value = obj;
-    //}
+    }
+    else
+    {
+      value = obj;
+    }
   }
   else if(!strcmp(get_obj_type(obj),"proxy"))
   {
@@ -1417,6 +1420,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
   {
     //return an interpreter error here 
     printf("exec return NULL\n");
+    int x=1/0;
   }
   node_ClearItems(pars);
   node_FreeTree(pars);
@@ -1494,15 +1498,15 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   {
     node *token = node_ItemIterate(statement);
     
-    /*
-    printf("------\nevaluating next token in %x\n",block);
+    
+    /*printf("------\nevaluating next token in %x\n",block);
     node_Print(token,True,False);
     //node_PrintTree(token);
     printf("------\n");
     printf("actual_obj: %x ,block: %x ,extra_search_block: %x exe_level: %d\n",actual_obj,block,extra_search_block,get_execution_level(state));
     printf("------\n");
-    fflush(stdout);
-    */
+    fflush(stdout);*/
+    
 
     if(!strcmp(node_GetKey(token),"nyx_parameters")  ) //used to parse sub brackets '()'
     {
@@ -1520,7 +1524,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
           if(found_obj!=NULL)
           {
-            actual_obj = execute_obj(state,found_obj,block,NULL,False,False,True);
+            actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
           }
           free(preop_prefixed);
           free(use_preop);
@@ -1704,7 +1708,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
           if(found_obj!=NULL)
           { 
-            actual_obj = execute_obj(state,found_obj,block,NULL,False,False,True);
+            actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
           }
           free(preop_prefixed);
           free(use_preop);
@@ -1835,7 +1839,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //inc_obj_refcount(child);
           actual_obj = child;
           add_garbage(state,actual_obj);
-          //printf("created obj %x in %x: %x,%s\n",child,block,actual_obj,get_obj_name(actual_obj));
+          //printf("created obj %x in %x : %s\n",child,block,get_obj_name(actual_obj));
           //fflush(stdout);
           //node_PrintTree(actual_obj);
           node *peek = node_ItemPeek(statement);
@@ -1862,7 +1866,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               found_obj = resolve_object(found_obj);
             }
           }
-          //printf("found obj %x,%s ",found_obj,get_obj_name(found_obj));
+          //printf("found obj %x,%s (type:%s)\n",found_obj,get_obj_name(found_obj),get_obj_type(found_obj));
           //fflush(stdout);
           //printf(" in %x,%s\n",node_GetParent(node_GetParent(found_obj)),get_obj_name(node_GetParent(node_GetParent(found_obj))));
           /*if(get_object_parent(found_obj))
@@ -1873,12 +1877,15 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           }*/
           //fflush(stdout);
           //node_ItemPeek(statement)!=NULL && 
-          if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") || !strcmp(get_obj_type(found_obj),"nyx_il_block") ) )
+          //if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") || !strcmp(get_obj_type(found_obj),"nyx_il_block") ) )
+          //if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") ) )
+          if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") ) )
           {
             //printf("found function without brackets:%s\n",node_GetValue(token));
-            node *exe_parameters = create_obj("parameters");
-            actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False,True);
+            //node *exe_parameters = create_obj("parameters");
+            //actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False,True);
             //node_PrintTree(actual_obj);
+            actual_obj = found_obj;//added after change to not automatically call functions without brackets
           }
           else 
           {
@@ -1915,7 +1922,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                   }
                   index++;
                 }
-                actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False,True);
+                actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False,True);
 
                 node_ItemIterationReset(subs);
                 while(node_ItemIterationUnfinished(subs))
@@ -1977,6 +1984,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                       node_AddItem(exe_parameters,sub_obj);
                     }
                     actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False,True);
+                    //actual_obj = execute_obj(state,found_obj,block,exe_parameters,False,False,True);
 
                     node_ItemIterationReset(subs);
                     while(node_ItemIterationUnfinished(subs))
@@ -2045,7 +2053,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
           if(found_obj!=NULL)
           { 
-            actual_obj = execute_obj(state,found_obj,block,NULL,False,False,True);
+            actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
           }
           free(preop_prefixed);
           free(use_preop);
@@ -2102,7 +2110,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               node_AddItem(parameters,sub_obj);
             }
             actual_obj = found_obj;
-            actual_obj = execute_obj(state,actual_obj,block,parameters,False,False,True);
+            actual_obj = execute_obj(state,actual_obj,block,parameters,True,False,True);
             //printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
             //dec_execution_level(state);
             return(actual_obj);
