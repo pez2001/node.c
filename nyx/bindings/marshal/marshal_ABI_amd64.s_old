@@ -1,3 +1,5 @@
+.code64
+
 	.file	"marshal_ABI_amd64.c"
 	.section	.rodata
 .LC0:
@@ -31,38 +33,38 @@ marshal_call_function:
 	movq	%r8, -264(%rbp)
 	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_GetItemsNum@PLT
+	call	node_GetItemsNum
 	movq	%rax, -88(%rbp)
 	movq	-240(%rbp), %rax
-	leaq	.LC0(%rip), %rsi
+	movl	$.LC0, %esi
 	movq	%rax, %rdi
-	call	node_GetItemByKey@PLT
+	call	node_GetItemByKey
 	movq	%rax, -96(%rbp)
 	movq	-96(%rbp), %rax
-	leaq	.LC1(%rip), %rsi
+	movl	$.LC1, %esi
 	movq	%rax, %rdi
-	call	node_GetItemByKey@PLT
+	call	node_GetItemByKey
 	movq	%rax, -104(%rbp)
 	movq	-240(%rbp), %rax
-	leaq	.LC2(%rip), %rsi
+	movl	$.LC2, %esi
 	movq	%rax, %rdi
-	call	get_member@PLT
+	call	get_member
 	movq	%rax, -112(%rbp)
 	movq	$0, -24(%rbp)
 	cmpq	$0, -112(%rbp)
 	je	.L2
 	movq	-112(%rbp), %rax
 	movq	%rax, %rdi
-	call	resolve_object@PLT
+	call	resolve_object
 	movq	%rax, %rdi
-	call	get_value@PLT
+	call	get_value
 	movq	%rax, %rdi
-	call	node_GetSint32@PLT
+	call	node_GetSint32
 	movq	%rax, -24(%rbp)
 .L2:
 	movq	-104(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_GetValue@PLT
+	call	node_GetValue
 	movq	%rax, -120(%rbp)
 	movq	$0, -128(%rbp)
 	movq	$0, -136(%rbp)
@@ -77,33 +79,33 @@ marshal_call_function:
 	movq	$0, -152(%rbp)
 	movq	-88(%rbp), %rax
 	movq	%rax, %rdi
-	call	malloc@PLT
+	call	malloc
 	movq	%rax, -160(%rbp)
 	movq	-88(%rbp), %rax
 	salq	$3, %rax
 	movq	%rax, %rdi
-	call	malloc@PLT
+	call	malloc
 	movq	%rax, -168(%rbp)
 	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_ItemReverseIterationReset@PLT
+	call	node_ItemReverseIterationReset
 	jmp	.L3
 .L6:
 	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_ItemReverseIterate@PLT
+	call	node_ItemReverseIterate
 	movq	%rax, -176(%rbp)
 	movq	-176(%rbp), %rax
 	movq	%rax, %rdi
-	call	get_value@PLT
+	call	get_value
 	movq	%rax, -184(%rbp)
 	movq	-184(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_GetUint64@PLT
+	call	node_GetUint64
 	movq	%rax, -192(%rbp)
 	movq	-184(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_GetType@PLT
+	call	node_GetType
 	cmpb	$3, %al
 	jne	.L4
 	movq	-56(%rbp), %rdx
@@ -128,7 +130,7 @@ marshal_call_function:
 .L3:
 	movq	-264(%rbp), %rax
 	movq	%rax, %rdi
-	call	node_ItemReverseIterationUnfinished@PLT
+	call	node_ItemReverseIterationUnfinished
 	testl	%eax, %eax
 	jne	.L6
 	movq	-64(%rbp), %rax
@@ -200,7 +202,7 @@ marshal_call_function:
 	jne	.L12
 	movq	-200(%rbp), %rax
 #APP
-# 99 "marshal_ABI_amd64.c" 1
+# 96 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm0
 	
 # 0 "" 2
@@ -211,7 +213,7 @@ marshal_call_function:
 	jne	.L14
 	movq	-200(%rbp), %rax
 #APP
-# 101 "marshal_ABI_amd64.c" 1
+# 98 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm1
 	
 # 0 "" 2
@@ -222,7 +224,7 @@ marshal_call_function:
 	jne	.L15
 	movq	-200(%rbp), %rax
 #APP
-# 103 "marshal_ABI_amd64.c" 1
+# 100 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm2
 	
 # 0 "" 2
@@ -233,7 +235,7 @@ marshal_call_function:
 	jne	.L16
 	movq	-200(%rbp), %rax
 #APP
-# 105 "marshal_ABI_amd64.c" 1
+# 102 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm3
 	
 # 0 "" 2
@@ -244,7 +246,7 @@ marshal_call_function:
 	jne	.L17
 	movq	-200(%rbp), %rax
 #APP
-# 107 "marshal_ABI_amd64.c" 1
+# 104 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm4
 	
 # 0 "" 2
@@ -255,7 +257,7 @@ marshal_call_function:
 	jne	.L18
 	movq	-200(%rbp), %rax
 #APP
-# 109 "marshal_ABI_amd64.c" 1
+# 106 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm5
 	
 # 0 "" 2
@@ -266,7 +268,7 @@ marshal_call_function:
 	jne	.L19
 	movq	-200(%rbp), %rax
 #APP
-# 111 "marshal_ABI_amd64.c" 1
+# 108 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm6
 	
 # 0 "" 2
@@ -277,7 +279,7 @@ marshal_call_function:
 	jne	.L20
 	movq	-200(%rbp), %rax
 #APP
-# 113 "marshal_ABI_amd64.c" 1
+# 110 "marshal_ABI_amd64.c" 1
 	movq %rax, %xmm7
 	
 # 0 "" 2
@@ -286,7 +288,7 @@ marshal_call_function:
 .L20:
 	movq	-200(%rbp), %rax
 #APP
-# 115 "marshal_ABI_amd64.c" 1
+# 112 "marshal_ABI_amd64.c" 1
 	pushq %rax
 	
 # 0 "" 2
@@ -299,7 +301,7 @@ marshal_call_function:
 	jne	.L22
 	movq	-200(%rbp), %rax
 #APP
-# 121 "marshal_ABI_amd64.c" 1
+# 118 "marshal_ABI_amd64.c" 1
 	movq %rax,%rdi
 	
 # 0 "" 2
@@ -310,7 +312,7 @@ marshal_call_function:
 	jne	.L24
 	movq	-200(%rbp), %rax
 #APP
-# 123 "marshal_ABI_amd64.c" 1
+# 120 "marshal_ABI_amd64.c" 1
 	movq %rax,%rsi
 	
 # 0 "" 2
@@ -321,7 +323,7 @@ marshal_call_function:
 	jne	.L25
 	movq	-200(%rbp), %rax
 #APP
-# 125 "marshal_ABI_amd64.c" 1
+# 122 "marshal_ABI_amd64.c" 1
 	movq %rax,%rdx
 	
 # 0 "" 2
@@ -332,7 +334,7 @@ marshal_call_function:
 	jne	.L26
 	movq	-200(%rbp), %rax
 #APP
-# 127 "marshal_ABI_amd64.c" 1
+# 124 "marshal_ABI_amd64.c" 1
 	movq %rax,%rcx
 	
 # 0 "" 2
@@ -343,7 +345,7 @@ marshal_call_function:
 	jne	.L27
 	movq	-200(%rbp), %rax
 #APP
-# 129 "marshal_ABI_amd64.c" 1
+# 126 "marshal_ABI_amd64.c" 1
 	movq %rax,%r8
 	
 # 0 "" 2
@@ -354,7 +356,7 @@ marshal_call_function:
 	jne	.L28
 	movq	-200(%rbp), %rax
 #APP
-# 131 "marshal_ABI_amd64.c" 1
+# 128 "marshal_ABI_amd64.c" 1
 	movq %rax,%r9
 	
 # 0 "" 2
@@ -363,7 +365,7 @@ marshal_call_function:
 .L28:
 	movq	-200(%rbp), %rax
 #APP
-# 135 "marshal_ABI_amd64.c" 1
+# 132 "marshal_ABI_amd64.c" 1
 	pushq %rax
 	
 # 0 "" 2
@@ -383,7 +385,7 @@ marshal_call_function:
 	movq	-64(%rbp), %rax
 	movq	-120(%rbp), %rbx
 #APP
-# 145 "marshal_ABI_amd64.c" 1
+# 142 "marshal_ABI_amd64.c" 1
 	call %rbx
 	
 # 0 "" 2
@@ -391,55 +393,55 @@ marshal_call_function:
 	movq	%rax, -128(%rbp)
 	movq	-136(%rbp), %rax
 #APP
-# 154 "marshal_ABI_amd64.c" 1
+# 151 "marshal_ABI_amd64.c" 1
 	movq %rax,%rsp
 	
 # 0 "" 2
 #NO_APP
 	movq	-232(%rbp), %rax
 	movq	%rax, %rdi
-	call	get_base_class@PLT
+	call	get_base_class
 	movq	%rax, -208(%rbp)
 	movq	-208(%rbp), %rax
 	movq	%rax, %rdi
-	call	create_class_instance@PLT
+	call	create_class_instance
 	movq	%rax, -216(%rbp)
 	movq	-216(%rbp), %rax
-	leaq	.LC3(%rip), %rdx
-	leaq	.LC4(%rip), %rsi
+	movl	$.LC3, %edx
+	movl	$.LC4, %esi
 	movq	%rax, %rdi
-	call	set_obj_string@PLT
+	call	set_obj_string
 	movq	-216(%rbp), %rdx
 	movq	-232(%rbp), %rax
 	movq	%rdx, %rsi
 	movq	%rax, %rdi
-	call	add_garbage@PLT
+	call	add_garbage
 	movq	-216(%rbp), %rax
 	movq	%rax, %rdi
-	call	get_value@PLT
+	call	get_value
 	movq	%rax, -224(%rbp)
 	movq	-128(%rbp), %rdx
 	movq	-224(%rbp), %rax
 	movq	%rdx, %rsi
 	movq	%rax, %rdi
-	call	node_SetUint64@PLT
+	call	node_SetUint64
 	movq	-224(%rbp), %rax
 	movl	$10, %esi
 	movq	%rax, %rdi
-	call	node_SetType@PLT
+	call	node_SetType
 	cmpq	$1, -24(%rbp)
 	jne	.L31
 	movq	-224(%rbp), %rax
 	movl	$3, %esi
 	movq	%rax, %rdi
-	call	node_SetType@PLT
+	call	node_SetType
 .L31:
 	movq	-160(%rbp), %rax
 	movq	%rax, %rdi
-	call	free@PLT
+	call	free
 	movq	-168(%rbp), %rax
 	movq	%rax, %rdi
-	call	free@PLT
+	call	free
 	movq	-216(%rbp), %rax
 	addq	$264, %rsp
 	popq	%rbx

@@ -87,6 +87,9 @@ node *marshal_call_function(node *state,node *self,node *obj,node *block,node *p
   if(pushes%2==1)
     __asm__ __volatile__("subq $8,%%rsp\n\t" :  :  : "rsp","cc");
 
+  //remember to change rdx -> rbx
+  // rcx also
+  //remove some unneeded opcodes in final assembly 
   while(pop_index<pars_num)
   {
     data = par_data[pop_index];

@@ -11,6 +11,10 @@ USE_CURL = True
 USE_WEBSOCKETS = True
 USE_MICROHTTPD = True
 
+USE_CURL = False
+USE_WEBSOCKETS = False
+USE_MICROHTTPD = False
+
 
 #LIBCURL := $(shell locate libcurl.so)
 #LIBWEBSOCKETS := $(shell locate libwebsockets.so)
@@ -46,8 +50,8 @@ ifneq (, $(findstring linux, $(SYS)))
 	PLATFORM_LIB_EXT = .so
 	PLATFORM_NAME = Linux
 	PLATFORM_LIBS = -lm
-	PLATFORM_CFLAGS = -fPIC -DLINUX -D_XOPEN_SOURCE=700
-	PLATFORM_DEBUG_CFLAGS = -fPIC -DLINUX -D_XOPEN_SOURCE=700
+	PLATFORM_CFLAGS = -fPIC -DPIC -DLINUX -D_XOPEN_SOURCE=700
+	PLATFORM_DEBUG_CFLAGS = -fPIC -DPIC -DLINUX -D_XOPEN_SOURCE=700
 	PLATFORM_LDFLAGS = 
 	#-static
 	ifeq ($(USE_CURL),True)
@@ -168,8 +172,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 7
-BUILD = 2844
-DEBUG_BUILD = 3342
+BUILD = 2866
+DEBUG_BUILD = 3361
 
 CSTD = -std=c99
 #-std=c99
@@ -193,7 +197,6 @@ LD=ld
 
 NYX_FILES = nyx.c nyx_handler.c bindings/curl/curl.c bindings/microhttpd/microhttpd.c bindings/websockets/websockets.c bindings/sockets/sockets.c bindings/http/http.c bindings/sys/sys.c bindings/file/file.c bindings/marshal/marshal.c bindings/marshal/marshal_ABI_amd64.s
 NYX_OBJ = nyx.o nyx_handler.o bindings/curl/curl.o bindings/microhttpd/microhttpd.o bindings/websockets/websockets.o bindings/sockets/sockets.o bindings/http/http.o bindings/sys/sys.o bindings/file/file.o bindings/marshal/marshal.o bindings/marshal/marshal_ABI_amd64.ao
-#bindings/marshal/marshal_ABI_amd64.ao
 NYX_BINS = nyx$(PLATFORM_EXT)
 NYX_DEBUG_OBJ = nyx.do nyx_handler.do bindings/curl/curl.do bindings/microhttpd/microhttpd.do bindings/websockets/websockets.do bindings/sockets/sockets.do bindings/http/http.do bindings/sys/sys.do bindings/file/file.do bindings/marshal/marshal.do bindings/marshal/marshal_ABI_amd64.dao
 NYX_INCLUDE_FILES = nyx.h nyx_handler.h bindings/curl/curl.h bindings/microhttpd/microhttpd.h bindings/websockets/websockets.h  bindings/sockets/sockets.h bindings/http/http.h bindings/sys/sys.h bindings/file/file.h bindings/marshal/marshal.h bindings/marshal/marshal_ABI_amd64.h
@@ -287,7 +290,7 @@ library_debug: compile_debug_start build_inc nyx_static_debug unit_tests_debug
 
 clean_all: clean clean_debug clean_binaries all 
 
-library: compile_start build_inc nyx_static nyx_dynamic unit_tests
+library: compile_start build_inc nyx_static unit_tests nyx_dynamic
 
 unit_tests: nyx_static $(UT_OBJ) 
 	$(CC) $(UT_OBJ) libnyx.a ../libnode.a $(LDFLAGS) -o unit_tests 
@@ -306,7 +309,7 @@ nyx_static_debug: $(NYX_DEBUG_OBJ)
 	$(AR) -rs libnyx.da ../libnode.da $(NYX_DEBUG_OBJ) 
 
 nyx_dynamic: $(NYX_OBJ)
-	$(CC) -DCREATELIB -shared ../$(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)
+	$(CC)  -nostdlib -DCREATELIB -shared ../$(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)
 	@strip $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)	
 
 %.o: %.c 
@@ -317,11 +320,11 @@ nyx_dynamic: $(NYX_OBJ)
 	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
 %.ao: %.s
-	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
+	$(CC) -fkeep-inline-functions $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
 
 %.dao: %.s 
-	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
+	$(CC) -fkeep-inline-functions $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
 
 clean:

@@ -44,7 +44,6 @@ node *marshal_close_module(node *state,node *self,node *obj,node *block,node *pa
 node *marshal_open_library(node *state,node *self,node *obj,node *block,node *parameters);
 node *marshal_close_library(node *state,node *self,node *obj,node *block,node *parameters);
 node *marshal_load_function(node *state,node *self,node *obj,node *block,node *parameters);
-node *marshal_test(node *state,node *self,node *obj,node *block,node *parameters);
 
 #endif
 
