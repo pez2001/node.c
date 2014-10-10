@@ -50,6 +50,7 @@ void http_binding_open(node *state)
   inc_obj_refcount(http);
   add_member(block_class,proxy);
   inc_obj_refcount(proxy);
+  sys_add_module(state,"http");
 }
 
 void http_binding_close(node *state)
@@ -105,7 +106,9 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
   char *request = str_CreateEmpty();
   if(node_GetItemsNum(parameters))
   {
-    node *host = node_GetItem(parameters,0);
+    node *host = get_object(parameters,"host");
+    if(host==NULL)
+      host = node_GetItem(parameters,0);
     node *method = get_object(parameters,"method");
     node *port = get_object(parameters,"port");
     node *protocol = get_object(parameters,"protocol");
@@ -129,6 +132,13 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
 
     request = str_CatFree(request," HTTP/1.1\r\nHost: ");
     request = str_CatFree(request,node_GetString(host_value));
+    if(port!=NULL)
+    {
+      node *port_value = get_value(port);
+      request = str_CatFree(request,":");
+      request = str_CatFree(request,str_FromLong(node_GetSint32(port_value)));
+    }
+
 
   }
   node_SetString(real_value,request);

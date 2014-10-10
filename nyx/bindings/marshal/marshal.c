@@ -24,9 +24,6 @@
 
 #ifdef USE_MARSHAL
 
-//node *marshal_call_function(node *state,node *self,node *obj,node *block,node *parameters); 
-
-
 
 node *marshal_create_class_object(node *state)
 {
@@ -45,7 +42,17 @@ node *marshal_create_class_object(node *state)
   set_obj_int(return_type_double,"value",1);
   add_member(base,return_type_double);
 
+  node *return_type_string = create_class_instance(base_class);
+  inc_obj_refcount(return_type_string);
+  set_obj_string(return_type_string,"name","STRING");
+  set_obj_int(return_type_string,"value",2);
+  add_member(base,return_type_string);
 
+  node *return_type_sint32 = create_class_instance(base_class);
+  inc_obj_refcount(return_type_sint32);
+  set_obj_string(return_type_sint32,"name","SINT32");
+  set_obj_int(return_type_sint32,"value",0);
+  add_member(base,return_type_sint32);
   return(base);
 }
 
@@ -61,6 +68,7 @@ void marshal_binding_open(node *state)
   inc_obj_refcount(marshal);
   add_member(block_class,proxy);
   inc_obj_refcount(proxy);
+  sys_add_module(state,"marshal");
 }
 
 void marshal_binding_close(node *state)
@@ -79,20 +87,69 @@ node *marshal_bind(node *state,node *class)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
 
-typedef void (*func)();
 
-#pragma GCC diagnostic pop
 
+typedef node *(*func)(node *state);
 
 node *marshal_open_module(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  node *olibrary_name = node_GetItem(parameters,0);
+  node *library_name = get_value(olibrary_name);
 
+  node *value = get_false_class(state);
+  void *lib = dlopen(node_GetString(library_name),RTLD_LAZY);
+  if(lib==NULL)
+  {
+    printf("module not loaded:%s (%s)\n",node_GetString(library_name),dlerror());
+  } 
+  else
+  {
+    //now get module_open symbol and call it
+     void *sym = dlsym(lib,"module_open");
+    if(sym==NULL)
+    {
+      printf("no module_open function found\n");
+      node *base_class = get_base_class(state);
+      value = create_class_instance(base_class);
+      set_obj_string(value,"name","marshal.lib_handle");
+      add_garbage(state,value);
+      set_obj_ptr(value,"value",lib);
+    }
+    else
+    {
+      func init = (func)sym;
+      value=init(state);
+      set_obj_ptr(value,"value",lib);
+      add_garbage(state,value);
+    }
+  }
+  return(value);    
 }
 
 node *marshal_close_module(node *state,node *self,node *obj,node *block,node *parameters)
 {
-
+  node *library = node_GetItem(parameters,0);
+  void *lib = (void*)node_GetValue(get_value(library));
+  if(lib)
+  {
+     void *sym = dlsym(lib,"module_close");
+    if(sym==NULL)
+    {
+      printf("no module_close function found\n");
+    }
+    else
+    {
+      func _close = (func)sym;
+      _close(state);
+    }
+    dlclose(lib);
+    return(get_true_class(state));
+  }
+  else 
+    return(get_false_class(state));
 }
+
+#pragma GCC diagnostic pop
 
 node *marshal_open_library(node *state,node *self,node *obj,node *block,node *parameters)
 {
@@ -153,11 +210,7 @@ node *marshal_load_function(node *state,node *self,node *obj,node *block,node *p
   }
 }
 
-
-
-
 #pragma GCC diagnostic pop
-
 
 #endif
 

@@ -1,0 +1,6 @@
+?("marshal".in(sys.modules),{println("marshal supported")},{println("marshal not supported");sys.exit(1)},0);
+println("joystick:","joystick".in_keys(sys.modules));
+joysticks = marshal.open_module("./nyx/modules/libjoy/nyxmod_libjoy.so");
+println(joysticks.ANY);
+marshal.close_module(joysticks);
+

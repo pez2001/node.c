@@ -8,25 +8,29 @@ host = parsed_url["host"];
 protocol = parsed_url["protocol"];
 port = parsed_url["port"];
 
-request = http.create_request(host,port=port,uri=uri,protocol=protocol);
+/*request = http.create_request(host,port=port,uri=uri,protocol=protocol);
 println("request:["+request+"]");
+*/
 
-request = http.create_request(host,port=port,uri="test.html",protocol=protocol);
+request = http.create_request(host,"method":"POST","port":port,"uri":"test.html","protocol":protocol);
 println("request:["+request+"]");
 
 
 };
 
+/*
 data = get_url();
 data = get_url("www.openstrike.de");
 data = get_url("https://www.openstrike.de");
 data = get_url("www.openstrike.de:8080");
 data = get_url("http://www.openstrike.de:8080");
+*/
 data = get_url("http://www.openstrike.de:8080/index.html");
-data = get_url("http://www.openstrike.de:8080/sub/index.html");
+
+/*data = get_url("http://www.openstrike.de:8080/sub/index.html");
 data = get_url("http://www.openstrike.de:8080/sub/index.html?name=trudy");
 data = get_url("http://www.openstrike.de:8080/sub/sub2/index.html?name=trudy&pw=abc");
-
+*/
 
 
 

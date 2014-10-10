@@ -87,9 +87,9 @@ node *marshal_call_function(node *state,node *self,node *obj,node *block,node *p
   if(pushes%2==1)
     __asm__ __volatile__("subq $8,%%rsp\n\t" :  :  : "rsp","cc");
 
-  //remember to change rdx -> rbx
+  //remember to change rdx -> rbx if manually recreating .s file 
   // rcx also
-  //remove some unneeded opcodes in final assembly 
+  //remove some unneeded opcodes in final assembly near call
   while(pop_index<pars_num)
   {
     data = par_data[pop_index];
@@ -157,15 +157,17 @@ node *marshal_call_function(node *state,node *self,node *obj,node *block,node *p
     : "r" (ret)
     : "rsp","cc"
     );
-    node *base_class = get_base_class(state);
-    node *value = create_class_instance(base_class);
-    set_obj_string(value,"name","marshal.return_value");
-    add_garbage(state,value);
-    node *real_value = get_value(value);
-    node_SetUint64(real_value,call_ret);
-    node_SetType(real_value,NODE_TYPE_SINT32);
-    if(return_type == 1)
-      node_SetType(real_value,NODE_TYPE_DOUBLE);
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  set_obj_string(value,"name","marshal.return_value");
+  add_garbage(state,value);
+  node *real_value = get_value(value);
+  node_SetUint64(real_value,call_ret);
+  node_SetType(real_value,NODE_TYPE_SINT32);
+  if(return_type == 1)
+    node_SetType(real_value,NODE_TYPE_DOUBLE);
+  if(return_type == 2)
+    node_SetType(real_value,NODE_TYPE_STRING);
 
   free(is_double);
   free(par_data);

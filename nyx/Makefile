@@ -11,9 +11,11 @@ USE_CURL = True
 USE_WEBSOCKETS = True
 USE_MICROHTTPD = True
 
-USE_CURL = False
-USE_WEBSOCKETS = False
-USE_MICROHTTPD = False
+#USE_CURL = False
+#USE_WEBSOCKETS = False
+#USE_MICROHTTPD = False
+
+BUILD_MODULES = True
 
 
 #LIBCURL := $(shell locate libcurl.so)
@@ -172,8 +174,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 7
-BUILD = 2866
-DEBUG_BUILD = 3361
+BUILD = 2969
+DEBUG_BUILD = 3416
 
 CSTD = -std=c99
 #-std=c99
@@ -216,12 +218,20 @@ TOOLS_BUILD_INC_OBJ = tools/build_inc/build_inc.o
 .PHONY: all
 
 all:
+ifeq ($(BUILD_MODULES),True)
+	$(MAKE) library && $(MAKE) modules && $(MAKE) compile_end || $(MAKE) compile_failed
+else
 	$(MAKE) library && $(MAKE) compile_end || $(MAKE) compile_failed
+endif
 
 .PHONY: debug
 
 debug:
+ifeq ($(BUILD_MODULES),True)
+	$(MAKE) library_debug && $(MAKE) modules_debug && $(MAKE) compile_debug_end || $(MAKE) compile_debug_failed
+else
 	$(MAKE) library_debug && $(MAKE) compile_debug_end || $(MAKE) compile_debug_failed
+endif
 
 
 .PHONY: compile_start
@@ -229,7 +239,6 @@ debug:
 compile_start: 
 	@echo "====================================================="
 	@echo "::::::::::::::\033[33m Compiling nyx for $(PLATFORM_NAME)\033[0m ::::::::::::::"
-	#@echo "====================================================="
 	@$(BEGIN_NOTIFY)
 
 .PHONY: compile_debug_start
@@ -237,7 +246,6 @@ compile_start:
 compile_debug_start: 
 	@echo "====================================================="
 	@echo "::::::::::\033[93m Compiling nyx (DEBUG) for $(PLATFORM_NAME)\033[0m ::::::::::"
-	#@echo "====================================================="
 	@$(BEGIN_NOTIFY)
 
 .PHONY: compile_end
@@ -285,12 +293,23 @@ test: all
 test_debug: debug
 	./unit_tests_debug$(PLATFORM_EXT)
 	
-library_debug: compile_debug_start build_inc nyx_static_debug unit_tests_debug
+modules: nyx_static
+	$(MAKE) -C modules modules
+
+modules_debug: nyx_static_debug
+	$(MAKE) -C modules debug
+
+modules_clean: 
+	$(MAKE) -C modules clean
+
+
+
+library_debug: compile_debug_start build_inc nyx_static_debug nyx_shared_debug unit_tests_debug
 	@./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 clean_all: clean clean_debug clean_binaries all 
 
-library: compile_start build_inc nyx_static unit_tests nyx_dynamic
+library: compile_start build_inc nyx_static nyx_shared unit_tests 
 
 unit_tests: nyx_static $(UT_OBJ) 
 	$(CC) $(UT_OBJ) libnyx.a ../libnode.a $(LDFLAGS) -o unit_tests 
@@ -308,9 +327,12 @@ nyx_static: $(NYX_OBJ)
 nyx_static_debug: $(NYX_DEBUG_OBJ)
 	$(AR) -rs libnyx.da ../libnode.da $(NYX_DEBUG_OBJ) 
 
-nyx_dynamic: $(NYX_OBJ)
-	$(CC)  -nostdlib -DCREATELIB -shared ../$(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) $(NYX_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)
+nyx_shared: $(NYX_OBJ)
+	$(CC) -rdynamic -nostdlib -DCREATELIB -shared -L.. -lnode $(NYX_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)
 	@strip $(PLATFORM_LIB_PREFIX)nyx$(PLATFORM_LIB_EXT)	
+
+nyx_shared_debug: $(NYX_DEBUG_OBJ)
+	$(CC) -rdynamic -nostdlib -DCREATELIB -shared -L.. -lnode $(NYX_DEBUG_OBJ) $(PLATFORM_LIBS) -o $(PLATFORM_LIB_PREFIX)nyx_debug$(PLATFORM_LIB_EXT)
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
@@ -327,7 +349,7 @@ nyx_dynamic: $(NYX_OBJ)
 	$(CC) -fkeep-inline-functions $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
 
-clean:
+clean: modules_clean
 	$(BEGIN_NOTIFY)
 	rm -f $(PLATFORM_LIB_PREFIX)nyx.$(PLATFORM_LIB_EXT) *.elf *.do *.da *.o *.a *.so tools/build_inc/*.o bindings/curl/*.o bindings/curl/*.do bindings/microhttpd/*.o bindings/microhttpd/*.do bindings/websockets/*.do bindings/websockets/*.o bindings/sockets/*.do bindings/sockets/*.o bindings/http/*.do bindings/http/*.o bindings/sys/*.do bindings/sys/*.o bindings/file/*.do bindings/file/*.o bindings/marshal/*.o bindings/marshal/*.do bindings/marshal/*.ao bindings/marshal/*.dao
 

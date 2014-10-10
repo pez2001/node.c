@@ -59,6 +59,7 @@ void sockets_binding_open(node *state)
   inc_obj_refcount(sockets);
   add_member(block_class,proxy);
   inc_obj_refcount(proxy);
+  sys_add_module(state,"sockets");
 }
 
 void sockets_binding_close(node *state)

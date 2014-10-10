@@ -52,3 +52,15 @@ r=marshal.libs.libm.pow(10.0,3.0);
 println("pow ret:"+r);
 marshal.close_lib(marshal.libs.libm);
 
+
+joy=marshal.open_lib("libjoy.so");
+joy.open=marshal.load_function(joy,"ljoy_OpenById");
+joy.close=marshal.load_function(joy,"ljoy_Close");
+joy.name=marshal.load_function(joy,"ljoy_GetName");
+joy.name.return_type = marshal.STRING;
+j=joy.open(0,1);
+println("name:"+joy.name(j));
+joy.close(j);
+marshal.close_lib(joy);
+
+

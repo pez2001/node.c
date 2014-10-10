@@ -22,10 +22,22 @@
 
 #include "sys.h"
 
+void sys_add_module(node *state,char *module_name)
+{
+  #ifdef USE_SYS
+  node *base_class = get_base_class(state);
+  node *modules = get_modules(state);
+  node *sys = get_member(modules,"sys");
+  node *sys_modules = get_member(sys,"modules");
+  node *sys_modules_items = node_GetItemByKey(sys_modules,"items");
+  sys_add_module_item(base_class,sys_modules_items,module_name);
+  #endif
+}
+
+
 #ifdef USE_SYS
 
-
-void add_module(node *base_class,node *items,char *module_name)
+void sys_add_module_item(node *base_class,node *items,char *module_name)
 {
   node *module = create_class_instance(base_class);
   inc_obj_refcount(module);
@@ -56,8 +68,6 @@ void sys_add_parameter(node *state,node *parameter)
   node_AddItem(items,parameter);
   node_SetParent(parameter,items);
 }
-
-
 
 node *sys_create_class_object(node *base_class)
 {
@@ -94,14 +104,11 @@ node *sys_create_class_object(node *base_class)
   node *modules_items = create_obj("items");
   add_obj_kv(modules,modules_items);
   //long items_index = 0;
-  #ifdef USE_SOCKETS
+  /*#ifdef USE_SOCKETS
   add_module(base_class,modules_items,"sockets");
   #endif
   #ifdef USE_HTTP
   add_module(base_class,modules_items,"http");
-  #endif
-  #ifdef USE_CURL
-  add_module(base_class,modules_items,"curl");
   #endif
   #ifdef USE_WEBSOCKETS
   add_module(base_class,modules_items,"websockets");
@@ -111,7 +118,7 @@ node *sys_create_class_object(node *base_class)
   #endif
   #ifdef USE_CURSES
   add_module(base_class,modules_items,"curses");
-  #endif
+  #endif*/
   //add_class_object_function(base,"load",nyxh_load);
   //add_class_object_function(base,"reset",nyxh_reset);
   //add_class_object_function(base,"remove",nyxh_remove);//remove file/directory

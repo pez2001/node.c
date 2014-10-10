@@ -25,6 +25,7 @@
 
 #include "../../nyx.h"
 
+void sys_add_module(node *state,char *module_name);
 
 #ifdef USE_SYS
 
@@ -50,6 +51,8 @@ node *sys_bind(node *base_class,node *class);
 node *sys_create_class_object(node *base_class);
 
 void sys_add_parameter(node *state,node *parameter);
+
+void sys_add_module_item(node *base_class,node *items,char *module_name);
 
 node *sys(node *state,node *self,node *obj,node *block,node *parameters);
 

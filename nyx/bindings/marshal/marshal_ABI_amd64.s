@@ -434,6 +434,13 @@ marshal_call_function:
 	movq	%rax, %rdi
 	call	node_SetType@PLT
 .L31:
+	cmpq	$2, -24(%rbp)
+	jne	.L32
+	movq	-224(%rbp), %rax
+	movl	$13, %esi
+	movq	%rax, %rdi
+	call	node_SetType@PLT
+.L32:
 	movq	-160(%rbp), %rax
 	movq	%rax, %rdi
 	call	free@PLT

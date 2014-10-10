@@ -53,6 +53,7 @@ void file_binding_open(node *state)
   inc_obj_refcount(file);
   add_member(block_class,proxy);
   inc_obj_refcount(proxy);
+  sys_add_module(state,"file");
 }
 
 void file_binding_close(node *state)

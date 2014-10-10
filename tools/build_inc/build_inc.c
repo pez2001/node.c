@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 		if(fgets((char*)&line,300000,f)==NULL)
 			break;
 		//printf("%s\n",&line);
-		if(strstr((char*)&line,argv[2]) == (char*)&line)
+		if(strstr((char*)&line,argv[2]) == (char*)&line && strlen(line)>strlen(argv[2]) && (line[strlen(argv[2])] == ' ' || line[strlen(argv[2])]=='=') )
 		{
 			int count = 0;
 			//printf("line:%s\n",&line);

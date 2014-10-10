@@ -83,8 +83,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 5103
-DEBUG_BUILD = 4772
+BUILD = 5218
+DEBUG_BUILD = 4827
 
 CSTD = -std=c99
 #-std c99
@@ -209,14 +209,14 @@ test: all
 test_debug: debug
 	@./unit_tests_debug$(PLATFORM_EXT)
 	
-library_debug: compile_debug_start build_inc node_static_debug starter_debug libnyx_debug nyxi_debug unit_tests_debug
+library_debug: compile_debug_start build_inc node_static_debug node_shared_debug starter_debug libnyx_debug nyxi_debug unit_tests_debug
 	@./build_inc$(PLATFORM_EXT) Makefile DEBUG_BUILD
 
 #	@echo "Compiling for "$(PLATFORM_NAME)
 #	./build_inc$(PLATFORM_EXT) Makefile BUILD
 #	$(SUCCESS_NOTIFY)
 
-library: compile_start node_static node_dynamic build_inc starter libnyx nyxi unit_tests 
+library: compile_start node_static node_shared build_inc starter libnyx nyxi unit_tests 
 
 print_version:
 	@echo -n "$(BUILD)"
@@ -270,9 +270,12 @@ node_static: $(NODE_OBJ)
 node_static_debug: $(NODE_DEBUG_OBJ)
 	$(AR) -rs libnode.da $(NODE_DEBUG_OBJ)
 
-node_dynamic: $(NODE_OBJ)
-	$(CC) -nostdlib -DCREATELIB -shared $(NODE_OBJ) -o $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT)
+node_shared: $(NODE_OBJ)
+	$(CC) -rdynamic -nostdlib -DCREATELIB -shared $(NODE_OBJ) -o $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT)
 	@strip $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT)	
+
+node_shared_debug: $(NODE_DEBUG_OBJ)
+	$(CC) -rdynamic -nostdlib -DCREATELIB -shared $(NODE_DEBUG_OBJ) -o $(PLATFORM_LIB_PREFIX)node_debug$(PLATFORM_LIB_EXT)
 
 %.o: %.c 
 	$(CC) $(CFLAGS) -c -o $@ $<
@@ -280,6 +283,22 @@ node_dynamic: $(NODE_OBJ)
 
 %.do: %.c 
 	$(CC) $(DEBUG_CFLAGS) -c -o $@ $<
+
+install:
+	@echo "====================================================="
+	@echo "::::::::::::::::\033[32m INSTALLING Node.c/Nyx\033[0m ::::::::::::::"
+	@echo "====================================================="
+	@cp libnode.so /usr/lib
+	@cp nyx/libnyx.so /usr/lib
+	@cp nyxi /usr/bin
+
+uninstall:
+	@echo "====================================================="
+	@echo ":::::::::::::::::\033[32m REMOVING Node.c/Nyx\033[0m :::::::::::::::"
+	@echo "====================================================="
+	@rm /usr/lib/libnode.so /usr/lib/libnyx.so /usr/bin/nyxi
+
+
 
 clean: libnyx_clean
 	rm -f $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do tools/starter/*.o tools/starter/*.do
@@ -326,9 +345,9 @@ binariesdist: clean_binaries clean all clean
 dist:	srcdist binariesdist 
 	make clean clean_binaries
 git:	
-	git add .
-	git commit -m "$(msg)"
-	git push 
+	@git add .
+	@git commit -m "$(msg)"
+	@git push 
 	
 indent:	
 	indent -bap -bli0 -i4 -l79 -ncs -npcs -npsl -fca -lc79 -fc1 -ts4 *.c *.h

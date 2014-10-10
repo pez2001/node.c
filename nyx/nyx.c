@@ -1420,7 +1420,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
   {
     //return an interpreter error here 
     printf("exec return NULL\n");
-    int x=1/0;
+    //int x=1/0;
   }
   node_ClearItems(pars);
   node_FreeTree(pars);

@@ -20,21 +20,26 @@
  *
  */
 
-#include "curl.h"
-
-#ifdef USE_CURL
+#include "nyxmod_libjoy.h"
 
 
-
-
-node *curl_create_class_object(void)
+node *ljoy_create_class_object(node *state)
 {
-  node *base = create_base_obj_layout("curl");
+  node *base = create_base_obj_layout("joystick");
   add_class_object_function(base,"=",nyxh_assign);
-  add_class_object_function(base,"get",curl_get);
+  //add_class_object_function(base,"get",curl_get);
+
+  node *base_class = get_base_class(state);
+  node *any_id = create_class_instance(base_class);
+  inc_obj_refcount(any_id);
+  set_obj_string(any_id,"name","ANY");
+  set_obj_int(any_id,"value",254);
+  add_member(base,any_id);
+
   return(base);
 }
 
+/*
 static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 {
   node *state = node_GetItem((node*)stream,0);
@@ -60,36 +65,40 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   //execute_obj(state,read_block,block,parameters,True,True,True);
   return((size*nmemb));
 }
+*/
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 
-void curl_binding_open(node *state)
+node *module_open(node *state)
 {
   node *modules = get_modules(state);
   node *block_class = get_block_class(state);
-  node *curl = curl_bind(modules);
-  node *proxy = create_proxy_object(state,curl,"curl");
-  inc_obj_refcount(curl);
-  add_member(block_class,proxy);
-  inc_obj_refcount(proxy);
-  sys_add_module(state,"curl");
+  node *ljoy = ljoy_bind(state,modules);
+  //node *proxy = create_proxy_object(state,ljoy,"joystick");
+  //inc_obj_refcount(ljoy);
+  //add_member(block_class,proxy);
+  //inc_obj_refcount(proxy);
+  sys_add_module(state,"joystick");
+  printf("initiated joystick module\n");
+  return(ljoy);
 }
 
-void curl_binding_close(node *state)
+void module_close(node *state)
 {
-
+  printf("closed joystick module\n");
 }
 
 
-node *curl_bind(node *class)
+node *ljoy_bind(node *state,node *class)
 {
-  node *curl = curl_create_class_object();
-  add_member(class,curl);
-  inc_obj_refcount(curl);
-  return(curl);
+  node *ljoy = ljoy_create_class_object(state);
+  add_member(class,ljoy);
+  inc_obj_refcount(ljoy);
+  return(ljoy);
 }
 
+/*
 node *curl_get(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
@@ -125,9 +134,9 @@ node *curl_get(node *state,node *self,node *obj,node *block,node *parameters)
   }
   return(value);
 }
+*/
 
 #pragma GCC diagnostic pop
 
 
-#endif
 

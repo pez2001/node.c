@@ -111,6 +111,7 @@ void microhttpd_binding_open(node *state)
   inc_obj_refcount(microhttpd);
   add_member(block_class,proxy);
   inc_obj_refcount(proxy);
+  sys_add_module(state,"mictrohttpd");
 }
 
 void microhttpd_binding_close(node *state)

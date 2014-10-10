@@ -80,6 +80,30 @@ automatic test suite
 remove warnings
 review parameter handling
 
+proper overloading (insert right before older members)
+add remove(member) function
+add aliasing 
+add_alias("other_lang_idioms") used for language translation etc
+(privates/aliases)
+
+external modules loading
+32 bit marshalling 
+marshalling addressing modes
+more return types
+
+libjoy as external module
+(libjoy add deadzone support)
+
+nyx os kernel install 
+grub2 
+qemu test
+use nyx with script as init 
+
+seperate stack execution mechanism for easy single step execution
+sig int handler
+atexit mechanism for module/binding unloading
+
+
 
 
 */

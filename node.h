@@ -201,7 +201,7 @@ void *node_GetItemByKeyHash(node *n,unsigned long key_hash);
 node *node_Create(void);
 
 /**
- * node_CreateFilled() - Creates a Node and setting the most important members
+ * node_CreateFilled() - Creates a Node and sets the most important members
  * @n: Node to use
  * @parent: Pointer to Parent Node
  * @key: String used as key
@@ -209,7 +209,7 @@ node *node_Create(void);
  * @type: Type of the Node
  * @items: list of items to use as sub member of the node
  *
- *
+ * Creates a value filled node.
  *
  *
  * Return: pointer to the new value filled node

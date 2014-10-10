@@ -465,6 +465,7 @@ void websockets_binding_open(node *state)
   inc_obj_refcount(websockets);
   add_member(block_class,proxy);
   inc_obj_refcount(proxy);
+  sys_add_module(state,"websockets");
 }
 
 void websockets_binding_close(node *state)
