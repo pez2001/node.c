@@ -104,6 +104,9 @@ sig int handler
 atexit mechanism for module/binding unloading
 
 
+loops scale badly -> gc not firing??
+reduce amount of members (copy on first access)
+
 
 
 */

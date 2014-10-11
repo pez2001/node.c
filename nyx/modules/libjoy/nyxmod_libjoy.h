@@ -29,23 +29,20 @@
 
 #include <libjoy.h>
 
+#include <errno.h>
+
 node *module_open(node *state);
 void module_close(node *state);
 
-node *ljoy_bind(node *state,node *class);
-node *ljoy_create_class_object(node *state);
-node *ljoy_open_id(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_open_file(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_close(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_filename(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_joy_num(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_name(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_axis_num(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_buttons_num(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_event(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_filtered_event(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_filtered_type_event(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_get_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters);
-node *ljoy_set_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_bind(node *state,node *class);
+node *nyxjoy_create_class_object(node *state);
+node *nyxjoy_open(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_close(node *state,node *self,node *obj,node *block,node *parameters);
+
+node *nyxjoy_get_event(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_get_filtered_event(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_get_filtered_type_event(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_get_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_set_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters);
 
 #endif

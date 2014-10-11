@@ -991,7 +991,7 @@ node *nyxh_switch_name_value(node *state,node *self,node *obj,node *block,node *
   return(switch_obj_copy);
 }
 
-node *nyxh_immediate_add(node *state,node *self,node *obj,node *block,node *parameters)
+node *nyxh_immediate_add(node *state,node *self,node *obj,node *block,node *parameters) //TODO rename to delayed_add
 {
   node *value = node_CopyTree(obj,True,True);
   node_SetParent(value,NULL);
@@ -1104,6 +1104,8 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
       exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
     }
     execute_obj(state,false_block,block,NULL,True,False,True);
+    //free_garbage(state,get_execution_level(state)+0,NULL);
+
     value = get_true_class(state);
   }
   else

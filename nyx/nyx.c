@@ -503,6 +503,16 @@ int remove_member(node *obj,node *member)
   return(remove_obj_kv(members,member));
 }
 
+node *remove_member_by_key(node *obj,char *key)
+{
+  node *member = get_member_non_recursive(obj,key);
+  if(!member)
+    return(NULL);
+  if(!remove_member(obj,member))
+    return(NULL);
+  return(member);
+}
+
 void remove_item(node *obj,node *item)
 {
   node *items = node_GetItemByKey(obj,"items");
@@ -970,6 +980,7 @@ void free_garbage(node *state,long min_level,node *skip_this)
 {
   //printf("freeing garbage items with min: %d\n",min_level);
   //fflush(stdout);
+  long gc_collected = 0;
   node *garbage = get_garbage(state);
   node_ItemIterationReset(garbage);
   while(node_ItemIterationUnfinished(garbage))
@@ -1042,6 +1053,7 @@ void free_garbage(node *state,long min_level,node *skip_this)
       node_FreeTree(gc);
       node_RemoveItem(garbage,gc);
       node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
+      gc_collected++;
       //printf("removed:%x,%d\n",gc,gc_level);
       //fflush(stdout);
       //continue;
@@ -1053,7 +1065,7 @@ void free_garbage(node *state,long min_level,node *skip_this)
       node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
     }*/
   }
-  //printf("garbage collected\n");
+  printf("garbage collected:%d\n",gc_collected);
   //fflush(stdout);
   //node_ClearItems(garbage);
 }
@@ -2234,6 +2246,9 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
         }
         free(block_flag);
       }
+      else
+        free_garbage(state,get_execution_level(state)+gc_threshold,ret);
+
     }
   }
   if(ret==NULL)

@@ -1,6 +1,37 @@
 ?("marshal".in(sys.modules),{println("marshal supported")},{println("marshal not supported");sys.exit(1)},0);
 println("joystick:","joystick".in_keys(sys.modules));
 joysticks = marshal.open_module("./nyx/modules/libjoy/nyxmod_libjoy.so");
-println(joysticks.ANY);
+println("Found "+joysticks.num+" Joysticks");
+println("Ordered mode:"+joysticks.ordered_mode);
+/*joysticks.ordered_mode = 1;
+println("Ordered mode:"+joysticks.ordered_mode);*/
+
+/*joysticks.ordered_mode = 0;
+println("Ordered mode:"+joysticks.ordered_mode);
+println(joysticks.ANY);*/
+
+/*joystick=joysticks.open(0,joysticks.NON_BLOCKING);*/
+/*joystick=joysticks.open("/dev/input/js0",joysticks.NON_BLOCKING);*/
+joystick=joysticks.open(0,joysticks.BLOCKING);
+println("Joystick Name:"+joystick.name);
+println("Joystick Axes Num:"+joystick.axes_num);
+println("Joystick Buttons Num:"+joystick.buttons_num);
+pressed=0;
+?({!pressed},
+{
+	event=joystick.get_event();
+	event.do({
+		println("time:"+event.time);
+		println("type:"+event.type);
+		println("value:"+event.value);
+		println("number:"+event.number);
+		});
+
+},{},1);
+
+
+
+joystick.close();
+
 marshal.close_module(joysticks);
 

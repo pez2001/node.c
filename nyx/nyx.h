@@ -125,6 +125,7 @@ void remove_private(node *obj,node *private);
 
 void add_member(node *obj,node *member);
 int remove_member(node *obj,node *member);
+node *remove_member_by_key(node *obj,char *key);
 node *get_member(node *obj,char *key);
 node *get_object(node *obj,char *key);
 node *get_member_non_recursive(node *obj,char *key);
