@@ -90,7 +90,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
   node *state = NULL;
   node *block = NULL;
   //node *daemon = NULL;
-  node *daemon_obj = NULL;
+  //node *daemon_obj = NULL;
   node *session_uid = NULL;
   long lsession_uid = 0;
   node *sessions_num = NULL;

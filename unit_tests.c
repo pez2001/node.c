@@ -27,6 +27,20 @@
 int debug_level = 0;
 #endif
 
+void base64_tests(void)
+{
+  char *test="Hallo Welt";
+  printf("test:%s len:%d\n",test,strlen(test)+1);
+  char *b64=str_EncodeBase64(test,strlen(test)+1);
+  printf("base 64 encoded (%d) : [%s]\n",strlen(b64),b64);
+
+  char *decoded = NULL;
+  unsigned long len = 0;
+  int r = str_DecodeBase64(b64,&decoded,&len);
+  printf("base 64 decoded (%d) : [%s]\n",len,decoded);
+  free(b64);
+}
+
 void ptr_tests(void)
 {
   printf("testing ptr list functions\n");
@@ -704,11 +718,12 @@ void nyx_tests2(void)
 
 int main(int argc, char *argv[])
 {
-  mem_tests();
-  ptr_tests();
-  ptr_tests2();
-  node_tests();
-  json_tests();
+  base64_tests();
+  //mem_tests();
+  //ptr_tests();
+  //ptr_tests2();
+  //node_tests();
+  //json_tests();
   //fbx_tests();
   //nyx_tests();
   //nyx_tests2();

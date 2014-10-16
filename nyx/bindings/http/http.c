@@ -115,6 +115,10 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
     node *uri = get_object(parameters,"uri");
     node *body = get_object(parameters,"body");
     node *agent = get_object(parameters,"agent");
+    node *cookies = get_object(parameters,"cookies");
+    node *basic_auth = get_object(parameters,"basic_auth");
+    node *content_type = get_object(parameters,"content_type");
+    node *content_length = get_object(parameters,"content_length");
     node *host_value = get_value(host);
     if(method!=NULL)
     {
@@ -130,15 +134,74 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
       request = str_CatFree(request,node_GetString(uri_value));
     }
 
-    request = str_CatFree(request," HTTP/1.1\r\nHost: ");
+    request = str_CatFree(request," ");
+    if(protocol)
+    {
+      node *protocol_value = get_value(protocol);
+      if(!strcmp(node_GetString(protocol_value),"http"))
+        request = str_CatFree(request,"HTTP/1.1");
+      else  
+        request = str_CatFree(request,node_GetString(protocol_value));
+    }
+    else
+      request = str_CatFree(request,"HTTP/1.1");
+    request = str_CatFree(request,"\r\n");
+    request = str_CatFree(request,"Host: ");
     request = str_CatFree(request,node_GetString(host_value));
-    if(port!=NULL)
+    if(port)
     {
       node *port_value = get_value(port);
       request = str_CatFree(request,":");
       request = str_CatFree(request,str_FromLong(node_GetSint32(port_value)));
     }
-
+    request = str_CatFree(request,"\r\n");
+    if(agent)
+    {
+      node *agent_value = get_value(agent);
+      request = str_CatFree(request,"User-Agent: ");
+      request = str_CatFree(request,node_GetString(agent_value));
+      request = str_CatFree(request,"\r\n");
+    }
+    if(cookies)
+    {
+      node *cookies_value = get_value(cookies);
+      request = str_CatFree(request,"Set-Cookie: ");
+      request = str_CatFree(request,node_GetString(cookies_value));
+      request = str_CatFree(request,"\r\n");
+    }
+    if(content_type)
+    {
+      node *content_type_value = get_value(content_type);
+      request = str_CatFree(request,"Content-Type: ");
+      request = str_CatFree(request,node_GetString(content_type_value));
+      request = str_CatFree(request,"\r\n");
+    }
+    if(content_length)
+    {
+      node *content_length_value = get_value(content_length);
+      request = str_CatFree(request,"Content-Length: ");
+      char *len_str = str_FromLong(node_GetSint32(content_length_value));
+      request = str_CatFree(request,len_str);
+      free(len_str);
+      request = str_CatFree(request,"\r\n");
+    }
+    if(basic_auth)
+    {
+      node *basic_auth_value = get_value(basic_auth);
+      request = str_CatFree(request,"Authorization: Basic ");
+      char *auth_str = node_GetString(basic_auth_value);
+      char *encoded = str_EncodeBase64(auth_str,strlen(auth_str));
+      request = str_CatFree(request,encoded);
+      request = str_CatFree(request,"\r\n");
+      free(encoded);
+    }
+    request = str_CatFree(request,"Accept: */*\r\nConnection: close\r\n");
+    request = str_CatFree(request,"\r\n");
+    if(body)
+    {
+      node *body_value = get_value(body);
+      request = str_CatFree(request,node_GetString(body_value));
+    }
 
   }
   node_SetString(real_value,request);

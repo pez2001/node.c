@@ -63,7 +63,7 @@ node *nyxh_pre_not(node *state,node *self,node *obj,node *block,node *parameters
   node *real_value = get_value(value);
   if(node_GetType(real_value)==NODE_TYPE_SINT32)
     node_SetSint32(real_value,!node_GetSint32(real_value));
-  else if(node_GetType(real_value)==NODE_TYPE_SINT32)
+  else if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
     node_SetDouble(real_value,!node_GetDouble(real_value));
   else if(node_GetType(real_value)==NODE_TYPE_STRING)
     node_SetSint32(real_value,!atol(node_GetString(real_value)));
@@ -78,7 +78,7 @@ node *nyxh_pre_at(node *state,node *self,node *obj,node *block,node *parameters)
     value = search_block_path_for_member(block,get_obj_name(obj));
   if(value==NULL)
   {
-    //printf("global not found for:%x %s\n",obj,get_obj_name(obj));
+    // printf("global not found for:%x %s\n",obj,get_obj_name(obj));
     value = obj;
   }
   //else
@@ -423,6 +423,7 @@ node *nyxh_eq(node *state,node *self,node *obj,node *block,node *parameters)
   node *value2 = node_GetItem(parameters,0);
   node *real_value = get_value(obj);
   node *real_value2 = get_value(value2);
+  printf("eq bet: %x == %x\n",obj,value2);
 
   if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
   {
@@ -469,6 +470,7 @@ node *nyxh_eq(node *state,node *self,node *obj,node *block,node *parameters)
 
     if(l1==l2)
       value = get_true_class(state);
+    printf("eq: %d == %d\n",l1,l2);
   } 
   else if(node_GetType(real_value)==NODE_TYPE_STRING)
   {
@@ -1102,9 +1104,14 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
         free(block_flag);
       }
       exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
+      free_garbage(state,get_execution_level(state)+0,exp_obj);
+      add_garbage(state,exp_obj);
+
     }
+    //TODO is exp_obj removed?
+    //add_garbage(exp_obj);
+    add_garbage(state,exp_obj);
     execute_obj(state,false_block,block,NULL,True,False,True);
-    //free_garbage(state,get_execution_level(state)+0,NULL);
 
     value = get_true_class(state);
   }
@@ -1169,7 +1176,10 @@ node *nyxh_init_cmp(node *state,node *self,node *obj,node *block,node *parameter
         free(block_flag);
       }
       exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
+      free_garbage(state,get_execution_level(state)+0,exp_obj);
+      add_garbage(state,exp_obj);
     }
+    add_garbage(state,exp_obj);
     execute_obj(state,false_block,block,NULL,True,False,True);
     value = get_true_class(state);
   }

@@ -129,6 +129,7 @@ node *remove_member_by_key(node *obj,char *key);
 node *get_member(node *obj,char *key);
 node *get_object(node *obj,char *key);
 node *get_member_non_recursive(node *obj,char *key);
+node *get_member_part_non_recursive(node *obj,char *key);
 node *get_item(node *state,node *obj,node *key,BOOL append_new_item);
 void remove_item(node *obj,node *item);
 
@@ -195,6 +196,8 @@ node *get_false_class(node *state);
 node *get_null_class(node *state);
 node *get_garbage(node *state);
 node *get_modules(node *state);
+node *get_default_class_members(node *state);
+node *get_default_block_class_members(node *state);
 
 node *init_nyx(void);
 void close_nyx(node *state);

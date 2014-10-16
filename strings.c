@@ -22,6 +22,124 @@
 
 #include "strings.h"
 
+char *str_Base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+char *str_base64url_Chars= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+char str_Base64Char(int index)
+{
+  return(str_Base64Chars[index]);
+}
+
+int str_IndexOfBase64Char(char b64_char)
+{
+  int count = strlen(str_Base64Chars);
+  for(int i=0;i<count;i++)
+    if(b64_char == str_Base64Chars[i])
+      return(i);
+  return(-1);
+}
+
+char *str_EncodeBase64(char *data,unsigned long len)
+{
+  char *encoded_data = str_CreateEmpty();
+  unsigned long in_offset = 0;
+  unsigned long out_len = 0;
+  unsigned long padding = 0;
+  while(in_offset < len)
+  {
+    unsigned char in1 = 0;
+    unsigned char in2 = 0;
+    unsigned char in3 = 0;
+    unsigned long in = 0;
+    if(in_offset<len)
+      in1 = data[in_offset++];
+    if(in_offset<len)
+      in2 = data[in_offset++];
+    else
+      padding++;
+    if(in_offset<len)
+      in3 = data[in_offset++];
+    else
+      padding++;
+    in = in3;
+    in |= in2<<8;
+    in |= in1<<16;
+ 
+    unsigned char out1 = in&63;
+    unsigned char out2 = (in>>6)&63;
+    unsigned char out3 = (in>>12)&63;
+    unsigned char out4 = (in>>18)&63;
+    encoded_data = str_AddChar(encoded_data,str_Base64Char(out4));
+    encoded_data = str_AddChar(encoded_data,str_Base64Char(out3));
+    out_len+=2;
+    if(padding<2)
+    {
+      encoded_data = str_AddChar(encoded_data,str_Base64Char(out2));
+      out_len++;
+    }
+    if(!padding)
+    {
+      encoded_data = str_AddChar(encoded_data,str_Base64Char(out1));
+      out_len++;
+    }
+    if(!(out_len%76))
+      encoded_data = str_CatFree(encoded_data,"\r\n");
+
+    for(unsigned long p=0;p<padding;p++)
+      encoded_data = str_AddChar(encoded_data,'=');
+  }
+  return(encoded_data);
+}
+
+int str_DecodeBase64(char *data,char **decoded,unsigned long *len)
+{
+  int r = 0;
+  unsigned long encoded_len = strlen(data);
+  unsigned long offset = 0;
+  unsigned long out_offset = 0;
+  unsigned long padding = 0;
+  if(data[encoded_len-1]=='=')
+    padding++;
+  if(data[encoded_len-2]=='=')
+    padding++;
+  unsigned long decoded_len = (((encoded_len)/4)*3)-padding;
+  *len = decoded_len;
+  char *decoded_data = (char*)malloc(decoded_len);
+  while(offset<encoded_len)
+  {
+    unsigned char in1 = 0;
+    unsigned char in2 = 0;
+    unsigned char in3 = 0;
+    unsigned char in4 = 0;
+    while(data[offset]=='\r' || data[offset]=='\n')
+      offset++;
+    in1 = str_IndexOfBase64Char(data[offset++]);
+    while(data[offset]=='\r' || data[offset]=='\n')
+      offset++;
+    in2 = str_IndexOfBase64Char(data[offset++]);
+    while(data[offset]=='\r' || data[offset]=='\n')
+      offset++;
+    in3 = str_IndexOfBase64Char(data[offset++]);
+    while(data[offset]=='\r' || data[offset]=='\n')
+      offset++;
+    in4 = str_IndexOfBase64Char(data[offset++]);
+    unsigned long out = 0;
+    if(in4!=255)
+      out = (in4&63);
+    if(in3!=255)
+    out |= (in3&63)<<6;
+    out |= (in2&63)<<12;
+    out |= (in1&63)<<18;
+    if(in3!=255)
+      decoded_data[out_offset++] = (out>>16)&255;
+    if(in4!=255)
+      decoded_data[out_offset++] = (out>>8)&255;
+    decoded_data[out_offset++] = out&255;
+  }
+  *decoded = decoded_data;
+  return(r);
+}
+
+
 char *str_FromLong(long i)
 {
   char *ret=NULL;

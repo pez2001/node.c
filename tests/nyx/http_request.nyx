@@ -12,7 +12,7 @@ port = parsed_url["port"];
 println("request:["+request+"]");
 */
 
-request = http.create_request(host,"method":"POST","port":port,"uri":"test.html","protocol":protocol);
+request = http.create_request(host,"method":"POST","port":port,"uri":"test.html","protocol":protocol,"agent":"Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36");
 println("request:["+request+"]");
 
 

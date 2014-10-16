@@ -606,6 +606,7 @@ node *get_member_part(node *obj,char *key)
   node *members = node_GetItemByKey(obj,"members");
   if(members!=NULL)
   {
+    //node_PrintTree(members);
     node_ItemIterationReset(members);
     while(node_ItemIterationUnfinished(members))
     {
@@ -618,7 +619,7 @@ node *get_member_part(node *obj,char *key)
       {
         match = member; 
         match_len = mmlen;
-        //printf("best match so far with:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
+        printf("best match so far with:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
       }
     }
   }
@@ -642,7 +643,7 @@ node *get_member_part(node *obj,char *key)
         if(sub_mmlen>match_len)
         {
           match = sub_match;
-          //printf("better match with:%d as %d [%s] of [%s]\n",sub_mmlen,match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
+          printf("better match with:%d as %d [%s] of [%s]\n",sub_mmlen,match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
           match_len = sub_mmlen;
         }
       }
@@ -651,11 +652,47 @@ node *get_member_part(node *obj,char *key)
   }
   if(match_len)
   {
+    printf("ret match:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
+    return(match);
+  }
+  return(NULL);
+}
+
+node *get_member_part_non_recursive(node *obj,char *key)
+{
+  if(obj==NULL)
+    return(NULL);
+  long match_len = 0;
+  node *match = NULL;
+  node *members = node_GetItemByKey(obj,"members");
+  if(members!=NULL)
+  {
+    node_ItemIterationReset(members);
+    while(node_ItemIterationUnfinished(members))
+    {
+      node *member = node_ItemIterate(members);
+      node *member_name = node_GetItemByKey(member,"name");
+      //if(!strcmp(node_GetString(member_name),key))
+      //  return(member);
+      long mmlen = str_MatchCount(node_GetString(member_name),key);
+      if(mmlen>match_len)
+      {
+        match = member; 
+        match_len = mmlen;
+        //printf("best match so far with:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
+      }
+    }
+  }
+
+  if(match_len)
+  {
     //printf("ret match:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
     return(match);
   }
   return(NULL);
 }
+
+
 
 long get_items_new_index(node *items)
 {
@@ -832,10 +869,10 @@ node *resolve_object(node *obj)
     return(obj);
 }
 
-node *create_class_object(void)
+void setup_default_class_members(node *state)
 {
-  node *base = create_base_obj_layout("object");
-  add_class_object_function(base,"=",nyxh_assign);
+  node *base = get_default_class_members(state);
+  //add_class_object_function(base,"=",nyxh_assign);
   //add_class_object_function(base,":",nyxh_set_value_only);
   add_class_object_function(base,":",nyxh_switch_name_value);
   add_class_object_function(base,":=",nyxh_assign_copy);
@@ -894,6 +931,12 @@ node *create_class_object(void)
   add_class_object_function(base,"split",nyxh_split);
   add_class_object_function(base,"parent",nyxh_parent);
   add_class_object_function(base,"get_block",nyxh_get_block);
+}
+
+node *create_class_object(void)
+{
+  node *base = create_base_obj_layout("object");
+  add_class_object_function(base,"=",nyxh_assign);
   return(base);
 }
 
@@ -1065,7 +1108,7 @@ void free_garbage(node *state,long min_level,node *skip_this)
       node_SetItemIterationIndex(garbage,node_GetItemIterationIndex(garbage)-1);
     }*/
   }
-  printf("garbage collected:%d\n",gc_collected);
+  //printf("garbage collected:%d\n",gc_collected);
   //fflush(stdout);
   //node_ClearItems(garbage);
 }
@@ -1095,9 +1138,19 @@ node *get_null_class(node *state)
   return(node_GetItem(state,4));
 }
 
-node *get_garbage(node *state)
+node *get_default_class_members(node *state)
 {
   return(node_GetItem(state,5));
+}
+
+node *get_default_block_class_members(node *state)
+{
+  return(node_GetItem(state,6));
+}
+
+node *get_garbage(node *state)
+{
+  return(node_GetItem(state,7));
 }
 
 node *get_modules(node *state)
@@ -1470,6 +1523,8 @@ node *search_anonymous_block_for_member(node *block,char *key)
   return(found_obj);
 }
 
+
+
 node *get_object_parent(node *obj)
 {
   node *p = node_GetParent(obj);
@@ -1510,14 +1565,15 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   {
     node *token = node_ItemIterate(statement);
     
-    
-    /*printf("------\nevaluating next token in %x\n",block);
+    /*
+    printf("------\nevaluating next token in %x\n",block);
     node_Print(token,True,False);
     //node_PrintTree(token);
     printf("------\n");
     printf("actual_obj: %x ,block: %x ,extra_search_block: %x exe_level: %d\n",actual_obj,block,extra_search_block,get_execution_level(state));
     printf("------\n");
-    fflush(stdout);*/
+    fflush(stdout);
+    */
     
 
     if(!strcmp(node_GetKey(token),"nyx_parameters")  ) //used to parse sub brackets '()'
@@ -1534,6 +1590,16 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         {
           char *preop_prefixed=str_Cat("PRE",use_preop);
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
+          if(found_obj==NULL)
+          {
+            found_obj = get_member_part_non_recursive(get_default_class_members(state),preop_prefixed);
+            if(found_obj)
+            {
+              node *member_copy = node_CopyTree(found_obj,True,True);
+              add_member(actual_obj,member_copy);
+              found_obj = member_copy;
+            }
+          }
           if(found_obj!=NULL)
           {
             actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
@@ -1718,6 +1784,17 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         {
           char *preop_prefixed=str_Cat("PRE",use_preop);
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
+          if(found_obj==NULL)
+          {
+            found_obj = get_member_part_non_recursive(get_default_class_members(state),preop_prefixed);
+            if(found_obj)
+            {
+              node *member_copy = node_CopyTree(found_obj,True,True);
+              add_member(actual_obj,member_copy);
+              found_obj = member_copy;
+            }
+          }
+
           if(found_obj!=NULL)
           { 
             actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
@@ -1813,6 +1890,17 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //  printf("found in extra anon block\n");
         }
 
+        }
+
+        if(found_obj==NULL)
+        {
+          found_obj = get_member_non_recursive(get_default_class_members(state),(char*)(unsigned long)node_GetValue(token));
+          if(found_obj)
+          {
+            node *member_copy = node_CopyTree(found_obj,True,True);
+            add_member(actual_obj,member_copy);
+            found_obj = member_copy;
+          }
         }
 
         /*found_obj = get_member(actual_obj,(char*)(unsigned long)node_GetValue(token));
@@ -2057,12 +2145,25 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         actual_obj = child;
         add_garbage(state,child);
       }
+
       if(use_preop!=NULL)// && (node_ItemPeek(statement)==NULL || (node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"ops") && !strcmp(node_GetString(node_ItemPeek(statement)),"."))) )
       {
         if( !(node_ItemPeek(statement)!=NULL && !strcmp(node_GetKey(node_ItemPeek(statement)),"ops") && !strcmp(node_GetString(node_ItemPeek(statement)),".")) )
         {
           char *preop_prefixed=str_Cat("PRE",use_preop);
           node *found_obj = get_member_part(actual_obj,preop_prefixed);
+
+          if(found_obj==NULL)
+          {
+            found_obj = get_member_part_non_recursive(get_default_class_members(state),preop_prefixed);
+            if(found_obj)
+            {
+              node *member_copy = node_CopyTree(found_obj,True,True);
+              add_member(actual_obj,member_copy);
+              found_obj = member_copy;
+            }
+          }
+
           if(found_obj!=NULL)
           { 
             actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
@@ -2100,13 +2201,26 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           {
             use_preop = str_Copy(node_GetString(token));
           }
-          //printf("searching member part:[%s][%s][%s]\n",get_obj_name(actual_obj),node_GetValue(token),use_preop);
+          printf("searching member part:[%s][%s][%s]\n",get_obj_name(actual_obj),node_GetValue(token),use_preop);
           //fflush(stdout);
           //node_PrintTree(actual_obj);
           node *found_obj = get_member_part(actual_obj,(char*)(unsigned long)node_GetValue(token));
+
+          if(found_obj==NULL)
+          {
+            found_obj = get_member_part_non_recursive(get_default_class_members(state),(char*)(unsigned long)node_GetValue(token));
+            if(found_obj)
+            {
+              printf("adding new member :%x %s\n",found_obj,get_obj_name(found_obj));
+              node *member_copy = node_CopyTree(found_obj,True,True);
+              add_member(actual_obj,member_copy);
+              found_obj = member_copy;
+            }
+          }
+
           if(found_obj!=NULL && (use_preop == NULL || !strlen(use_preop)))
           {
-            //printf("found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
+            printf("found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
             long token_len = strlen(node_GetString(token));
             char *found_name = get_obj_name(found_obj);
             if((long)strlen(found_name)<token_len)
@@ -2125,8 +2239,12 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             actual_obj = execute_obj(state,actual_obj,block,parameters,True,False,True);
             //printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
             //dec_execution_level(state);
+            if(use_preop)
+              printf("1found preop:[%s]\n",use_preop);
             return(actual_obj);
           }
+          if(use_preop)
+            printf("2found preop:[%s]\n",use_preop);
         }
         /*else if(index+1<node_GetItemsNum(statement))
         {
@@ -2389,6 +2507,16 @@ node *create_nyx_state(node *base_class,node *block_class)
   set_obj_int(_null,"no_gc",1);
   add_obj_kv(state,_null);
 
+  node *default_class_members = create_class_instance(base_class);
+  set_obj_string(default_class_members,"name","default_class_members");
+  set_obj_int(default_class_members,"no_gc",1);
+  add_obj_kv(state,default_class_members);
+
+  node *default_block_class_members = create_class_instance(base_class);
+  set_obj_string(default_block_class_members,"name","default_block_class_members");
+  set_obj_int(default_block_class_members,"no_gc",1);
+  add_obj_kv(state,default_block_class_members);
+
   add_obj_kv(state,garbage);
 
   node *modules = create_class_instance(base_class);
@@ -2397,6 +2525,10 @@ node *create_nyx_state(node *base_class,node *block_class)
   set_obj_int(modules,"no_gc",1);
   add_obj_kv(state,modules);
   add_obj_int(state,"execution_level",0);
+
+
+
+
 
   //add_obj_kv(state,class_types);
   add_obj_kv(state,blocks);
@@ -2408,6 +2540,7 @@ node *init_nyx(void)
   node *base_class = create_class_object();
   node *block_class = create_block_class_object(base_class);
   node *nyx_state = create_nyx_state(base_class,block_class);
+  setup_default_class_members(nyx_state);
   open_modules(nyx_state);
   return(nyx_state);
 }

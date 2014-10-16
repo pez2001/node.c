@@ -16,8 +16,8 @@ joystick=joysticks.open(0,joysticks.BLOCKING);
 println("Joystick Name:"+joystick.name);
 println("Joystick Axes Num:"+joystick.axes_num);
 println("Joystick Buttons Num:"+joystick.buttons_num);
-pressed=0;
-?({!pressed},
+running=0;
+?({running==0},
 {
 	event=joystick.get_event();
 	event.do({
@@ -25,11 +25,12 @@ pressed=0;
 		println("type:"+event.type);
 		println("value:"+event.value);
 		println("number:"+event.number);
+		(event.type==1).do({println("button "+event.number+" pressed ");@running++;});
 		});
-
+	println("run:"+running);
 },{},1);
 
-
+println("running:"+running);
 
 joystick.close();
 

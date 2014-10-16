@@ -36,6 +36,11 @@
 
 
 
+char *str_EncodeBase64(char *data,unsigned long len);
+
+int str_DecodeBase64(char *data,char **decoded,unsigned long *len);
+
+
 /**
  * str_FromLong() - Converts a Long to a String
  * @i: Long to be converted
