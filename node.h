@@ -431,6 +431,14 @@ int node_HasKey(node *n);
  */
 node *node_GetRoot(node *n);
 
+/**
+ * node_StringPrint() - 
+ * @n: Node to use
+ *
+ * 
+ * Return: new string 
+ */
+char *node_StringPrint(node *n,int with_key,int include_items);
 
 /**
  * node_Print() - 

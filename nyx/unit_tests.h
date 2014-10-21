@@ -23,8 +23,8 @@
 #ifndef UNIT_TESTS_H
 #define UNIT_TESTS_H
 
-#include "../node.h"
-#include "../imports/nyx.h"
+//#include "../node.h"
+#include "nyx.h"
 
 
 #include "stdio.h"

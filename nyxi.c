@@ -75,8 +75,6 @@ code consolidation,refactoring
 more api like naming 
 more kerneldoc comments
 redundancy reductions
-minor features adding (http)
-automatic test suite
 remove warnings
 review parameter handling
 
@@ -86,7 +84,6 @@ add aliasing
 add_alias("other_lang_idioms") used for language translation etc
 (privates/aliases)
 
-external modules loading
 32 bit marshalling 
 marshalling addressing modes
 more return types
@@ -103,9 +100,25 @@ seperate stack execution mechanism for easy single step execution
 sig int handler
 atexit mechanism for module/binding unloading
 
-
-loops scale badly -> gc not firing??
 reduce amount of members (copy on first access)
+
+
+add sys.add_default_member function
+add $ preop test in script (cb 1 par)
+
+sys.actual script line number
+debug output channel (synced output)
+
+
+hommage release names
+onyxia
+nyx assassin
+linyx
+unyx
+gnyx
+onyx
+nyxdeb
+
 
 
 

@@ -41,6 +41,7 @@ node *nyxh_pre_add(node *state,node *self,node *obj,node *block,node *parameters
 
 node *nyxh_pre_sub(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  //nyx_append_printf(state,"exec pre sub\n");
   node *value = copy_class(obj);
   add_garbage(state,value);
   node *real_value = get_value(value);
@@ -53,6 +54,7 @@ node *nyxh_pre_sub(node *state,node *self,node *obj,node *block,node *parameters
     //printf("negating :[%s] to %f\n",node_GetString(real_value),-atof(node_GetString(real_value)));
     node_SetDouble(real_value,-atof(node_GetString(real_value)));//TODO what about being a sint32
   }
+  //node_PrintTree(value);
   return(value);
 }
 
@@ -177,6 +179,7 @@ node *nyxh_add(node *state,node *self,node *obj,node *block,node *parameters)
 
 node *nyxh_sub(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  //nyx_append_printf(state,"exec sub\n");
   node *value = copy_class(obj);
   add_garbage(state,value);
   node *value2 = node_GetItem(parameters,0);
@@ -423,7 +426,7 @@ node *nyxh_eq(node *state,node *self,node *obj,node *block,node *parameters)
   node *value2 = node_GetItem(parameters,0);
   node *real_value = get_value(obj);
   node *real_value2 = get_value(value2);
-  printf("eq bet: %x == %x\n",obj,value2);
+  //printf("eq bet: %x == %x\n",obj,value2);
 
   if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
   {
@@ -470,7 +473,7 @@ node *nyxh_eq(node *state,node *self,node *obj,node *block,node *parameters)
 
     if(l1==l2)
       value = get_true_class(state);
-    printf("eq: %d == %d\n",l1,l2);
+    //printf("eq: %d == %d\n",l1,l2);
   } 
   else if(node_GetType(real_value)==NODE_TYPE_STRING)
   {
@@ -902,6 +905,8 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
 node *nyxh_print(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_true_class(state);
+  node *output_mode = node_GetItemByKey(state,"output_mode");
+  int output_mode_value = (int)node_GetSint32(output_mode);
   if(node_GetItemsNum(parameters))
   {
     node_ItemIterationReset(parameters);
@@ -915,29 +920,65 @@ node *nyxh_print(node *state,node *self,node *obj,node *block,node *parameters)
         while(node_ItemIterationUnfinished(items))
         {
           node *item = node_ItemIterate(items);
-          node_Print(get_value(item),False,False);
-          fflush(stdout);
+          if(output_mode_value)
+          {
+            char *tmp = node_StringPrint(get_value(item),False,False);
+            nyx_append_output(state,tmp);
+            free(tmp);
+          }
+          else
+          {
+            node_Print(get_value(item),False,False);
+            fflush(stdout);
+          }
         } 
       }
       else
       {
-        node_Print(get_value(token),False,False);
-        fflush(stdout);
+        if(output_mode_value)
+        {
+          char *tmp = node_StringPrint(get_value(token),False,False);
+          nyx_append_output(state,tmp);
+          free(tmp);
+        }
+        else
+        {
+          node_Print(get_value(token),False,False);
+          fflush(stdout);
+        }
       }
     }      
   }
   else
   {
+    if(output_mode_value)
+    {
+      char *tmp = node_StringPrint(get_value(obj),False,False);
+      nyx_append_output(state,tmp);
+      free(tmp);
+    }
+    else
+    {
       node_Print(get_value(obj),False,False);
+    }
   }
   return(value);
 }
 
 node *nyxh_println(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  node *output_mode = node_GetItemByKey(state,"output_mode");
+  int output_mode_value = (int)node_GetSint32(output_mode);
   node *ret = nyxh_print(state,self,obj,block,parameters);
-  printf("\n");
-  fflush(stdout);
+  if(output_mode_value)
+  {
+    nyx_append_output(state,"\n");
+  }
+  else
+  {
+    printf("\n");
+    fflush(stdout);
+  }
   return(ret);
 }
 

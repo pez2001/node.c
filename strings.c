@@ -355,6 +355,33 @@ char *str_Replace(char *hay,char *needle,char*diamond)
   return(str_Copy(hay));
 }
 
+char *str_ReplaceAll(char *hay,char *needle,char*diamond)
+{
+  if(!hay)
+    return(str_CreateEmpty());
+  if(!strlen(hay) || !needle || !strlen(needle))
+    return(str_Copy(hay));
+  long offset = 0;
+  char *ret = str_CreateEmpty();
+  long hay_len = strlen(hay);
+  long needle_len = strlen(needle);
+  while(offset<hay_len)
+  {
+    if(strstr(hay+offset,needle)==(hay+offset))
+    {
+      ret = str_CatFree(ret,diamond);
+      offset+=needle_len;
+    }
+    else
+    {
+      ret = str_AddChar(ret,hay[offset]);
+      offset++;
+    }
+
+  }
+  return(ret);
+}
+
 long str_IndexOf(char *hay,char *needle)
 {
   long index = -1;

@@ -21,16 +21,15 @@ running=0;
 {
 	event=joystick.get_event();
 	event.do({
-		println("time:"+event.time);
+		/*println("time:"+event.time);
 		println("type:"+event.type);
 		println("value:"+event.value);
-		println("number:"+event.number);
-		(event.type==1).do({println("button "+event.number+" pressed ");@running++;});
+		println("number:"+event.number);*/
+		(event.type==2).do({println("axis "+event.number+" moved: "+@event.value);});
+		(event.type==1).do({println("button "+event.number+" pressed ");++(@running);});
 		});
-	println("run:"+running);
 },{},1);
 
-println("running:"+running);
 
 joystick.close();
 

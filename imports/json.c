@@ -182,7 +182,7 @@ node *json_Load(char *json,unsigned long len)
       case '\n':
       case '\r':
       case ',': 
-        found_key = 0;
+        //found_key = 0;
         if(!is_value_string)
           value_string = str_Trim(value_string);
         if((strlen(value_string) || is_value_string) && new_obj!=NULL)

@@ -80,6 +80,10 @@
 #include "getopt.h"
 #include "signal.h"
 
+
+#define NYX_OUTPUT_STRING 1
+#define NYX_OUTPUT_STDOUT 0
+
 typedef struct _nyx_module
 {
 	char *name;
@@ -162,6 +166,13 @@ long get_last_index(node *items);
 
 void nyx_add_parameter(node *state,char *parameter);
 
+void nyx_set_output_mode(node *state,int mode);
+char *nyx_get_output(node *state);
+int nyx_get_output_mode(node *state);
+void nyx_clear_output(node *state);  
+void nyx_append_output(node *state,char *string);
+
+
 node *create_nyx_state(node *base_class,node *block_class);
 
 char *check_block_flag(node *state);
@@ -174,7 +185,7 @@ node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execut
 
 node *search_block_path_for_member(node *block,char *key);
 
-node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preop,BOOL resolv_obj,node *extra_search_block);//,long auto_add_new);
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preops,BOOL resolv_obj,node *extra_search_block);//,long auto_add_new);
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);

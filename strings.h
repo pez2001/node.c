@@ -197,6 +197,20 @@ char *str_AddChars(char *string,char *append,long len);
 char *str_Replace(char *hay,char *needle,char*diamond);
 
 /**
+ * str_ReplaceAll() - Creates new String with the all ocurrences of the search string replaced 
+ * @hay: String to search in
+ * @needle: String to search for
+ * @diamond: Replacement String
+ * 
+ * Replaces the all ocurrences of the needle in the hay with the diamond 
+ * Note any parameter can be null 
+ * at least an empty string will be returned
+ *
+ * Return: a modified string
+ */
+char *str_ReplaceAll(char *hay,char *needle,char*diamond);
+
+/**
  * str_IndexOf() - Returns the Index of the search string 
  * @hay: String to search in
  * @needle: String to search for

@@ -1,0 +1,60 @@
+{
+    "tests" :
+        [
+		{
+			"name" : "Basic Print",
+		    "file" : "tests/001-basic_print.nyx",
+		    "expected_output" : "1"
+		},
+		{
+			"name" : "Basic ExitCode",
+		    "file" : "tests/002-basic_exitcode.nyx",
+		    "expected_exitcode" : 12
+		},
+		{
+			"name" : "Basic Assignment",
+	    	"file" : "tests/003-basic_assignment.nyx",
+	    	"expected_output" : "1"
+		},
+		{
+			"name" : "Basic Comment",
+		    "file" : "tests/004-basic_comment.nyx",
+		    "expected_output" : "1"
+		},
+		{
+			"name" : "Basic Pre-Op",
+		    "file" : "tests/005-basic_preop.nyx",
+		    "expected_exitcode" : 1
+		},
+		{
+			"name" : "Basic Addition",
+		    "file" : "tests/006-basic_add.nyx",
+		    "expected_exitcode" : 2
+		},
+		{
+			"name" : "Basic Compare",
+		    "file" : "tests/007-basic_cmp.nyx",
+		    "expected_exitcode" : 1
+		},
+		{
+			"name" : "Basic Print String",
+		    "file" : "tests/008-basic_print_str.nyx",
+		    "expected_output" : "Hallo Welt!\n"
+		},
+		{
+			"name" : "Multiple Pre-Ops",
+		    "file" : "tests/009-multiple_preops.nyx",
+		    "expected_output" : "0\n-1\n2\n"
+		},
+		{
+			"name" : "Delayed Addition (++)",
+		    "file" : "tests/010-delayed_add.nyx",
+		    "expected_output" : "0\n1\n"
+		},
+		{
+			"name" : "Basic Global Operator",
+		    "file" : "tests/011-globals.nyx",
+		    "expected_output" : "12\n12\n0\n12\n-12\n0\n12\n-12\n-13\n-11\n"
+		},
+    ]
+}

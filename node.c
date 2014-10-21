@@ -413,6 +413,14 @@ void node_print_tabs(int num)
    printf("\t");
 }
 
+char *node_string_print_tabs(int num)
+{
+  char *ret = str_CreateEmpty();
+  for(int i=0;i<num;i++)
+   ret = str_CatFree(ret,"\t");
+  return(ret);
+}
+
 void node_PrintWithTabs(node *n,int with_key,int tabs_num)
 {
   if(with_key && node_HasKey(n))
@@ -552,6 +560,219 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num)
     printf("\n");
 }
 
+char *node_StringPrint(node *n,int with_key,int include_items)
+{
+  char *ret=str_CreateEmpty();
+  if(with_key)
+  {
+    if(n->key != NULL)
+      ret=str_CatFree(ret,n->key);
+    else
+      ret=str_CatFree(ret,"[undefined]");
+    ret=str_CatFree(ret," = ");
+  }
+
+  switch(n->type)
+  {
+    case NODE_TYPE_NULL:
+         break;
+    case NODE_TYPE_INT:
+         {
+           long len = snprintf(NULL,0,"%d",(int)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%d",(int)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_FLOAT:
+         {
+            float *fp = (float*)&(n->value);
+            long len = snprintf(NULL,0,"%f",*fp);
+            if(len)
+            {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%f",*fp);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+            }
+         }
+         break;
+    case NODE_TYPE_DOUBLE:
+         {
+            double *dp = (double*)&(n->value);
+            long len = snprintf(NULL,0,"%f",*dp);
+            if(len)
+            {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%f",*dp);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+            }
+         }
+         break;
+    case NODE_TYPE_UINT8:
+         {
+           long len = snprintf(NULL,0,"%u",(unsigned char)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%u",(unsigned char)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_SINT8:
+         {
+           long len = snprintf(NULL,0,"%d",(char)n->value);
+           if(len)
+           {  
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%d",(char)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_BOOL:
+         if((unsigned char)n->value)
+            ret=str_CatFree(ret,"True");
+         else
+            ret=str_CatFree(ret,"False");
+         break;
+    case NODE_TYPE_UINT16:
+         {
+           long len = snprintf(NULL,0,"%u",(unsigned short)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%u",(unsigned short)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_SINT16:
+         {
+           long len = snprintf(NULL,0,"%u",(short)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%u",(short)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_UINT32:
+         {
+           long len = snprintf(NULL,0,"%u",(unsigned long)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%u",(unsigned long)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_SINT32:
+         {
+           long len = snprintf(NULL,0,"%d",(long)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%d",(long)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_SINT64:
+         {
+           long len = snprintf(NULL,0,"%I64d",(long long)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%I64d",(long long)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_UINT64:
+         {
+           long len = snprintf(NULL,0,"%I64u",(unsigned long long)n->value);
+           if(len)
+           {
+              char *tmp = (char*)malloc(len+1);
+              snprintf(tmp,len+1,"%I64u",(unsigned long long)n->value);
+              ret = str_CatFree(ret,tmp);
+              free(tmp);
+           }
+         }
+         break;
+    case NODE_TYPE_STRING:
+         {
+         ret=str_CatFree(ret,(char*)(unsigned long)n->value);
+         }
+         break;
+    case NODE_TYPE_ARRAY:
+         {
+         ret=str_CatFree(ret,"[");
+         long old_index = node_array_GetIterationIndex(n);
+         node_array_IterationReset(n);
+         while(node_array_IterationUnfinished(n))
+         { 
+            node *i = node_array_Iterate(n);
+            char *sub=node_StringPrint(i,True,include_items);
+            ret=str_CatFree(ret,sub);
+            free(sub);
+            if(node_array_IterationUnfinished(n))
+              ret=str_CatFree(ret," , ");
+         }
+         ret=str_CatFree(ret,"]\n");
+         node_array_SetIterationIndex(n,old_index);
+         }
+         break;
+    case NODE_TYPE_NODE:
+         if(include_items && node_HasItems(n))
+         { 
+           node_print_tabs(1);
+           ret=str_CatFree(ret,"{\n");
+           long old_index = node_GetItemIterationIndex(n);
+           node_ItemIterationReset(n);
+           while(node_ItemIterationUnfinished(n))
+           {
+              node *i = node_ItemIterate(n);
+              char *sub=node_StringPrint(i,True,True);
+              ret=str_CatFree(ret,sub);
+              free(sub);
+           }
+           node_SetItemIterationIndex(n,old_index);
+           char *tabs=node_string_print_tabs(1);
+           ret=str_CatFree(ret,tabs);
+           free(tabs);
+           ret=str_CatFree(ret,"}\n");
+         }
+         break;
+    case NODE_TYPE_STUB:
+         break;
+    case NODE_TYPE_BINARY:
+         break;
+    default:
+         break;
+  }
+  if(with_key)
+    ret=str_CatFree(ret,"\n");
+
+  return(ret);
+}
+
 void node_Print(node *n,int with_key,int include_items)
 {
   if(with_key)
@@ -612,7 +833,7 @@ void node_Print(node *n,int with_key,int include_items)
          printf("%I64d",(long long)n->value);
          break;
     case NODE_TYPE_UINT64:
-         printf("%I64u",(long long)n->value);
+         printf("%I64u",(unsigned long long)n->value);
          break;
     case NODE_TYPE_STRING:
          //SetConsoleOutputCP(CP_UTF8);
