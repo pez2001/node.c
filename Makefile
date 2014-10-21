@@ -4,6 +4,7 @@ LIBCURL = $(shell echo \\\#include \<curl/curl.h\>\\n int main\(int c,char**v\){
 LIBWEBSOCKETS = $(shell echo "int main(int c,char**v){}" | gcc -lwebsockets -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 #LIBMICROHTTPD = $(shell echo "int main(int c,char**v){}" | gcc -lmicrohttpd -xc -o a.out - 2>/dev/null ;echo $$? ;rm a.out 2>/dev/null ;rm a.exe 2>/dev/null)
 
+#USE_MEMORY_DEBUG=True
 
 USER := $(shell whoami)
 UNAME := $(shell uname)
@@ -32,7 +33,10 @@ endif
 ifeq ($(LIBMICROHTTPD), 0)
 	PLATFORM_LIBS += -lmicrohttpd
 endif
-
+ifeq ($(USE_MEMORY_DEBUG),True)
+	#PLATFORM_CFLAGS += -DUSE_MEMORY_DEBUGGING
+	PLATFORM_DEBUG_CFLAGS += -DUSE_MEMORY_DEBUGGING
+endif
 ifeq ($(LIBDL), 0)
 	PLATFORM_LIBS += -ldl
 endif
@@ -57,6 +61,10 @@ ifeq ($(LIBWEBSOCKETS), 0)
 endif
 ifeq ($(LIBMICROHTTPD), 0)
 	PLATFORM_LIBS += -lmicrohttpd.dll
+endif
+ifeq ($(USE_MEMORY_DEBUG),True)
+	#PLATFORM_CFLAGS += -DUSE_MEMORY_DEBUGGING
+	PLATFORM_DEBUG_CFLAGS += -DUSE_MEMORY_DEBUGGING
 endif
 
 
@@ -83,8 +91,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 6
-BUILD = 5756
-DEBUG_BUILD = 4968
+BUILD = 5799
+DEBUG_BUILD = 4989
 
 CSTD = -std=c99
 #-std c99
@@ -233,12 +241,12 @@ libnyx: node_static
 	$(MAKE) -C nyx all
 
 libnyx_clean: 
-	$(MAKE) -C nyx clean
+	$(MAKE) -C nyx clean 
 
 libnyx_clean_binaries: 
 	$(MAKE) -C nyx clean_binaries
 
-libnyx_debug: node_static_debug
+libnyx_debug: node_static_debug 
 	$(MAKE) -C nyx debug
 
 unit_tests: node_static $(UT_OBJ) 

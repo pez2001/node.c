@@ -15,33 +15,53 @@ println("Enter Password:");
 password=input();
 
 
-get_url(url="http://openstrike.de/aluria/client/clients.json",body="")=
+post_url(url="http://openstrike.de/aluria/client/clients.json",body="")=
 {
 parsed_url=http.parse_url(url);
 sock=socket.open(socket.SOCK_STREAM);
 connected=sock.connect(parsed_url["host"],parsed_url["port"]).else({restart(1)});
 request = http.create_request(parsed_url["host"],"port":parsed_url["port"],"uri":parsed_url["uri"],"agent":"Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36","basic_auth":"admin:"+@password,"body":body,"method":"POST","content_length":len(body),"content_type":"application/x-www-form-urlencoded");
-println("request:["+request+"]");
+/*println("request:["+request+"]");*/
 sock.write(request);
 timeouts=1000;
 r=sock.read();
 c:=r;
-?({(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{print(".");timeouts=timeouts-1},{},0);},{},1);
+?({(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0);},{},1);
 sock.close();
 j=http.parse_answer(c)["body"];
-println(c,j);
+/*println(j);*/
+};
 
+get_url(url="http://openstrike.de/aluria/client/clients.json",body="")=
+{
+parsed_url=http.parse_url(url);
+sock=socket.open(socket.SOCK_STREAM);
+connected=sock.connect(parsed_url["host"],parsed_url["port"]).else({restart(1)});
+request = http.create_request(parsed_url["host"],"port":parsed_url["port"],"uri":parsed_url["uri"],"agent":"Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36","basic_auth":"admin:"+@password);
+/*println("request:["+request+"]");*/
+sock.write(request);
+timeouts=1000;
+r=sock.read();
+c:=r;
+?({(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0);},{},1);
+sock.close();
+j=http.parse_answer(c)["body"];
+/*println(j);*/
+id=j.sub(j.index_of("st_poe.cgi?id="));
+id=id.sub(0,id.index_of("\""));
 };
 
 
 
 
 
-/*data = get_url("http://192.168.0.1/RST_st_poe.htm");*/
 
-data = get_url("http://192.168.0.1/st_poe.cgi?id=18191531","Disconnect=Trennen&ConMethod=Disconnect&pppoe2=");
+id_data = get_url("http://192.168.0.1/RST_st_poe.htm");
+println(id_data);
 
-data = get_url("http://192.168.0.1/st_poe.cgi?id=18191531","Connect=Verbinden&ConMethod=++Connect++&pppoe2=");
+data = post_url("http://192.168.0.1/"+id_data,"Disconnect=Trennen&ConMethod=Disconnect&pppoe2=");
+
+data = post_url("http://192.168.0.1/"+id_data,"Connect=Verbinden&ConMethod=++Connect++&pppoe2=");
 
 /*data = get_url();*/
 /*data = get_url("www.openstrike.de");

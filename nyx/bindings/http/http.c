@@ -152,7 +152,9 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
     {
       node *port_value = get_value(port);
       request = str_CatFree(request,":");
-      request = str_CatFree(request,str_FromLong(node_GetSint32(port_value)));
+      char *ports = str_FromLong(node_GetSint32(port_value));
+      request = str_CatFree(request,ports);
+      free(ports);
     }
     request = str_CatFree(request,"\r\n");
     if(agent)
@@ -205,6 +207,7 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
 
   }
   node_SetString(real_value,request);
+  free(request);
   return(value);
 }
 
@@ -382,7 +385,7 @@ node *http_parse_answer(node *state,node *self,node *obj,node *block,node *param
   node *value2 = NULL;
   node *value = create_class_instance(base_class);
   set_obj_string(value,"name","http.answer");
-  reset_obj_refcount(value);
+  //reset_obj_refcount(value);
   add_garbage(state,value);
   node *items = create_obj("items");
   add_obj_kv(value,items);
@@ -438,6 +441,7 @@ node *http_parse_answer(node *state,node *self,node *obj,node *block,node *param
   set_obj_string(nheader,"name","header");
   set_obj_string(nheader,"value",header);
   node_AddItem(items,nheader);
+  node_SetParent(nheader,items);
   set_obj_int(nheader,"item_index",0);
   free(header);
 
@@ -447,8 +451,10 @@ node *http_parse_answer(node *state,node *self,node *obj,node *block,node *param
   set_obj_string(nbody,"name","body");
   set_obj_string(nbody,"value",body);
   node_AddItem(items,nbody);
+  node_SetParent(nbody,items);
   set_obj_int(nbody,"item_index",1);
   free(body);
+  //printf("added body:%x\n",nbody);
   return(value);
 }
 

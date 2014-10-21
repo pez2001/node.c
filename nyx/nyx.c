@@ -1062,7 +1062,7 @@ void free_garbage(node *state,long min_level,node *skip_this)
       ///fflush(stdout);
       if(!strcmp(get_obj_type(gc),"proxy"))
       {
-        ///printf("removing proxy:%x (%s)\n",gc,get_obj_name(gc));
+        //printf("removing proxy:%x (%s)\n",gc,get_obj_name(gc));
         ///fflush(stdout);
         node *ptarget = get_proxy_target(gc);
         ///printf("proxy target: %x (%s)\n",ptarget,get_obj_name(ptarget));
@@ -1088,7 +1088,7 @@ void free_garbage(node *state,long min_level,node *skip_this)
         while(node_ItemIterationUnfinished(gc_items))
         {
           node *gc_item = node_ItemIterate(gc_items);
-          //printf("removing sub item: %x (%s)\n",gc_item,get_obj_name(gc_item));
+          //printf("removing sub item: %x (%s) (rc:%d)\n",gc_item,get_obj_name(gc_item),get_obj_refcount(gc_item));
           dec_obj_refcount(gc_item);
           node_SetParent(gc_item,NULL);
           add_garbage(state,gc_item);
@@ -1785,8 +1785,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             add_garbage(state,actual_obj);
           }
         }
+        //add_garbage(state,key_obj);
       }
-      //inde
     }
     else if(!strcmp(node_GetKey(token),"nyx_array"))
     {
@@ -3155,6 +3155,7 @@ node *evaluate_block_instance_in(node *state,node *block_class_instance,node *bl
     printf("eval return NULL\n");
   }
   //printf("block %x (%d) (exe block: %x) finished: ret_obj: %x\n",block_class_instance,get_execution_level(state),block,ret);
+  //add_garbage(state,block_class_instance);
   free_garbage(state,get_execution_level(state)+gc_threshold,ret);
   dec_execution_level(state);
   add_garbage(state,ret);
@@ -3380,6 +3381,16 @@ node *init_nyx(void)
 void close_nyx(node *state)
 {
   close_modules(state);
+  node *blocks = node_GetItemByKey(state,"blocks");
+  node_ItemIterationReset(blocks);
+  while(node_ItemIterationUnfinished(blocks))
+  {
+    node *block = node_ItemIterate(blocks);
+    dec_obj_refcount(block);
+    node_SetParent(block,NULL);
+    add_garbage(state,block);
+  }
+  node_ClearItems(blocks);
   free_garbage(state,0,NULL);
   node *garbage = node_GetItemByKey(state,"garbage");
   node_ClearItems(garbage);
