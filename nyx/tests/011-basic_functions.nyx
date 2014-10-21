@@ -1,0 +1,9 @@
+f()={println(1)};
+f();
+f(a)={println(a)};
+f(2);
+f(a=3)={println(a)};
+f();
+f(4);
+f(a,b)={println(a,b)};
+f(1,2);

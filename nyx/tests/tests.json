@@ -52,9 +52,24 @@
 		    "expected_output" : "0\n1\n"
 		},
 		{
+			"name" : "Basic Functions",
+		    "file" : "tests/011-basic_functions.nyx",
+		    "expected_output" : "1\n2\n3\n4\n12\n"
+		},
+		{
 			"name" : "Basic Global Operator",
-		    "file" : "tests/011-globals.nyx",
+		    "file" : "tests/012-globals.nyx",
 		    "expected_output" : "12\n12\n0\n12\n-12\n0\n12\n-12\n-13\n-11\n"
+		},
+		{
+			"name" : "Basic Sub Ids",
+		    "file" : "tests/013-sub_ids.nyx",
+		    "expected_output" : "12\n24\n"
+		},
+		{
+			"name" : "Basic Dollar Handler",
+		    "file" : "tests/014-dollar_handler.nyx",
+		    "expected_output" : "33\n12\n24\n"
 		},
     ]
 }

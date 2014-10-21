@@ -1,0 +1,5 @@
+a=0;
+a.id=12;
+println(a.id);
+b.id.sub2=24;
+println(b.id.sub2);
