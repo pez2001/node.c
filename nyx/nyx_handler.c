@@ -1439,6 +1439,49 @@ node *nyxh_has(node *state,node *self,node *obj,node *block,node *parameters)
   return(value);
 }
 
+node *nyxh_remove_member(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_false_class(state);
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *key = node_GetItem(parameters,0);
+    node *key_value = get_value(key);
+    node *found = get_member_non_recursive(obj,node_GetString(key_value));
+    if(found!=NULL)
+    {
+      remove_member(obj,found);
+      node_SetParent(found,NULL);
+      dec_obj_refcount(found);
+      add_garbage(state,found);
+      value = get_true_class(state);
+    }
+  }
+  return(value);
+}
+
+node *nyxh_add_member(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_false_class(state);
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *key = node_GetItem(parameters,0);
+    node *member = node_GetItem(parameters,1);
+    node *key_value = get_value(key);
+    //node *found = get_member_non_recursive(obj,node_GetString(key_value));
+    //if(found!=NULL)
+    //{
+    node *proxy = create_proxy_object(state,member,node_GetString(key_value));
+    add_member(obj,proxy);
+    inc_obj_refcount(proxy);
+    inc_obj_refcount(member);
+    value = get_true_class(state);
+    //}
+  }
+  return(value);
+}
+
+
+
 node *nyxh_in_keys(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = get_false_class(state);

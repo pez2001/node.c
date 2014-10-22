@@ -1,0 +1,24 @@
+
+
+func()={
+	println(@glob);	
+};
+glob=24;
+func();
+
+
+glob=16;
+{println(glob)}();
+
+glob=36;
+func2={
+	println(@glob);	
+};
+func2();
+
+func3={
+	(@glob==36).do({println("works")});
+	(@glob==33).do({println("invisible")});
+	@func2();
+};
+func3();

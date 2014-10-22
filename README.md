@@ -11,7 +11,7 @@ nyx
 
 a node.c based scripting language with a pretty unique feature "it uses no keywords"
 
-BUILD = 5799
+BUILD = 5893
 
 [![Build Status](https://buildhive.cloudbees.com/job/pez2001/job/node.c/badge/icon)](https://buildhive.cloudbees.com/job/pez2001/job/node.c/)
 

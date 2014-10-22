@@ -71,5 +71,10 @@
 		    "file" : "tests/014-dollar_handler.nyx",
 		    "expected_output" : "33\n12\n24\n"
 		},
+		{
+			"name" : "Functions and globals",
+		    "file" : "tests/015-function_globals.nyx",
+		    "expected_output" : "24\n16\n36\nworks\n36\n"
+		},
     ]
 }

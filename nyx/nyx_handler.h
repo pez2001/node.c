@@ -125,6 +125,9 @@ node *nyxh_in_keys(node *state,node *self,node *obj,node *block,node *parameters
 
 node *nyxh_has(node *state,node *self,node *obj,node *block,node *parameters);
 
+node *nyxh_remove_member(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxh_add_member(node *state,node *self,node *obj,node *block,node *parameters);
+
 
 node *nyxh_pre_sub(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_pre_add(node *state,node *self,node *obj,node *block,node *parameters);

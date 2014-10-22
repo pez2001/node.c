@@ -921,6 +921,8 @@ void setup_default_class_members(node *state)
   add_class_object_function(base,"in",nyxh_in);
   add_class_object_function(base,"each",nyxh_each);
   add_class_object_function(base,"remove",nyxh_remove);
+  add_class_object_function(base,"remove_member",nyxh_remove_member);
+  add_class_object_function(base,"add_member",nyxh_add_member);
   //add_class_object_function(base,"remove_by_key",nyxh_remove_by_key);
   add_class_object_function(base,"sub",nyxh_substr);
   add_class_object_function(base,"replace",nyxh_replace);
@@ -1530,6 +1532,10 @@ node *get_pre_ops(node *state,node *obj,char *ops)
 {
   node *pre_ops = create_obj("pre_ops");
   //nyx_append_printf(state,"searching preops for:%s\n",get_obj_name(obj));
+  //printf("searching preops for:%s\n",get_obj_name(obj));
+  //printf("pre_ops:[%s]\n",ops);
+  //fflush(stdout);
+
   //nyx_append_printf(state,"pre_ops:[%s]\n",ops);
 
   node *members = node_GetItemByKey(obj,"members");
@@ -1583,6 +1589,8 @@ node *get_pre_ops(node *state,node *obj,char *ops)
     if(match_len)
     {
       //nyx_append_printf(state,"ret match:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
+      //printf("ret match:%d [%s] of [%s]\n",match_len,get_obj_name(match),get_obj_name(node_GetParent(node_GetParent(match))));
+      //fflush(stdout);
       if(is_def_member)
       {
         node *member_copy = node_CopyTree(match,True,True);
@@ -1724,6 +1732,27 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     else if(!strcmp(node_GetKey(token),"nyx_array") && actual_obj!=block) //TODO better 'with' array operation check
     //else if(prev_token!=NULL && !strcmp(node_GetKey(prev_token),"val") && !strcmp(node_GetKey(token),"nyx_array"))
     {
+      if(use_preops)
+      {
+        node *preops_list = get_pre_ops(state,actual_obj,use_preops);
+        node_ItemIterationReset(preops_list);
+        while(node_ItemIterationUnfinished(preops_list))
+        {
+          node *preop = node_ItemIterate(preops_list);        
+          char *preop_value = node_GetString(preop);
+          node *found_op = get_member(actual_obj,preop_value);
+          if(found_op)
+          {
+            //printf("found preop: actual obj: %x - %s\n",actual_obj,get_obj_name(actual_obj));
+            actual_obj = execute_obj(state,found_op,block,NULL,True,False,True);
+            //printf("found preop: ret:%x - %s , of %x - %s\n",actual_obj,get_obj_name(actual_obj),found_op,get_obj_name(found_op));
+          }
+        }
+        free(use_preops);
+        node_FreeTree(preops_list);
+        use_preops=NULL;
+      }
+
       if(!node_GetItemsNum(token))
       {
         //printf("no search key defined\n");
@@ -1910,25 +1939,25 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             printf("found in block path\n");
         }*/
 
-        found_obj = get_member_non_recursive(actual_obj,(char*)(unsigned long)node_GetValue(token));
+        found_obj = get_member_non_recursive(actual_obj,node_GetString(token));
         //if(found_obj)
         //  printf("found in member non_rec(actual_obj)\n");
         if(found_obj==NULL && !is_sub_id)
         {
-          found_obj = get_member_non_recursive(block,(char*)(unsigned long)node_GetValue(token));
+          found_obj = get_member_non_recursive(block,node_GetString(token));
           //if(found_obj)
           //  printf("found in member_non_rec(block)\n");
         }
         if(found_obj==NULL && !is_sub_id)
         {
-          found_obj = search_anonymous_block_for_member(actual_obj,(char*)(unsigned long)node_GetValue(token));
+          found_obj = search_anonymous_block_for_member(actual_obj,node_GetString(token));
           //if(found_obj)
           //  nyx_append_printf(state,"found in actual_obj anon block\n");
         }
         if(found_obj==NULL && !is_sub_id)// && !is_sub_id)
         {
           //found_obj = search_anonymous_block_for_member(actual_obj,(char*)(unsigned long)node_GetValue(token));
-          found_obj = search_anonymous_block_for_member(block,(char*)(unsigned long)node_GetValue(token));
+          found_obj = search_anonymous_block_for_member(block,node_GetString(token));
           //if(found_obj)
           //  printf("found in anon block\n");
         }
@@ -1942,7 +1971,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //  printf("found in anon block\n");
         }*/
 
-        if(gpeek!=NULL && !strcmp(node_GetKey(gpeek),"ops") && (!strcmp((char*)(unsigned long)node_GetValue(gpeek),"=") || !strcmp((char*)(unsigned long)node_GetValue(gpeek),":=")))
+        if(gpeek!=NULL && !strcmp(node_GetKey(gpeek),"ops") && (!strcmp(node_GetString(gpeek),"=") || !strcmp(node_GetString(gpeek),":=")))
         {
           //printf("still none found but do not look any further because its an assign\n");
         }
@@ -1951,13 +1980,13 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
 
         if(found_obj==NULL && extra_search_block && !is_sub_id)
         {
-          found_obj = get_member_non_recursive(extra_search_block,(char*)(unsigned long)node_GetValue(token));
+          found_obj = get_member_non_recursive(extra_search_block,node_GetString(token));
           //if(found_obj)
           //  printf("found in extra member non_rec\n");
         }
         if(found_obj==NULL && extra_search_block && !is_sub_id) 
         {
-          found_obj = search_anonymous_block_for_member(extra_search_block,(char*)(unsigned long)node_GetValue(token));
+          found_obj = search_anonymous_block_for_member(extra_search_block,node_GetString(token));
           //if(found_obj)
           //  printf("found in extra anon block\n");
         }
@@ -1966,7 +1995,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
 
         if(found_obj==NULL)
         {
-          found_obj = get_member_non_recursive(get_default_class_members(state),(char*)(unsigned long)node_GetValue(token));
+          found_obj = get_member_non_recursive(get_default_class_members(state),node_GetString(token));
           if(found_obj)
           {
             node *member_copy = node_CopyTree(found_obj,True,True);
@@ -2015,13 +2044,41 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //fflush(stdout);
           //node_PrintTree(actual_obj);
           node *peek = node_ItemPeek(statement);
-          if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
+          node *peek_further = node_ItemPeekFurther(statement,1);
+          if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters") && (peek_further==NULL || !strcmp(node_GetKey(peek_further),"ops") && (!strcmp(node_GetString(peek_further),"=") || !strcmp(node_GetString(peek_further),":=")) ))
           {
             node *parameters_definition = node_ItemIterate(statement);
             node *pars = node_CopyTree(parameters_definition,True,True);
             node_AddItem(child,pars);
             index++;
+            //printf("found func def\n");
           }
+
+          if(use_preops)
+          {
+            node *preops_list = get_pre_ops(state,actual_obj,use_preops);
+            node_ItemIterationReset(preops_list);
+            while(node_ItemIterationUnfinished(preops_list))
+            {
+              node *preop = node_ItemIterate(preops_list);        
+              char *preop_value = node_GetString(preop);
+              //node *found_obj = get_member_part(actual_obj,preop_value);
+              node *found_op = get_member(actual_obj,preop_value);
+              if(found_op)
+              {
+                //nyx_append_printf(state,"VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
+                //nyx_append_printf(state,"VAL %x : %s - %s\n",found_obj,get_obj_name(found_obj),preop_value);
+                //printf("VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
+                //printf("VAL %x : %s - %s\n",found_op,get_obj_name(found_op),preop_value);
+                actual_obj = execute_obj(state,found_op,block,NULL,True,False,True);
+                //printf("VAL preop ret: %x - %s\n",actual_obj,get_obj_name(actual_obj));
+              }
+            }
+            free(use_preops);
+            node_FreeTree(preops_list);
+            use_preops=NULL;
+          }
+
         }
         else
         {
@@ -2039,6 +2096,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             }
           }
           //printf("found obj %x,%s (type:%s)\n",found_obj,get_obj_name(found_obj),get_obj_type(found_obj));
+          //nyx_append_printf(state,"found obj %x,%s (type:%s)\n",found_obj,get_obj_name(found_obj),get_obj_type(found_obj));
           //fflush(stdout);
           //printf(" in %x,%s\n",node_GetParent(node_GetParent(found_obj)),get_obj_name(node_GetParent(node_GetParent(found_obj))));
           /*if(get_object_parent(found_obj))
@@ -2051,6 +2109,33 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //node_ItemPeek(statement)!=NULL && 
           //if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") || !strcmp(get_obj_type(found_obj),"nyx_il_block") ) )
           //if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") ) )
+
+          if(use_preops)
+          {
+            node *preops_list = get_pre_ops(state,found_obj,use_preops);
+            node_ItemIterationReset(preops_list);
+            while(node_ItemIterationUnfinished(preops_list))
+            {
+              node *preop = node_ItemIterate(preops_list);        
+              char *preop_value = node_GetString(preop);
+              //node *found_obj = get_member_part(actual_obj,preop_value);
+              node *found_op = get_member(found_obj,preop_value);
+              if(found_op)
+              {
+                //nyx_append_printf(state,"VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
+                //nyx_append_printf(state,"VAL %x : %s - %s\n",found_obj,get_obj_name(found_obj),preop_value);
+                //printf("VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
+                //printf("VAL %x : %s - %s\n",found_obj,get_obj_name(found_obj),preop_value);
+                found_obj = execute_obj(state,found_op,block,NULL,True,False,True);
+              }
+            }
+            free(use_preops);
+            node_FreeTree(preops_list);
+            use_preops=NULL;
+          }
+
+
+
           if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") ) )
           {
             //printf("found function without brackets:%s\n",node_GetValue(token));
@@ -2216,28 +2301,28 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         //printf("created int: %x (%d)\n",child,node_GetSint32(token));
         actual_obj = child;
         add_garbage(state,child);
-      }
 
-      if(use_preops)
-      {
-        node *preops_list = get_pre_ops(state,actual_obj,use_preops);
-        node_ItemIterationReset(preops_list);
-        while(node_ItemIterationUnfinished(preops_list))
+        if(use_preops)
         {
-          node *preop = node_ItemIterate(preops_list);        
-          char *preop_value = node_GetString(preop);
-          //node *found_obj = get_member_part(actual_obj,preop_value);
-          node *found_obj = get_member(actual_obj,preop_value);
-          if(found_obj)
+          node *preops_list = get_pre_ops(state,actual_obj,use_preops);
+          node_ItemIterationReset(preops_list);
+          while(node_ItemIterationUnfinished(preops_list))
           {
-            //nyx_append_printf(state,"VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
-            //nyx_append_printf(state,"VAL %x : %s - %s\n",found_obj,get_obj_name(found_obj),preop_value);
-            actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
+            node *preop = node_ItemIterate(preops_list);        
+            char *preop_value = node_GetString(preop);
+            //node *found_obj = get_member_part(actual_obj,preop_value);
+            node *found_obj = get_member(actual_obj,preop_value);
+            if(found_obj)
+            {
+              //nyx_append_printf(state,"VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
+              //nyx_append_printf(state,"VAL %x : %s - %s\n",found_obj,get_obj_name(found_obj),preop_value);
+              actual_obj = execute_obj(state,found_obj,block,NULL,True,False,True);
+            }
           }
+          free(use_preops);
+          node_FreeTree(preops_list);
+          use_preops=NULL;
         }
-        free(use_preops);
-        node_FreeTree(preops_list);
-        use_preops=NULL;
       }
     }
     else if(!strcmp(node_GetKey(token),"ops"))
@@ -2286,6 +2371,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
             if(found_obj!=NULL)
             {
             //nyx_append_printf(state,"found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
+            //printf("found this:[%s] of [%s]\n",get_obj_name(found_obj),get_obj_name(node_GetParent(node_GetParent(found_obj))));
             long token_len = strlen(node_GetString(token));
             char *found_name = get_obj_name(found_obj);
             if((long)strlen(found_name)<token_len)
@@ -2300,8 +2386,10 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               node *sub_obj = evaluate_statement(state,statement,block,index+1,use_preops,True,extra_search_block);
               node_AddItem(parameters,sub_obj);
             }
-            actual_obj = found_obj;
-            actual_obj = execute_obj(state,actual_obj,block,parameters,True,False,True);
+            //actual_obj = found_obj;
+            if(!strcmp("proxy",get_obj_type(found_obj)))
+              found_obj = get_proxy_target(found_obj);
+            actual_obj = execute_obj(state,found_obj,block,parameters,True,False,True);
             //printf("evaluate obj in ret op out:[%s]\n",get_obj_name(actual_obj));
             //dec_execution_level(state);
             //if(use_preop)

@@ -170,7 +170,11 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         free(url);
         node_AddItem(parameters,pss->session);
         //node_AddItem(parameters,daemon_obj);
+        node *tmp_parent = node_GetParent(found_prot);
+        node *bmembers = node_GetItemByKey(block,"members");
+        node_SetParent(found_prot,bmembers);
         node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
+        node_SetParent(found_prot,tmp_parent);
         //dec_obj_refcount(msg_value);
         dec_obj_refcount(prot_value);
         //add_garbage(state,msg_value);//TODO check if "just survives"
@@ -414,7 +418,12 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
 
       //printf("recv callback\n");
       //fflush(stdout);
+      node *tmp_parent = node_GetParent(found_prot);
+      node *bmembers = node_GetItemByKey(block,"members");
+      node_SetParent(found_prot,bmembers);
+
       node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
+      node_SetParent(found_prot,tmp_parent);
       //printf("recv callback finished\n");
       //fflush(stdout);
 
