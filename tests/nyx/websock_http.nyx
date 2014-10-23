@@ -28,7 +28,9 @@ http_call={
 	(url=="/status").do({@msg = "actual chat server status";@daemon.broadcast("echo","someone is watching the status");});
 	(url=="/stop").do({@msg = "stopping server";@running=0;});
 	(url=="/copco").do({@msg = @copco.data;@type="image/png";});
-	(url=="/favicon.ico").do({@msg = @fav.data;@type="image/ico";});
+	(url=="/favicon.ico").do({println("sending icon");@msg = @fav.data;@type="image/ico";});
+
+	/*TODO sending fav 2 times crashes*/
 
 	room="lobby";
 	cookie_room="room=lobby";

@@ -174,8 +174,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 7
-BUILD = 3635
-DEBUG_BUILD = 3633
+BUILD = 3651
+DEBUG_BUILD = 3645
 
 CSTD = -std=c99
 #-std=c99
@@ -342,7 +342,7 @@ nyx_shared_debug: $(NYX_DEBUG_OBJ)
 	$(CC) $(DEBUG_CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
 
 %.ao: %.s
-	$(CC) -fkeep-inline-functions $(CFLAGS) -c -o $@ $< $(FAILED_NOTIFY)
+	$(CC) -fkeep-inline-functions $(CFLAGS) -O0 -c -o $@ $< $(FAILED_NOTIFY)
 
 
 %.dao: %.s 

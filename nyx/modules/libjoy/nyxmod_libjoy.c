@@ -29,11 +29,22 @@ node *nyxjoy_create_class_object(node *state)
   add_class_object_function(base,"=",nyxh_assign);
   add_class_object_function(base,"open",nyxjoy_open);
 
+
+  add_class_object_function(base,"sm_open",nyxjoy_sm_open);
+  add_class_object_function(base,"sm_close",nyxjoy_sm_close);
+  add_class_object_function(base,"sm_add",nyxjoy_sm_add);
+  add_class_object_function(base,"sm_remove",nyxjoy_sm_remove);
+  add_class_object_function(base,"sm_poll",nyxjoy_sm_poll);
+  add_class_object_function(base,"sm_wait",nyxjoy_sm_wait);
+  add_class_object_function(base,"sm_wait_extra_precision",nyxjoy_sm_wait_extra_precision);
+  add_class_object_function(base,"sm_get_state",nyxjoy_sm_get_state);
+
+
   node *base_class = get_base_class(state);
   node *any_id = create_class_instance(base_class);
   inc_obj_refcount(any_id);
   set_obj_string(any_id,"name","ANY");
-  set_obj_int(any_id,"value",254);
+  set_obj_int(any_id,"value",255);
   add_member(base,any_id);
 
   node *non_blocking = create_class_instance(base_class);
@@ -47,6 +58,25 @@ node *nyxjoy_create_class_object(node *state)
   set_obj_string(blocking,"name","BLOCKING");
   set_obj_int(blocking,"value",0);
   add_member(base,blocking);
+
+  node *init_event = create_class_instance(base_class);
+  inc_obj_refcount(init_event);
+  set_obj_string(init_event,"name","INIT_EVENT");
+  set_obj_int(init_event,"value",0x80);
+  add_member(base,init_event);
+
+  node *button_event = create_class_instance(base_class);
+  inc_obj_refcount(button_event);
+  set_obj_string(button_event,"name","BUTTON_EVENT");
+  set_obj_int(button_event,"value",1);
+  add_member(base,button_event);
+
+  node *axis_event = create_class_instance(base_class);
+  inc_obj_refcount(axis_event);
+  set_obj_string(axis_event,"name","AXIS_EVENT");
+  set_obj_int(axis_event,"value",2);
+  add_member(base,axis_event);
+
 
   node *joysticks_num = create_class_instance(base_class);
   inc_obj_refcount(joysticks_num);
@@ -66,34 +96,6 @@ node *nyxjoy_create_class_object(node *state)
 
   return(base);
 }
-
-/*
-static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-  node *state = node_GetItem((node*)stream,0);
-  node *read_block = node_GetItem((node*)stream,1);
-  node *block = node_GetItem((node*)stream,2);
-  node *base_class = get_base_class(state);
-  node *value = create_class_instance(base_class);
-  add_garbage(state,value);
-  node *real_value = get_value(value);
-  char *ret = (char*)malloc((size*nmemb)+1);
-  memset(ret+(size*nmemb) + 0, 0, 1);
-  memcpy(ret,ptr,(size*nmemb));
-  node_SetString(real_value,ret);
-  free(ret);
-  set_obj_string(value,"name","data");
-  node *parameters = create_obj("parameters");
-  node_AddItem(parameters,value);
-  //printf("curl data handler callback\n");
-  //node_PrintTree(value);
-  //node *read_obj = 
-  //node_PrintTree(read_block);
-  execute_obj(state,read_block,block,parameters,True,False,True);
-  //execute_obj(state,read_block,block,parameters,True,True,True);
-  return((size*nmemb));
-}
-*/
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
@@ -132,6 +134,7 @@ node *nyxjoy_open(node *state,node *self,node *obj,node *block,node *parameters)
   add_garbage(state,value);
   add_class_object_function(value,"close",nyxjoy_close);
   add_class_object_function(value,"get_event",nyxjoy_get_event);
+  add_class_object_function(value,"get_filtered_event",nyxjoy_get_filtered_event);
   int joy_id = -1;
   if(node_GetItemsNum(parameters))
   {
@@ -246,12 +249,130 @@ node *nyxjoy_get_event(node *state,node *self,node *obj,node *block,node *parame
 
 node *nyxjoy_get_filtered_event(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  node *value = get_false_class(state);
+  node *obj_value = get_value(obj);
+  long joy_dev = node_GetSint32(obj_value);
+  node *ntype = node_GetItem(parameters,0);
+  node *nid = node_GetItem(parameters,1);
+  node *type_value = get_value(ntype);
+  node *id_value = get_value(nid);
 
+  if(joy_dev != -1)
+  {
+    struct js_event *event = (struct js_event*)malloc(sizeof(struct js_event));
+    //printf("polling joy events:%d\n",joy_dev);
+    unsigned char type = (unsigned char)node_GetSint32(type_value);
+    unsigned char id = (unsigned char)node_GetSint32(id_value);
+    int r=ljoy_GetFilteredEvent((int)joy_dev,event,type,id);
+    if(r!= -1)
+    {
+      // struct js_event {
+      //  __u32 time; /* event timestamp in milliseconds */
+      //  __s16 value;  /* value */
+      //  __u8 type;  /* event type */
+      //  __u8 number;  /* axis/button number */
+      // };
+      //printf("received joystick event\n");
+      node *base_class = get_base_class(state);
+      value = create_class_instance(base_class);
+      set_obj_string(value,"name","joystick.event");
+      add_garbage(state,value);
+
+      node *ev_value = create_class_instance(base_class);
+      inc_obj_refcount(ev_value);
+      set_obj_string(ev_value,"name","value");
+      set_obj_int(ev_value,"value",event->value);
+      add_member(value,ev_value);
+
+      node *ev_type = create_class_instance(base_class);
+      inc_obj_refcount(ev_type);
+      set_obj_string(ev_type,"name","type");
+      set_obj_int(ev_type,"value",event->type);
+      add_member(value,ev_type);
+
+      node *ev_time = create_class_instance(base_class);
+      inc_obj_refcount(ev_time);
+      set_obj_string(ev_time,"name","time");
+      set_obj_int(ev_time,"value",event->time);
+      add_member(value,ev_time);
+
+      node *ev_number = create_class_instance(base_class);
+      inc_obj_refcount(ev_number);
+      set_obj_string(ev_number,"name","number");
+      set_obj_int(ev_number,"value",event->number);
+      add_member(value,ev_number);
+      set_obj_int(value,"value",1);
+    }
+    else
+    {
+      //printf("error polling joystick :%s\n",strerror(errno));
+
+    }
+    free(event);
+  }
+  return(value);
 }
 
 node *nyxjoy_get_filtered_type_event(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  node *value = get_false_class(state);
+  node *obj_value = get_value(obj);
+  long joy_dev = node_GetSint32(obj_value);
+  node *ntype = node_GetItem(parameters,0);
+  node *type_value = get_value(ntype);
 
+  if(joy_dev != -1)
+  {
+    struct js_event *event = (struct js_event*)malloc(sizeof(struct js_event));
+    unsigned char type = (unsigned char)node_GetSint32(type_value);
+    int r=ljoy_GetFilteredTypeEvent((int)joy_dev,event,type);
+    if(r!= -1)
+    {
+      // struct js_event {
+      //  __u32 time; /* event timestamp in milliseconds */
+      //  __s16 value;  /* value */
+      //  __u8 type;  /* event type */
+      //  __u8 number;  /* axis/button number */
+      // };
+      //printf("received joystick event\n");
+      node *base_class = get_base_class(state);
+      value = create_class_instance(base_class);
+      set_obj_string(value,"name","joystick.event");
+      add_garbage(state,value);
+
+      node *ev_value = create_class_instance(base_class);
+      inc_obj_refcount(ev_value);
+      set_obj_string(ev_value,"name","value");
+      set_obj_int(ev_value,"value",event->value);
+      add_member(value,ev_value);
+
+      node *ev_type = create_class_instance(base_class);
+      inc_obj_refcount(ev_type);
+      set_obj_string(ev_type,"name","type");
+      set_obj_int(ev_type,"value",event->type);
+      add_member(value,ev_type);
+
+      node *ev_time = create_class_instance(base_class);
+      inc_obj_refcount(ev_time);
+      set_obj_string(ev_time,"name","time");
+      set_obj_int(ev_time,"value",event->time);
+      add_member(value,ev_time);
+
+      node *ev_number = create_class_instance(base_class);
+      inc_obj_refcount(ev_number);
+      set_obj_string(ev_number,"name","number");
+      set_obj_int(ev_number,"value",event->number);
+      add_member(value,ev_number);
+      set_obj_int(value,"value",1);
+    }
+    else
+    {
+      //printf("error polling joystick :%s\n",strerror(errno));
+
+    }
+    free(event);
+  }
+  return(value);
 }
 
 node *nyxjoy_set_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters)
@@ -269,45 +390,151 @@ node *nyxjoy_set_ordered_mode(node *state,node *self,node *obj,node *block,node 
   return(obj);
 }
 
-
-
-/*
-node *curl_get(node *state,node *self,node *obj,node *block,node *parameters)
+node *nyxjoy_sm_open(node *state,node *self,node *obj,node *block,node *parameters)
 {
-  node *base_class = get_base_class(state);
-  node *value = create_class_instance(base_class);
-  set_obj_string(value,"name","http.answer");
-  add_garbage(state,value);
-  if(node_GetItemsNum(parameters))
-  {
-    node *nurl = node_GetItem(parameters,0);
-    node *read_block = node_GetItem(parameters,1);
-    node *url_value=get_value(nurl);
-    CURL *curl_handle;
-    node *curl_state = create_obj("curl_state");
-    node_AddItem(curl_state,state);
-    node_AddItem(curl_state,read_block);
-    node_AddItem(curl_state,block);
-    inc_obj_refcount(read_block);
-    curl_global_init(CURL_GLOBAL_ALL);
-    curl_handle = curl_easy_init();
-    curl_easy_setopt(curl_handle,CURLOPT_URL,node_GetString(url_value));
-    curl_easy_setopt(curl_handle,CURLOPT_NOPROGRESS,1);
-    curl_easy_setopt(curl_handle,CURLOPT_HEADERFUNCTION,curl_write_data);
-    curl_easy_setopt(curl_handle,CURLOPT_WRITEFUNCTION,curl_write_data);
-    curl_easy_setopt(curl_handle,CURLOPT_HEADERDATA,curl_state);
-    curl_easy_setopt(curl_handle,CURLOPT_WRITEDATA,curl_state);
-    curl_easy_perform(curl_handle);
-    curl_easy_cleanup(curl_handle);
-    curl_global_cleanup();
-    node_ClearItems(curl_state);
-    node_Free(curl_state,True);
-    dec_obj_refcount(read_block);
-    add_garbage(state,read_block);
-  }
+  node *value = get_true_class(state);
+  if(ljoy_sm_Init())
+    value = get_false_class(state);
   return(value);
 }
-*/
+
+node *nyxjoy_sm_close(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_true_class(state);
+  if(ljoy_sm_Shutdown())
+    value = get_false_class(state);
+  return(value);
+}
+
+node *nyxjoy_sm_add(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_true_class(state);
+  node *joy = node_GetItem(parameters,0);
+  node *joy_value = get_value(joy);
+  long joy_dev = node_GetSint32(joy_value);
+  if(joy_dev != -1)
+    if(ljoy_sm_AddDevice(joy_dev))
+      value = get_false_class(state);
+  return(value);
+}
+
+node *nyxjoy_sm_remove(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_true_class(state);
+  node *joy = node_GetItem(parameters,0);
+  node *joy_value = get_value(joy);
+  long joy_dev = node_GetSint32(joy_value);
+  if(joy_dev != -1)
+    if(ljoy_sm_RemoveDevice(joy_dev))
+      value = get_false_class(state);
+  return(value);
+}
+
+node *nyxjoy_sm_poll(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_true_class(state);
+  if(ljoy_sm_Poll())
+      value = get_false_class(state);
+  return(value);
+}
+
+
+node *nyxjoy_sm_get_state(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  struct ljoy_sm_state *sm_state=NULL;
+  node *value = get_false_class(state);
+  node *joy = node_GetItem(parameters,0);
+  node *joy_value = get_value(joy);
+  long joy_dev = node_GetSint32(joy_value);
+  if(joy_dev != -1)
+    if(!ljoy_sm_GetState(joy_dev,&sm_state))
+    {
+      node *base_class = get_base_class(state);
+      value = create_class_instance(base_class);
+      set_obj_string(value,"name","joystick.state");
+      add_garbage(state,value);
+
+      node *state_num_axes = create_class_instance(base_class);
+      inc_obj_refcount(state_num_axes);
+      set_obj_string(state_num_axes,"name","num_axes");
+      set_obj_int(state_num_axes,"value",sm_state->num_axes);
+      add_member(value,state_num_axes);
+
+      node *state_num_buttons = create_class_instance(base_class);
+      inc_obj_refcount(state_num_buttons);
+      set_obj_string(state_num_buttons,"name","num_buttons");
+      set_obj_int(state_num_buttons,"value",sm_state->num_buttons);
+      add_member(value,state_num_buttons);
+
+      node *state_buttons = create_class_instance(base_class);
+      inc_obj_refcount(state_buttons);
+      set_obj_string(state_buttons,"name","buttons");
+      node *buttons_items = create_obj("items");
+      add_obj_kv(state_buttons,buttons_items);
+      add_member(value,state_buttons);
+
+      node *state_axes = create_class_instance(base_class);
+      inc_obj_refcount(state_axes);
+      set_obj_string(state_axes,"name","axes");
+      node *axes_items = create_obj("items");
+      add_obj_kv(state_axes,axes_items);
+      add_member(value,state_axes);
+
+      for(int i=0;i<sm_state->num_axes;i++)
+      {
+        node *ev_value = create_class_instance(base_class);
+        inc_obj_refcount(ev_value);
+        set_obj_string(ev_value,"name","joystick.axis_value");
+        set_obj_int(ev_value,"value",sm_state->axes[i]);
+        add_member(value,ev_value);
+        set_obj_int(ev_value,"item_index",i);
+        inc_obj_refcount(ev_value);
+        node_AddItem(axes_items,ev_value);
+      }
+      for(int i=0;i<sm_state->num_buttons;i++)
+      {
+        node *ev_value = create_class_instance(base_class);
+        inc_obj_refcount(ev_value);
+        set_obj_string(ev_value,"name","joystick.button_value");
+        set_obj_int(ev_value,"value",sm_state->buttons[i]);
+        add_member(value,ev_value);
+        set_obj_int(ev_value,"item_index",i);
+        inc_obj_refcount(ev_value);
+        node_AddItem(buttons_items,ev_value);
+      }
+
+      node *state_time = create_class_instance(base_class);
+      inc_obj_refcount(state_time);
+      set_obj_string(state_time,"name","timestamp");
+      set_obj_int(state_time,"value",sm_state->timestamp);
+      add_member(value,state_time);
+    }
+  return(value);
+}
+
+node *nyxjoy_sm_wait(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *timeout = node_GetItem(parameters,0);
+  node *timeout_value = get_value(timeout);
+  node *value = get_true_class(state);
+  if(ljoy_sm_Wait(node_GetSint32(timeout_value)))
+      value = get_false_class(state);
+  return(value);
+}
+
+node *nyxjoy_sm_wait_extra_precision(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *timeout_s = node_GetItem(parameters,0);
+  node *timeout_s_value = get_value(timeout_s);
+  node *timeout_ms = node_GetItem(parameters,1);
+  node *timeout_ms_value = get_value(timeout_ms);
+  node *value = get_true_class(state);
+  if(ljoy_sm_WaitExtraPrecision(node_GetSint32(timeout_s_value),node_GetSint32(timeout_ms_value)))
+      value = get_false_class(state);
+  return(value);
+}
+
+
 
 #pragma GCC diagnostic pop
 

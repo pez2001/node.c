@@ -45,4 +45,13 @@ node *nyxjoy_get_filtered_type_event(node *state,node *self,node *obj,node *bloc
 node *nyxjoy_get_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxjoy_set_ordered_mode(node *state,node *self,node *obj,node *block,node *parameters);
 
+node *nyxjoy_sm_open(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_close(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_add(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_remove(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_poll(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_get_state(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_wait(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxjoy_sm_wait_extra_precision(node *state,node *self,node *obj,node *block,node *parameters);
+
 #endif
