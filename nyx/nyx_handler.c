@@ -75,12 +75,37 @@ node *nyxh_pre_not(node *state,node *self,node *obj,node *block,node *parameters
 node *nyxh_pre_at(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *value = NULL;
-  value = get_member(block,get_obj_name(obj));
-  if(value==NULL)
-    value = search_block_path_for_member(block,get_obj_name(obj));
-  if(value==NULL)
+  //value = get_member(block,get_obj_name(obj));
+  node *resolves = get_resolves(state);
+  //printf("num of resolves in evaluate:%d\n",node_GetItemsNum(resolves));
+  node_ItemIterationReset(resolves);
+  while(node_ItemIterationUnfinished(resolves))
   {
-    // printf("global not found for:%x %s\n",obj,get_obj_name(obj));
+    node *resolved = node_ItemIterate(resolves);
+    node *resolved_target = get_proxy_target(resolved);
+    if(resolved_target == obj)
+    {
+      //printf("@ item :%x - %s was resolved from :%x - %s\n",obj,get_obj_name(obj),resolved,get_obj_name(resolved));
+      obj = resolved;
+    }
+  }
+
+
+
+  node *mem = node_GetParent(block);
+  if(mem)
+  {
+    node *p = node_GetParent(mem);
+    if(p)
+      value = get_member(p,get_obj_name(obj));
+  }
+  if(!value)
+    value = search_block_path_for_member(block,get_obj_name(obj));
+  //if(!value)
+  //  value = search_anonymous_block_for_member(block,get_obj_name(obj));
+  if(!value)
+  {
+     printf("global not found for:%x %s\n",obj,get_obj_name(obj));
     value = obj;
   }
   //else
@@ -167,7 +192,7 @@ node *nyxh_add(node *state,node *self,node *obj,node *block,node *parameters)
       void *content = node_GetBinary(real_value2);
       unsigned long len = node_GetBinaryLength(real_value2);
       unsigned long str_len = strlen(node_GetString(real_value));
-      char *cat_string=str_AddChars(node_GetString(real_value),content,len);
+      char *cat_string=str_AddChars(str_Copy(node_GetString(real_value)),content,len);
       //char *cat_string=str_Cat(,node_GetString(real_value2));
       //node_SetString(real_value,cat_string);
       node_SetBinary(real_value,cat_string,str_len+len);
@@ -697,6 +722,22 @@ node *nyxh_copy(node *state,node *self,node *obj,node *block,node *parameters)
 // = handler
 node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
 {
+
+  node *resolves = get_resolves(state);
+  //printf("num of resolves in evaluate:%d\n",node_GetItemsNum(resolves));
+  node_ItemIterationReset(resolves);
+  while(node_ItemIterationUnfinished(resolves))
+  {
+    node *resolved = node_ItemIterate(resolves);
+    node *resolved_target = get_proxy_target(resolved);
+    if(resolved_target == obj)
+    {
+      //printf("assigning item :%x - %s was resolved from :%x - %s\n",obj,get_obj_name(obj),resolved,get_obj_name(resolved));
+      obj = resolved;
+    }
+  }
+
+
   node *obj_name = node_GetItemByKey(obj,"name");
   //printf("assigning:%s,%x(rc:%d) with: %s,%x(rc:%d)\n",get_obj_name(obj),obj,get_obj_refcount(obj),get_obj_name(node_GetItem(parameters,0)),node_GetItem(parameters,0),get_obj_refcount(node_GetItem(parameters,0)));
   //fflush(stdout);
@@ -805,6 +846,22 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
   //node *obj_name = node_GetItemByKey(obj,"name");
   //printf("assigning copy:%s,%x(rc:%d) with: %s,%x(rc:%d)\n",get_obj_name(obj),obj,get_obj_refcount(obj),get_obj_name(node_GetItem(parameters,0)),node_GetItem(parameters,0),get_obj_refcount(node_GetItem(parameters,0)));
   //fflush(stdout);
+
+  node *resolves = get_resolves(state);
+  //printf("num of resolves in evaluate:%d\n",node_GetItemsNum(resolves));
+  node_ItemIterationReset(resolves);
+  while(node_ItemIterationUnfinished(resolves))
+  {
+    node *resolved = node_ItemIterate(resolves);
+    node *resolved_target = get_proxy_target(resolved);
+    if(resolved_target == obj)
+    {
+      //printf("assigning item :%x - %s was resolved from :%x - %s\n",obj,get_obj_name(obj),resolved,get_obj_name(resolved));
+      obj = resolved;
+    }
+  }
+
+
   node *root = node_GetRoot(obj);
   //printf("obj %x root: %x ,%s ,%d\n",obj,root,node_GetKey(root),node_GetType(root));
 
@@ -991,7 +1048,7 @@ node *nyxh_else(node *state,node *self,node *obj,node *block,node *parameters)
   if(!parent_value)
   {
     inc_obj_refcount(exe_block);
-    execute_obj(state,exe_block,block,NULL,True,False,True);
+    execute_obj(state,exe_block,block,NULL,True,False);//,True);resolve
     dec_obj_refcount(exe_block);
     add_garbage(state,exe_block);
     value = get_true_class(state);
@@ -1008,7 +1065,7 @@ node *nyxh_do(node *state,node *self,node *obj,node *block,node *parameters)
   if(parent_value)
   {
     inc_obj_refcount(exe_block);
-    execute_obj(state,exe_block,block,NULL,True,False,True);
+    execute_obj(state,exe_block,block,NULL,True,False);//,True); resolve
     dec_obj_refcount(exe_block);
     add_garbage(state,exe_block);
     value = get_true_class(state);
@@ -1124,7 +1181,7 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
   inc_obj_refcount(true_block);
   inc_obj_refcount(false_block);
 
-  node *loop = execute_obj(state,loop_exe,block,NULL,True,False,True);
+  node *loop = execute_obj(state,loop_exe,block,NULL,True,False);//,True); resolve
   node *loop_value = get_value(loop);
   long lv = node_GetSint32(loop_value);
   //node_PrintTree(state);
@@ -1132,11 +1189,11 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
   //exit(1);
   if(lv)
   {
-    node *exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
+    node *exp_obj = execute_obj(state,expression_block,block,NULL,True,False);//,True); resolve
     //node *exp_obj = execute_obj(state,expression_block,block,NULL,True,True,True);
     while(node_GetSint32(get_value(exp_obj)))
     {
-      execute_obj(state,true_block,block,NULL,True,False,True);
+      execute_obj(state,true_block,block,NULL,True,False);//,True); resolve
       char *block_flag=check_block_flag(state);
       if(block_flag)
       {
@@ -1144,7 +1201,7 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
           break;
         free(block_flag);
       }
-      exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
+      exp_obj = execute_obj(state,expression_block,block,NULL,True,False);//,True); resolve
       free_garbage(state,get_execution_level(state)+0,exp_obj);
       add_garbage(state,exp_obj);
 
@@ -1152,13 +1209,13 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
     //TODO is exp_obj removed?
     //add_garbage(exp_obj);
     add_garbage(state,exp_obj);
-    execute_obj(state,false_block,block,NULL,True,False,True);
+    execute_obj(state,false_block,block,NULL,True,False);//,True); resolve
 
     value = get_true_class(state);
   }
   else
   {
-    node *exp_val=execute_obj(state,expression_block,block,NULL,True,False,True);
+    node *exp_val=execute_obj(state,expression_block,block,NULL,True,False);//,True); resolve
     //node *exp_val=execute_obj(state,expression_block,block,NULL,True,True,True);
     if(node_GetSint32(get_value(exp_val)))
       value = get_true_class(state);
@@ -1167,10 +1224,10 @@ node *nyxh_cmp(node *state,node *self,node *obj,node *block,node *parameters)
 
     if(node_GetSint32(get_value(exp_val)))
     {
-      execute_obj(state,true_block,block,NULL,True,False,True);
+      execute_obj(state,true_block,block,NULL,True,False);//,True); resolve
     }
     else
-      execute_obj(state,false_block,block,NULL,True,False,True);
+      execute_obj(state,false_block,block,NULL,True,False);//,True); resolve
   }
 
   dec_obj_refcount(expression_block);
@@ -1192,49 +1249,49 @@ node *nyxh_init_cmp(node *state,node *self,node *obj,node *block,node *parameter
   node *true_block = node_GetItem(parameters,2);
   node *false_block = node_GetItem(parameters,3);
   node *loop_exe = node_GetItem(parameters,4);
-  node *loop = execute_obj(state,loop_exe,block,NULL,True,False,True);
+  node *loop = execute_obj(state,loop_exe,block,NULL,True,False);//,True); resolve
   inc_obj_refcount(init_block);
   inc_obj_refcount(expression_block);
   inc_obj_refcount(true_block);
   inc_obj_refcount(false_block);
 
-  execute_obj(state,init_block,block,NULL,True,True,True);
+  execute_obj(state,init_block,block,NULL,True,True);//,True); resolve
   node *loop_value = get_value(loop);
   long lv = node_GetSint32(loop_value);
   if(lv)
   {
-    node *exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
+    node *exp_obj = execute_obj(state,expression_block,block,NULL,True,False);//,True); resolve
     while(node_GetSint32(get_value(exp_obj)))
     {
-      execute_obj(state,true_block,block,NULL,True,False,True);
+      execute_obj(state,true_block,block,NULL,True,False);//,True); resolve
       char *block_flag=check_block_flag(state);
       if(block_flag)
       {
         if(!strcmp(block_flag,"break")||!strcmp(block_flag,"exit")||!strcmp(block_flag,"return"))
           break;
         else if(!strcmp(block_flag,"restart"))
-          execute_obj(state,init_block,block,NULL,True,False,True);
+          execute_obj(state,init_block,block,NULL,True,False);//,True); resolve
         free(block_flag);
       }
-      exp_obj = execute_obj(state,expression_block,block,NULL,True,False,True);
+      exp_obj = execute_obj(state,expression_block,block,NULL,True,False);//,True); resolve
       free_garbage(state,get_execution_level(state)+0,exp_obj);
       add_garbage(state,exp_obj);
     }
     add_garbage(state,exp_obj);
-    execute_obj(state,false_block,block,NULL,True,False,True);
+    execute_obj(state,false_block,block,NULL,True,False);//,True); resolve
     value = get_true_class(state);
   }
   else
   {
-    node *exp_val=execute_obj(state,expression_block,block,NULL,True,False,True);
+    node *exp_val=execute_obj(state,expression_block,block,NULL,True,False);//,True); resolve
     if(node_GetSint32(get_value(exp_val)))
       value = get_true_class(state);
     else
       value = get_false_class(state);
     if(node_GetSint32(get_value(exp_val)))
-      execute_obj(state,true_block,block,NULL,True,False,True);
+      execute_obj(state,true_block,block,NULL,True,False);//,True); resolve
     else
-      execute_obj(state,false_block,block,NULL,True,False,True);
+      execute_obj(state,false_block,block,NULL,True,False);//,True); resolve
   }
 
   dec_obj_refcount(init_block);
@@ -1368,7 +1425,7 @@ node *nyxh_each(node *state,node *self,node *obj,node *block,node *parameters)
     node *item = node_ItemIterate(items);
     node *exe_parameters = create_obj("parameters");
     node_AddItem(exe_parameters,item);
-    execute_obj(state,exe_block,block,exe_parameters,True,False,True);
+    execute_obj(state,exe_block,block,exe_parameters,True,False);//,True); resolve
   }
   dec_obj_refcount(exe_block);
   add_garbage(state,exe_block);
@@ -2206,7 +2263,7 @@ node *nyxh_test(node *state,node *self,node *obj,node *block,node *parameters)
   node *mv = NULL;
   if(m)
   {
-    m = resolve_object(m);
+    m = resolve_object(state,m);
     mv = get_value(m);
   }
   /*node *pv = NULL;

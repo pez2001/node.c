@@ -55,7 +55,7 @@ void sys_add_parameter(node *state,node *parameter)
   //node *base_class = get_base_class(state);
   node *block_class = get_block_class(state);
   node *sys = get_member(block_class,"sys");
-  sys = resolve_object(sys);//TODO check if this problem occurs elsewhere and check for other solutions (proxy was returned by get_member)
+  sys = resolve_object(state,sys);//TODO check if this problem occurs elsewhere and check for other solutions (proxy was returned by get_member)
   //node_PrintTree(sys);
   //fflush(stdout);
 
@@ -83,6 +83,7 @@ node *sys_create_class_object(node *base_class)
   add_class_object_function(base,"random",sys_random);
   add_class_object_function(base,"execute",sys_execute);
   add_class_object_function(base,"exit",sys_exit);
+  add_class_object_function(base,"get_env",sys_get_env);
   add_class_object_function(base,"sleep",sys_sleep);
   add_class_object_function(base,"script_filename",sys_script_filename);//if applicable
   add_class_object_function(base,"interpreter_filename",sys_interpreter_filename);
@@ -157,6 +158,21 @@ node *sys_bind(node *base_class,node *class)
   return(sys);
 }
 
+node *sys_get_env(node *state,node *self,node *obj,node *block,node *parameters)
+{
+
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(value,"value");
+  node *env_name = node_GetItem(parameters,0);
+  node *env_name_value = get_value(env_name);
+  char *env = secure_getenv(node_GetString(env_name_value));
+  if(env)
+    node_SetString(real_value,env);
+  return(value);
+
+}
 
 node *sys_time(node *state,node *self,node *obj,node *block,node *parameters)
 {

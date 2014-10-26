@@ -173,7 +173,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *tmp_parent = node_GetParent(found_prot);
         node *bmembers = node_GetItemByKey(block,"members");
         node_SetParent(found_prot,bmembers);
-        node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
+        node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False);//,True);resolve
         node_SetParent(found_prot,tmp_parent);
         //dec_obj_refcount(msg_value);
         dec_obj_refcount(prot_value);
@@ -422,7 +422,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       node *bmembers = node_GetItemByKey(block,"members");
       node_SetParent(found_prot,bmembers);
 
-      node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False,True);
+      node *ret_obj = execute_obj(state,found_prot,block,parameters,True,False);//,True);resolve
       node_SetParent(found_prot,tmp_parent);
       //printf("recv callback finished\n");
       //fflush(stdout);

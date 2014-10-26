@@ -1,0 +1,13 @@
+data="Hi";
+func()={
+output = @data;
+{output = @data}();
+println(output);
+};
+func();
+
+func();
+func();
+
+
+

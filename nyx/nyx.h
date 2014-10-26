@@ -152,7 +152,7 @@ node *copy_class(node *class_obj);
 
 node *create_proxy_object(node *state,node *target,char *name);
 node *get_proxy_target(node *proxy);
-node *resolve_object(node *obj);
+node *resolve_object(node *state,node *obj);
 
 
 void clean_move(node *state,node *dst,node *src);
@@ -181,11 +181,11 @@ long get_execution_level(node *state);
 void inc_execution_level(node *state);
 void dec_execution_level(node *state);
 
-node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block,BOOL resolve_obj);
+node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block);//,BOOL resolve_obj);
 
 node *search_block_path_for_member(node *block,char *key);
 
-node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preops,BOOL resolv_obj,node *extra_search_block);//,long auto_add_new);
+node *evaluate_statement(node *state,node *statement,node *block,long iteration_start_index,char *preops,node *extra_search_block);//,long auto_add_new);//,BOOL resolv_obj
 node *evaluate_block_instance(node *state,node *block_class_instance);
 node *evaluate_block_instance_in(node *state,node *block_class_instance,node *block);
 node *evaluate_block(node *state,node *block);
@@ -206,6 +206,7 @@ node *get_true_class(node *state);
 node *get_false_class(node *state);
 node *get_null_class(node *state);
 node *get_garbage(node *state);
+node *get_resolves(node *state);
 node *get_modules(node *state);
 node *get_default_class_members(node *state);
 node *get_default_block_class_members(node *state);

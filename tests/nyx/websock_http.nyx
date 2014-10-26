@@ -37,7 +37,7 @@ http_call={
 	cookie_name="";
 	url.index_of("/room/").else(
 	{
-		@room = @url.sub(url.index_of("/room/")+"/room/".len());
+		@room = @url.sub(@url.index_of("/room/")+"/room/".len());
 		end = room.index_of("/");
 		(end!=-1).do({@room = @room.sub(0,@end);});
 	  	(!@room.in(@rooms)).do({
@@ -53,7 +53,7 @@ http_call={
 
 	(url.index_of("/name/")!=-1).do(
 	{
-		name = @url.sub(url.index_of("/name/")+"/name/".len());
+		name = @url.sub(@url.index_of("/name/")+"/name/".len());
 		end = name.index_of("/");
 		(end!=-1).do({@name = @name.sub(0,@end);});
 	  	@cookie_name = "name="+name;
@@ -61,7 +61,7 @@ http_call={
 
 	(url.index_of("/admin/")!=-1).do(
 	{
-		chat = @url.sub(url.index_of("/admin/")+"/admin/".len());
+		chat = @url.sub(@url.index_of("/admin/")+"/admin/".len());
 		end = chat.index_of("/");
 		(end!=-1).do({@chat = @chat.sub(0,@end);});
 	  	@msg = "sending message: "+chat;
@@ -75,7 +75,9 @@ http_call={
         "Content-Length: " + len(msg) + "\r\n";
     (cookie_room!="").do({@header = @header+"Set-Cookie: "+@cookie_room+";path=/; Max-Age=360000\r\n";});
     (cookie_name!="").do({@header = @header+"Set-Cookie: "+@cookie_name+";path=/; Max-Age=360000\r\n";});
-    header = header + "\r\n\r\n";
+    /*header = header + "\r\n\r\n";*/
+    header = header + "\r\n";
+	/*println("returning header:"+header);*/
 	ret = header + msg;
 };
 

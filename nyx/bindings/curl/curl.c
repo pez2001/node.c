@@ -56,7 +56,7 @@ static size_t curl_write_data(void *ptr, size_t size, size_t nmemb, void *stream
   //node_PrintTree(value);
   //node *read_obj = 
   //node_PrintTree(read_block);
-  execute_obj(state,read_block,block,parameters,True,False,True);
+  execute_obj(state,read_block,block,parameters,True,False);//,True);resolve
   //execute_obj(state,read_block,block,parameters,True,True,True);
   return((size*nmemb));
 }

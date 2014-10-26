@@ -1,0 +1,12 @@
+copco.data="Hi";
+func()={
+copco.output_data = @copco.data;
+println(copco.output_data);
+};
+func();
+func();
+func();
+
+
+
+

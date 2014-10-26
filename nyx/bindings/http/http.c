@@ -94,7 +94,6 @@ node *http_create_response(node *state,node *self,node *obj,node *block,node *pa
   return(value);
 }
 
-
 node *http_create_request(node *state,node *self,node *obj,node *block,node *parameters)
 {
   node *base_class = get_base_class(state);
@@ -211,12 +210,10 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
   return(value);
 }
 
-
 node *http_parse_cookies(node *state,node *self,node *obj,node *block,node *parameters)
 {
 
 }
-
 
 node *http_parse_url(node *state,node *self,node *obj,node *block,node *parameters)
 {
@@ -377,7 +374,6 @@ node *http_parse_url(node *state,node *self,node *obj,node *block,node *paramete
   }
   return(value);
 }
-
 
 node *http_parse_answer(node *state,node *self,node *obj,node *block,node *parameters)
 {
@@ -542,7 +538,6 @@ node *http_query(node *state,node *self,node *obj,node *block,node *parameters)
   http_append_query_array(state,value);
   return(value);
 }
-
 
 #pragma GCC diagnostic pop
 

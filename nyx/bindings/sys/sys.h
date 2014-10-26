@@ -69,6 +69,8 @@ node *sys_interpreter_version(node *state,node *self,node *obj,node *block,node 
 node *sys_interpreter_filename(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_script_filename(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_exit(node *state,node *self,node *obj,node *block,node *parameters);
+
+node *sys_get_env(node *state,node *self,node *obj,node *block,node *parameters);
 #endif
 
 #endif
