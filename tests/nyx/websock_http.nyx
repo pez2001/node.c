@@ -8,8 +8,8 @@ fav.data = fav.file.readallbytes().close();
 
 SERVER_PORT=sys.get_env("SERVER_PORT");
 SERVER_HOST=sys.get_env("SERVER_HOST");
-index.html = index.html.replace("%SERVER_HOST",SERVER_HOST);
-index.html = index.html.replace("\%SERVER_PORT\%",SERVER_PORT);
+index.html = index.html.replace("%SERVER_HOST%",SERVER_HOST);
+index.html = index.html.replace("%SERVER_PORT%",SERVER_PORT);
 
 println("server: "+SERVER_HOST+":"+SERVER_PORT);
 
