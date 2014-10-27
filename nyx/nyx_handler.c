@@ -62,11 +62,13 @@ node *nyxh_pre_not(node *state,node *self,node *obj,node *block,node *parameters
 {
   node *value = copy_class(obj);
   add_garbage(state,value);
+  //printf("not preop\n");
+  //node_PrintTree(value);
   node *real_value = get_value(value);
   if(node_GetType(real_value)==NODE_TYPE_SINT32)
-    node_SetSint32(real_value,!node_GetSint32(real_value));
+    node_SetSint32(real_value,node_GetSint32(real_value)==0);
   else if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
-    node_SetDouble(real_value,!node_GetDouble(real_value));
+    node_SetDouble(real_value,node_GetDouble(real_value)==0);
   else if(node_GetType(real_value)==NODE_TYPE_STRING)
     node_SetSint32(real_value,!atol(node_GetString(real_value)));
   return(value);

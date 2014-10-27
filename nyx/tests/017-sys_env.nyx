@@ -1,0 +1,3 @@
+sys.set_env("TEST_NYX","HELLO WORLD!",1);
+
+println(sys.get_env("TEST_NYX"));

@@ -5,6 +5,14 @@ copco.data = copco.file.readallbytes().close();
 fav.file = file.open("websocket-html/logo_draft.ico","rb"); 
 fav.data = fav.file.readallbytes().close();
 
+
+SERVER_PORT=sys.get_env("SERVER_PORT");
+SERVER_HOST=sys.get_env("SERVER_HOST");
+index.html = index.html.replace("%SERVER_HOST",SERVER_HOST);
+index.html = index.html.replace("\%SERVER_PORT\%",SERVER_PORT);
+
+println("server: "+SERVER_HOST+":"+SERVER_PORT);
+
 rooms=[];
 
 lobby_name="lobby";
@@ -35,37 +43,46 @@ http_call={
 	room="lobby";
 	cookie_room="room=lobby";
 	cookie_name="";
-	url.index_of("/room/").else(
+	(url.index_of("/room/")!=-1).do(
 	{
-		@room = @url.sub(@url.index_of("/room/")+"/room/".len());
+		room = url.sub(url.index_of("/room/")+"/room/".len());
 		end = room.index_of("/");
-		(end!=-1).do({@room = @room.sub(0,@end);});
-	  	(!@room.in(@rooms)).do({
-	  		println("creating room in http:"+@room);
-	  		@rooms[@room].created = sys.time;
-	  		@rooms[@room].users_num=0;
-	  		@rooms[@room].users=[];
-	  		@rooms[@room].password="";
-	  		@rooms[@room].bg_url="";
+		(end!=-1).do({room = room.sub(0,end);});
+		@rooms.each({println("rooms:"+arguments[0]._name_())});
+	  	(!(room.in_keys(@rooms))).do({
+	  		println("creating room in http:"+room);
+	  		@rooms[room].created = sys.time;
+	  		@rooms[room].users_num=0;
+	  		@rooms[room].users=[];
+	  		@rooms[room].password="";
+	  		@rooms[room].bg_url="";
 	  	});
-	  	@cookie_room = "room="+@room;
+	  	@cookie_room = "room="+room;
 	});
 
 	(url.index_of("/name/")!=-1).do(
 	{
-		name = @url.sub(@url.index_of("/name/")+"/name/".len());
+		name = url.sub(url.index_of("/name/")+"/name/".len());
 		end = name.index_of("/");
-		(end!=-1).do({@name = @name.sub(0,@end);});
-	  	@cookie_name = "name="+name;
+		(end!=-1).do({name = name.sub(0,end);});
+	  	cookie_name = "name="+name;
 	});
 
 	(url.index_of("/admin/")!=-1).do(
 	{
-		chat = @url.sub(@url.index_of("/admin/")+"/admin/".len());
+		chat = url.sub(url.index_of("/admin/")+"/admin/".len());
 		end = chat.index_of("/");
-		(end!=-1).do({@chat = @chat.sub(0,@end);});
-	  	@msg = "sending message: "+chat;
-		@daemon.broadcast("echo","("+room+")admin: "+chat);
+		(end!=-1).do({chat = chat.sub(0,end);});
+	  	@msg = "sending message: "+chat+" to "+room;
+		/*@daemon.broadcast("echo","("+room+")admin: "+chat);*/
+		@rooms[room].users.each(
+		{
+			sendid=arguments[0];
+			println("sending message:"+chat+" to:"+sendid);
+			@daemon.send("echo",chat,sendid);
+			println("sent message:"+chat+" to:"+sendid);
+		});
+
 	});
 
 
@@ -83,9 +100,6 @@ http_call={
 
 echo_call=
 {
-	println(@lobby_name);
-	println(@rooms[@lobby_name].created);
-
 	println("serving request:["+arguments["message"]+"] : "+arguments["protocol"]+" : "+arguments["session"].id+" cookies: "+arguments["session"].cookie);
 	(arguments["session"].has("uname")==0).do({arguments["session"].uname = arguments["session"].id.str()});
 	(arguments["session"].has("room_name")==0).do({
@@ -115,9 +129,9 @@ echo_call=
 			@rooms[room].users = [];
 		});
 		(room.in_keys(@rooms)).do({
-			println("users:"+@rooms[room].users_num);
+			println("room_users:"+@rooms[room].users_num);
 			@rooms[room].users_num = @rooms[room].users_num + 1;
-			println("users len:"+@rooms[room].users.len());
+			println("room_users len:"+@rooms[room].users.len());
 			/*rooms[room].users[arguments["session"].id] = arguments["session"];*/
 			@rooms[room].users.append_item(arguments["session"].id);
 			arguments["session"].room_name:=room;

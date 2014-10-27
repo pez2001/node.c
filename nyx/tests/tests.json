@@ -76,5 +76,15 @@
 		    "file" : "tests/015-function_globals.nyx",
 		    "expected_output" : "24\n16\n36\nworks\n36\n"
 		},
+		{
+			"name" : "Basic Not Preop",
+		    "file" : "tests/016-basic_not_preop.nyx",
+		    "expected_output" : "works\n"
+		},
+		{
+			"name" : "Sys.Environment",
+		    "file" : "tests/017-sys_env.nyx",
+		    "expected_output" : "HELLO WORLD!\n"
+		},
     ]
 }

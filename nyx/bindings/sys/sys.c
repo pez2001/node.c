@@ -84,6 +84,7 @@ node *sys_create_class_object(node *base_class)
   add_class_object_function(base,"execute",sys_execute);
   add_class_object_function(base,"exit",sys_exit);
   add_class_object_function(base,"get_env",sys_get_env);
+  add_class_object_function(base,"set_env",sys_set_env);
   add_class_object_function(base,"sleep",sys_sleep);
   add_class_object_function(base,"script_filename",sys_script_filename);//if applicable
   add_class_object_function(base,"interpreter_filename",sys_interpreter_filename);
@@ -160,19 +161,33 @@ node *sys_bind(node *base_class,node *class)
 
 node *sys_get_env(node *state,node *self,node *obj,node *block,node *parameters)
 {
-
   node *base_class = get_base_class(state);
   node *value = create_class_instance(base_class);
   add_garbage(state,value);
-  node *real_value = node_GetItemByKey(value,"value");
+  node *real_value = get_value(value);
   node *env_name = node_GetItem(parameters,0);
   node *env_name_value = get_value(env_name);
-  char *env = secure_getenv(node_GetString(env_name_value));
+  char *env = getenv(node_GetString(env_name_value));//secure_
   if(env)
     node_SetString(real_value,env);
+  //free(env);
   return(value);
-
 }
+
+node *sys_set_env(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *value = get_false_class(state);
+  node *env_name = node_GetItem(parameters,0);
+  node *env_value = node_GetItem(parameters,1);
+  node *env_overwrite = node_GetItem(parameters,2);
+  node *env_name_value = get_value(env_name);
+  node *env_value_value = get_value(env_value);
+  node *env_overwrite_value = get_value(env_overwrite);
+  if(!setenv(node_GetString(env_name_value),node_GetString(env_value_value),(int)node_GetSint32(env_overwrite_value)))
+    value = get_true_class(state);
+  return(value);
+}
+
 
 node *sys_time(node *state,node *self,node *obj,node *block,node *parameters)
 {

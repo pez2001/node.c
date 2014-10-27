@@ -1,0 +1,3 @@
+(!0).do({println("works")});
+(!1).do({println("fails")});
+(!(1)).do({println("fails")});

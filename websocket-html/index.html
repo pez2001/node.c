@@ -135,12 +135,12 @@
 
 <script type="text/javascript">
 var connection;
-var host="tron";
-host="192.168.0.2";
+var host="%SERVER_HOST%";
+var port="%SERVER_PORT%";
 
 function connect()
 {
-	connection = new WebSocket("ws://"+host+":8080/", ["echo"]);
+	connection = new WebSocket("ws://"+host+":"+port+"/", ["echo"]);
 	connection.onopen = function () 
 	{
 		add_message("Connected to server.");
