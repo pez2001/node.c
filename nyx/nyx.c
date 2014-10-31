@@ -916,6 +916,8 @@ void setup_default_class_members(node *state)
   add_class_object_function(base,"copy",nyxh_copy);
   //add_class_object_function(base,"http_query",nyxh_http_query);
   add_class_object_function(base,"str",nyxh_str);
+  add_class_object_function(base,"char",nyxh_char);
+  add_class_object_function(base,"from_char",nyxh_from_char);
   add_class_object_function(base,"float",nyxh_float);
   add_class_object_function(base,"len",nyxh_len);
   add_class_object_function(base,"input",nyxh_input); //TODO check if search member part gets troubled by this -> add additional var/check if only full match possible
@@ -944,7 +946,7 @@ void setup_default_class_members(node *state)
 node *create_class_object(void)
 {
   node *base = create_base_obj_layout("object");
-  add_class_object_function(base,"=",nyxh_assign);
+  add_class_object_function(base,"=",nyxh_assign);//TODO put back into setup
   return(base);
 }
 
@@ -1021,7 +1023,7 @@ void add_garbage(node *state,node *obj)
     //int x=1/0;
     return;
   }
-  ///printf("adding to gc with exe level:%x (%s) (el:%d) (ref:%d)\n",obj,get_obj_name(obj),execution_level,get_obj_refcount(obj)); 
+  //printf("adding to gc with exe level:%x (%s) (el:%d) (ref:%d)\n",obj,get_obj_name(obj),execution_level,get_obj_refcount(obj)); 
   ///fflush(stdout);
   node_AddItem(garbage,obj);
   node_SetTag(obj,(void*)execution_level);
@@ -1198,7 +1200,11 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
 
   node *dst_il_block = node_GetItemByKey(dst,"nyx_block");
   if(dst_il_block)
-    remove_obj_kv(dst,dst_il_block);
+  {
+     remove_obj_kv(dst,dst_il_block);
+     node_FreeTree(dst_il_block);
+  } 
+
 
   node *src_il_block = node_GetItemByKey(src,"nyx_block");
   if(src_il_block)
@@ -1210,7 +1216,8 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   }
 
   //special case should not be moved
-  /*node *dst_obj_parameters = node_GetItemByKey(dst,"nyx_parameters");
+  /*
+  node *dst_obj_parameters = node_GetItemByKey(dst,"nyx_parameters");
   if(dst_obj_parameters)
   {
     remove_obj_kv(dst,dst_obj_parameters);
@@ -1220,27 +1227,32 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   if(src_obj_parameters!=NULL)
   {
     remove_obj_kv(src,src_obj_parameters);
-    //node *pars = node_CopyTree(src_obj_parameters,True,True);
-    //add_obj_kv(dst,pars);
-    add_obj_kv(dst,src_obj_parameters);
-  }*/
+    node *pars = node_CopyTree(src_obj_parameters,True,True);
+    add_obj_kv(dst,pars);
+    //add_obj_kv(dst,src_obj_parameters);
+  }
 
 
+  */
 
   node *dst_abp = node_GetItemByKey(dst,"anonymous_block_parent");
   if(dst_abp)
+  {
     remove_obj_kv(dst,dst_abp);
+    node_FreeTree(dst_abp);
+  }
 
- /* node *src_abp = node_GetItemByKey(src,"anonymous_block_parent");
+  node *src_abp = node_GetItemByKey(src,"anonymous_block_parent");
   if(src_abp)
   {
     //printf("found abp in move\n");
     //fflush(stdout);
-    node *il_block = node_CopyTree(src_abp,True,True);
-    //node_PrintTree(il_block);
-    add_obj_kv(dst,il_block);
+    node *anon_block = node_CopyTree(src_abp,True,True);
+    //node_PrintTree(anon_block);
+    add_obj_kv(dst,anon_block);
   }
-  */
+ 
+
   //TODO better object freeing , accounting complex sub objects
   node *dst_members = node_GetItemByKey(dst,"members");
   node *src_members = node_GetItemByKey(src,"members");
@@ -1668,7 +1680,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     node_Print(token,True,False);
     //node_PrintTree(token);
     printf("------\n");
-    printf("actual_obj: %x ,block: %x ,extra_search_block: %x exe_level: %d\n",actual_obj,block,extra_search_block,get_execution_level(state));
+    printf("actual_obj: %x - %s(%s),block: %x ,extra_search_block: %x exe_level: %d\n",actual_obj,get_obj_name(actual_obj),get_obj_type(actual_obj),block,extra_search_block,get_execution_level(state));
     printf("------\n");
     fflush(stdout);
     */
@@ -1705,7 +1717,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       }
       else
       {
-        //printf("delayed execution\n"); //TODO maybe just use this case and delete the more complex struc in case VAL
+        //printf("delayed execution:%x - %s(%s)\n",actual_obj,get_obj_name(actual_obj),get_obj_type(actual_obj)); //TODO maybe just use this case and delete the more complex struc in case VAL
         node *exe_parameters = create_obj("parameters");
         node *subs = create_obj("subs");
         node *fmembers=node_GetItemByKey(actual_obj,"members");
@@ -1861,7 +1873,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       node *peek = node_ItemPeek(statement);
       if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
       {
-        //printf("imm block exec\n");
+        //printf("imm block exec:%x\n",block_class_instance);
         node *exe_parameters = create_obj("parameters");
         node *sub_parameters = node_ItemIterate(statement);
         set_obj_node(block_class_instance,"anonymous_block_parent",block);
@@ -1872,10 +1884,14 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           node *parameter_token = node_ItemIterate(sub_parameters);
           node *sub_obj = evaluate_statement(state,parameter_token,block,0,NULL,block);//True, resolve
           node_AddItem(exe_parameters,sub_obj);
+          //add_garbage(state,sub_obj);
         }
         index++;
         actual_obj = execute_obj(state,block_class_instance,block,exe_parameters,True,False);//,True); resove
+        node_SetParent(block_class_instance,NULL);
         add_garbage(state,block_class_instance);
+
+        //add_garbage(state,actual_obj);
       }
       else
       {
@@ -2053,14 +2069,14 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
           //fflush(stdout);
           //node_PrintTree(actual_obj);
           node *peek = node_ItemPeek(statement);
-          node *peek_further = node_ItemPeekFurther(statement,1);
-          if(peek && !strcmp(node_GetKey(peek),"nyx_parameters") && (!peek_further || !strcmp(node_GetKey(peek_further),"ops") && (!strcmp(node_GetString(peek_further),"=") || !strcmp(node_GetString(peek_further),":=")) ))
+          node *peek_further = node_ItemPeekFurther(statement,2);
+          if(peek && !strcmp(node_GetKey(peek),"nyx_parameters") && (peek_further && !strcmp(node_GetKey(peek_further),"ops") && (!strcmp(node_GetString(peek_further),"=") || !strcmp(node_GetString(peek_further),":=")) ))
           {
             node *parameters_definition = node_ItemIterate(statement);
             node *pars = node_CopyTree(parameters_definition,True,True);
             node_AddItem(child,pars);
             index++;
-            //printf("found func def\n");
+            //printf("found func def in create\n");
           }
 
           if(use_preops)
@@ -2139,14 +2155,16 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 //printf("VAL executing preop:%x : %s - %s\n",actual_obj,get_obj_name(actual_obj),preop_value);
                 //printf("VAL %x : %s - %s\n",found_obj,get_obj_name(found_obj),preop_value);
                 found_obj = execute_obj(state,found_op,block,NULL,True,False);//,True);resolve
+                found_obj = resolve_object(state,found_obj);
               }
             }
             free(use_preops);
             node_FreeTree(preops_list);
             use_preops=NULL;
           }
-
-
+          //printf("peeking ret:\n");
+          //if(node_ItemPeek(statement))
+          //  node_PrintTree(node_ItemPeek(statement));
 
           if(((node_ItemPeek(statement)==NULL)||(strcmp(node_GetKey(node_ItemPeek(statement)),"nyx_parameters"))) && ( !strcmp(get_obj_type(found_obj),"function") ) )
           {
@@ -2187,6 +2205,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                       //printf("sub was added to function mark for deletion:%s (%x)\n",get_obj_name(sub_obj),sub_obj);
                       node_AddItem(subs,sub_obj);
                     }
+                    //else
+                    //  add_garbage(state,sub_obj);
+
                     node_AddItem(exe_parameters,sub_obj);
                   }
                   index++;
@@ -2212,10 +2233,12 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                 node *peek = node_ItemPeek(statement);
                 if(peek!=NULL && !strcmp(node_GetKey(peek),"nyx_parameters"))
                 {
+                  //printf("peeked parameters\n");
                   node *sub_parameters = node_ItemIterate(statement);
                   node *peek = node_ItemPeek(statement);
-                  if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp((char*)(unsigned long)node_GetValue(peek),"="))
+                  if(peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp(node_GetString(peek),"="))
                   {
+                    //printf("defining function with parameters\n");
                     //node *op = node_ItemIterate(statement);
                     node *pars = node_CopyTree(sub_parameters,True,True);
                     node *old_pars = node_GetItemByKey(found_obj,"nyx_parameters");
@@ -2250,6 +2273,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
                         //printf("sub was added to function mark for deletion:%s (%x)\n",get_obj_name(sub_obj),sub_obj);
                         node_AddItem(subs,sub_obj);
                       }
+                      else
+                        add_garbage(state,sub_obj);
+
                       node_AddItem(exe_parameters,sub_obj);
                     }
                     actual_obj = execute_obj(state,found_obj,block,exe_parameters,True,False);//,True); resolve

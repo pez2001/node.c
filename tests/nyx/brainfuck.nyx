@@ -1,0 +1,76 @@
+
+program = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
+
+program = ">++++++++++>+>+[
+    [+++++[>++++++++<-]>.<++++++[>--------<-]+<<<]>.>>[
+        [-]<[>+<-]>>[<<+>+>-]<[>+<-[>+<-[>+<-[>+<-[>+<-[>+<-
+            [>+<-[>+<-[>+<-[>[-]>+>+<<<-[>+<-]]]]]]]]]]]+>>>
+    ]<<<
+]";
+
+program = ">++++++++++>>+<+[[+++++[>++++++++<-]>.<++++++[>--------<-]+<<]>.>[->[
+<++>-[<++>-[<++>-[<++>-[<-------->>[-]++<-[<++>-]]]]]]<[>+<-]+>>]<<]";
+
+
+println("brainfucking");
+
+while(_exp,_do)={?(_exp,_do,{},1)};
+
+ip = 0;
+program_len = program.len();
+println("program length:"+program_len);
+core=[];
+ptr=0;
+
+while({ip<program_len},{
+	opcode = program[ip];
+	/*println("["+opcode+"]");*/
+	(opcode==">").do({ptr++});
+	(opcode=="<").do({ptr--});
+	(opcode=="+").do({core[ptr]++});
+	(opcode=="-").do({core[ptr]--});
+	(opcode==".").do({print(core[ptr].char())});
+	(opcode==",").do({core[ptr]=input().from_char();/*println("core[ptr]="+core[ptr]);*/});
+	/*(opcode==",").do({core[ptr]=0});*/
+	(opcode=="[").do({
+		/*println("core[ptr]="+core[ptr]);*/
+		(core[ptr]==0).do({
+			/*println("searching closing bracket @"+ip);*/
+			open=0;
+			?({(program[++ip]!="]")||(open)},{?({program[ip]=="["},{open++},{},0);?({program[ip]=="]"},{open--},{},0);},{},1);
+			/*println("ip:"+ip);*/
+			});
+		});
+	(opcode=="]").do({
+		/*println("found closing bracket");
+		println("closing core[ptr]="+core[ptr]);*/
+		(core[ptr]).do({
+			/*println("reverse searching closing bracket @"+ip);*/
+			open=0;
+			?({(program[--ip]!="[")||(open)},{?({program[ip]=="]"},{open++},{},0);?({program[ip]=="["},{open--},{},0);},{},1);
+			/*println("ip:"+ip);*/
+			});
+		});
+
+	ip++;
+});
+
+/*
+
+?({ip<program_len},{
+	opcode = program[ip];
+	(opcode==">").do({ptr++});
+	(opcode=="<").do({ptr--});
+	(opcode=="+").do({core[ptr]++});
+	(opcode=="-").do({core[ptr]--});
+	(opcode==".").do({print(core[ptr])});
+	(opcode==",").do({core[ptr]=input()[0]});
+	(opcode=="[").do({core[ptr].do({});brip:=ip;brackets.append_item(brip)});
+	(opcode=="]").do({br=brackets[brackets.len()];println("@:"+br);brackets.remove(brackets.len())});
+	ip++;
+},{},1);
+
+*/
+
+/*println("");*/
+println("done");

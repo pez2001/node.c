@@ -46,6 +46,10 @@ node *nyxh_to_json(node *state,node *self,node *obj,node *block,node *parameters
 node *nyxh_from_json(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_str(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_int(node *state,node *self,node *obj,node *block,node *parameters);
+
+node *nyxh_char(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxh_from_char(node *state,node *self,node *obj,node *block,node *parameters);
+
 node *nyxh_float(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_input(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_len(node *state,node *self,node *obj,node *block,node *parameters);

@@ -57,7 +57,7 @@ http_call={
 	  		@rooms[room].password="";
 	  		@rooms[room].bg_url="";
 	  	});
-	  	@cookie_room = "room="+room;
+	  	cookie_room = "room="+room;
 	});
 
 	(url.index_of("/name/")!=-1).do(
@@ -73,8 +73,9 @@ http_call={
 		chat = url.sub(url.index_of("/admin/")+"/admin/".len());
 		end = chat.index_of("/");
 		(end!=-1).do({chat = chat.sub(0,end);});
-	  	@msg = "sending message: "+chat+" to "+room;
+	  	msg = "sending message: "+chat+" to "+room;
 		/*@daemon.broadcast("echo","("+room+")admin: "+chat);*/
+		println(@rooms[room]);
 		@rooms[room].users.each(
 		{
 			sendid=arguments[0];
@@ -90,8 +91,8 @@ http_call={
         "Server: nyx_chat_example\r\n" +
         "Content-Type: "+type+"\r\n" + 
         "Content-Length: " + len(msg) + "\r\n";
-    (cookie_room!="").do({@header = @header+"Set-Cookie: "+@cookie_room+";path=/; Max-Age=360000\r\n";});
-    (cookie_name!="").do({@header = @header+"Set-Cookie: "+@cookie_name+";path=/; Max-Age=360000\r\n";});
+    (cookie_room!="").do({header = header+"Set-Cookie: "+cookie_room+";path=/; Max-Age=360000\r\n";});
+    (cookie_name!="").do({header = header+"Set-Cookie: "+cookie_name+";path=/; Max-Age=360000\r\n";});
     /*header = header + "\r\n\r\n";*/
     header = header + "\r\n";
 	/*println("returning header:"+header);*/
@@ -210,9 +211,18 @@ echo_call=
 	ret="";
 };
 
+connect_call={
+	println("connection closed with id:");
+};
+
+disconnect_call={
+	println("connection closed with id:");
+};
 
 callbacks=["http-only":http_call,"echo":echo_call];
 daemon=websockets.start(8080,callbacks);
+daemon.connect_handler = connect_call;
+daemon.disconnect_handler = disconnect_call;
 timeout=10;
 println("servicing");
 running=1;

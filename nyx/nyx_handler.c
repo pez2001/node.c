@@ -807,12 +807,12 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
       //printf("clean move\n");
       clean_move(state,value,node_GetItem(parameters,0));
       reset_obj_refcount(value);
-      /*node *anon = node_GetItemByKey(value,"anonymous_block_parent");
+      node *anon = node_GetItemByKey(value,"anonymous_block_parent");
       if(anon)
       {
         node_RemoveItem(value,anon);
         node_FreeTree(anon);
-      }*/
+      }
     }
 
     if(parent)
@@ -1854,6 +1854,90 @@ node *nyxh_str(node *state,node *self,node *obj,node *block,node *parameters)
   }
   else if(node_GetType(real_value2)==NODE_TYPE_STRING)
     node_SetString(real_value,node_GetString(real_value2));
+  return(value);
+}
+
+node *nyxh_char(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  //to string convert as char from int
+  node *base_class = get_base_class(state);
+  node *value2 = NULL;
+  if(node_GetItemsNum(parameters))
+  {
+    value2 = node_GetItem(parameters,0);
+  }
+  else if(obj != block)
+  { 
+    value2 = obj;
+  }
+  else
+  {
+    value2 = create_class_instance(base_class);
+    add_garbage(state,value2);
+    set_obj_string(value2,"value","");
+  }
+  node *real_value2 = get_value(value2);
+  node *value = create_class_instance(base_class);
+  add_garbage(state,value);
+  node *real_value = get_value(value);
+  if(node_GetType(real_value2)==NODE_TYPE_SINT32)
+  {
+    //char *str = str_FromLong(node_GetSint32(real_value2));
+    char *str = str_CreateEmpty();
+    str = str_AddChar(str,node_GetSint32(real_value2));
+    node_SetString(real_value,str);
+    free(str);
+  }
+  else if(node_GetType(real_value2)==NODE_TYPE_DOUBLE)
+  {
+    char *str = str_CreateEmpty();
+    str = str_AddChar(str,(int)node_GetDouble(real_value2));
+    node_SetString(real_value,str);
+    free(str);
+  }
+  else if(node_GetType(real_value2)==NODE_TYPE_STRING)
+    node_SetString(real_value,node_GetString(real_value2));
+  return(value);
+}
+
+node *nyxh_from_char(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  //to int convert from first char of string
+  node *base_class = get_base_class(state);
+  node *value2 = NULL;
+  if(node_GetItemsNum(parameters))
+  {
+    value2 = node_GetItem(parameters,0);
+  }
+  else if(obj != block)
+  { 
+    value2 = obj;
+  }
+  else
+  {
+    value2 = create_class_instance(base_class);
+    add_garbage(state,value2);
+    set_obj_string(value2,"value","");
+  }
+  node *real_value2 = get_value(value2);
+  node *value = create_class_instance(base_class);
+  add_garbage(state,value);
+  node *real_value = get_value(value);
+  if(node_GetType(real_value2)==NODE_TYPE_SINT32)
+  {
+    //char *str = str_FromLong(node_GetSint32(real_value2));
+    /*char *str = str_CreateEmpty();
+    str = str_AddChar(str,node_GetSint32(real_value2));
+    node_SetString(real_value,str);
+    free(str);*/
+    node_SetSint32(real_value,node_GetSint32(real_value2));
+  }
+  else if(node_GetType(real_value2)==NODE_TYPE_DOUBLE)
+  {
+    node_SetSint32(real_value,(long)node_GetDouble(real_value2));
+  }
+  else if(node_GetType(real_value2)==NODE_TYPE_STRING)
+    node_SetSint32(real_value,node_GetString(real_value2)[0]);
   return(value);
 }
 
