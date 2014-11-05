@@ -266,10 +266,10 @@ char *run_script(char *filename,char *interpreter_filename,int is_exitcode ,void
   }
   if(is_exitcode)
   {
-    printf("\t %d == %d ",ret,(int)check_value);
-    ret=!(ret == (int)check_value);
+    printf("\t %d == %d ",ret,(long)check_value);
+    ret=!(ret == (long)check_value);
     if(ret)
-      ret = str_Copy(nyx_get_output(state));
+      ret = (long)str_Copy(nyx_get_output(state));
   }
   else
   {
@@ -294,22 +294,30 @@ char *run_script(char *filename,char *interpreter_filename,int is_exitcode ,void
       free(b_r);
     }
     if(ret)
-      ret = str_Copy(nyx_get_output(state));
+      ret = (long)str_Copy(nyx_get_output(state));
   }
   close_nyx(state);
-  return(ret);
+  return((char*)ret);
 }
 
 char *get_test_expected_output(node *suite,int index)
 {
   node *test = get_test(suite,index);
   node *expected_output = node_GetItemByKey(test,"expected_output");
-  node *expected_exitcode = node_GetItemByKey(test,"expected_exitcode");
+  //node *expected_exitcode = node_GetItemByKey(test,"expected_exitcode");
   if(expected_output)
     return(node_GetString(expected_output));
   return(NULL);
 }
 
+int skip_test(node *suite,int index)
+{
+  node *test = get_test(suite,index);
+  node *skip = node_GetItemByKey(test,"skip");
+  if(skip && node_GetSint32(skip))
+    return(1);
+  return(0);
+}
 char *run_test(node *test,char *interpreter_filename)
 {
   node *name = node_GetItemByKey(test,"name");
@@ -317,10 +325,12 @@ char *run_test(node *test,char *interpreter_filename)
   node *file = node_GetItemByKey(test,"file");
   node *expected_output = node_GetItemByKey(test,"expected_output");
   node *expected_exitcode = node_GetItemByKey(test,"expected_exitcode");
+
   if(expected_exitcode)
-    return(run_script(node_GetString(file),interpreter_filename,1,node_GetSint32(expected_exitcode)));  
+    return(run_script(node_GetString(file),interpreter_filename,1,(void*)node_GetSint32(expected_exitcode)));  
   if(expected_output)
     return(run_script(node_GetString(file),interpreter_filename,0,node_GetString(expected_output)));  
+  return(str_CreateEmpty());
 }
 
 int main(int argc, char *argv[])
@@ -333,9 +343,19 @@ int main(int argc, char *argv[])
   printf(" Test#\tTest Name\t\t\t\tTest Status\n");
   printf("------------------------------------------------------------\n");
   long tests_failed = 0 ;
+  long tests_skipped = 0;
   for(long i=0;i<num_tests;i++)
   {
     printf("#%-3d",i+1);
+    if(skip_test(suite,i))
+    {
+      node *name = node_GetItemByKey(get_test(suite,i),"name");
+      printf("\t%-17s",node_GetString(name));
+      printf("\t\t\t  Skipped");
+      printf("\n");
+      tests_skipped++;
+      continue;  
+    }
     void *r = run_test(get_test(suite,i),argv[0]);
     if(!r)
       printf("\t  Success");
@@ -371,13 +391,14 @@ int main(int argc, char *argv[])
       free(r);
       tests_failed++;
     }
-
     printf("\n");
   }
   printf("------------------------------------------------------------\n");
   if(tests_failed)
     printf("\t\t%d Test(s) failed\n",tests_failed);
-  else
+  if(tests_skipped)
+      printf("\t\t%d Test(s) skipped\n",tests_skipped);
+  if(!tests_failed && !tests_skipped)
     printf("\t\tAll Tests succeeded\n");
   close_tests_suite(suite);
 }

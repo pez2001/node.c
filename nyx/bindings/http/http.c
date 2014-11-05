@@ -213,6 +213,7 @@ node *http_create_request(node *state,node *self,node *obj,node *block,node *par
 node *http_parse_cookies(node *state,node *self,node *obj,node *block,node *parameters)
 {
 
+  return(get_false_class(state));
 }
 
 node *http_parse_url(node *state,node *self,node *obj,node *block,node *parameters)

@@ -1,8 +1,9 @@
 a=24;
 a.add_member("new",33);
 println(a.new);
-/*a.add_member("$",{println(12)});*/
-a.add_member("$",{println(get_parent())});
+/*a.add_member("$$",{println(12)});
+a$$;*/
+a.add_member("$",{println(a*2)});
 a$;
 
 /*a.add_member("PRE$",{println(12)});

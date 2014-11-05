@@ -105,12 +105,14 @@ unsigned long node_CopyValue(node *n)
   {
     case NODE_TYPE_FLOAT:
     case NODE_TYPE_DOUBLE:
-    //double *dp = (double*)&(n->value);
-    //*dp = d;
-    printf("copying double:%f\n",node_GetDouble(n));
-    double *d = (double*)&r;
-    *d = node_GetDouble(n);
-    printf("copying double2:%f\n",*d);
+    {
+      //double *dp = (double*)&(n->value);
+      //*dp = d;
+      //printf("copying double:%f\n",node_GetDouble(n));
+      double *d = (double*)&r;
+      *d = node_GetDouble(n);
+      //printf("copying double2:%f\n",*d);
+    }
     break;
     case NODE_TYPE_NULL:
     case NODE_TYPE_INT:
@@ -953,14 +955,16 @@ node *node_Copy(node *n,BOOL copy_value)
   node *r=NULL;
   if(n->type == NODE_TYPE_DOUBLE)
   {
-    list *l = list_Create(0,0);
+    //list *l = list_Create(0,0);
+    list *l = list_Copy(n->items);
     r = node_CreateFilled(n->parent,n->key,0,n->type,l);
     if(copy_value)
       node_SetDouble(r,node_GetDouble(n));
   }
   else if(n->type == NODE_TYPE_FLOAT)
   {
-    list *l = list_Create(0,0);
+    //list *l = list_Create(0,0);
+    list *l = list_Copy(n->items);
     r = node_CreateFilled(n->parent,n->key,0,n->type,l);
     if(copy_value)
       node_SetFloat(r,node_GetFloat(n));
@@ -1591,19 +1595,9 @@ node_array *node_CopyArray(node_array *array,BOOL copy_values)
 
 void node_SetArray(node *n,long num)
 {
-  /*if(node_IsType(n,NODE_TYPE_ARRAY))
-  {
-     list_Close(((node_array*)n->value)->nodes);
-     ((node_array*)n->value)->nodes = binary;
-  }
-  else
-  {*/
   node_FreeValue(n->type,n->value);
-  //node_array *array = node_CreateArray(num);
-  //memcpy(&(n->value), &array, sizeof(node_array*));
   n->value = (unsigned long long)(unsigned long)node_CreateArray(num);
   node_SetType(n,NODE_TYPE_ARRAY);
-  //}
 }
 
 long node_array_Add(node *n,node *s)

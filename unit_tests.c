@@ -36,7 +36,7 @@ void base64_tests(void)
 
   char *decoded = NULL;
   unsigned long len = 0;
-  int r = str_DecodeBase64(b64,&decoded,&len);
+  str_DecodeBase64(b64,&decoded,&len);
   printf("base 64 decoded (%d) : [%s]\n",len,decoded);
   free(b64);
 }

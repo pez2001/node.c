@@ -480,7 +480,7 @@ node *nyxjoy_sm_get_state(node *state,node *self,node *obj,node *block,node *par
       add_obj_kv(state_axes,axes_items);
       add_member(value,state_axes);
 
-      for(int i=0;i<sm_state->num_axes;i++)
+      for(unsigned int i=0;i<sm_state->num_axes;i++)
       {
         node *ev_value = create_class_instance(base_class);
         inc_obj_refcount(ev_value);
@@ -491,7 +491,7 @@ node *nyxjoy_sm_get_state(node *state,node *self,node *obj,node *block,node *par
         inc_obj_refcount(ev_value);
         node_AddItem(axes_items,ev_value);
       }
-      for(int i=0;i<sm_state->num_buttons;i++)
+      for(unsigned int i=0;i<sm_state->num_buttons;i++)
       {
         node *ev_value = create_class_instance(base_class);
         inc_obj_refcount(ev_value);

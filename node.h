@@ -87,11 +87,8 @@ extern "C"  {
 typedef struct _node
 {
   char *key;
-  //void *value; /*TODO make sure its 4byte wide on every platform*/
-  //long value;
   unsigned long long value;
   struct _node *parent;
-  //int type;
   unsigned char type;
   list *items;
   void *tag;
@@ -217,12 +214,12 @@ node *node_Create(void);
 node *node_CreateFilled(node *parent,char *key,unsigned long long value,unsigned char type,list *items);
 
 /**
- * node_() - 
+ * node_CopyValue() - Copies a Value and returns it
  * @n: Node to use
  *
- * 
+ * Copies a value. (used internally during node_CopyTree)
  *
- * Return: 
+ * Return: the copied value as unsigned long
  */
 unsigned long node_CopyValue(node *n);
 
@@ -243,28 +240,36 @@ void node_Free(node *n,BOOL free_value);
  * @type: node type
  * @value: 8 bytes data storage value
  *
- *  
+ *  Frees up the memory used by the string,binary and array types
+ *  Note: user types won't be freed
  *
  */
 void node_FreeValue(unsigned char type,unsigned long long value);
 
 /**
- * node_() - 
+ * node_Copy() - Copy a node
  * @n: Node to use
- *
+ * @copy_value: set to True if value should be copied too
  * 
+ * a single node will be copied with items references included
+ * the value will only be copied if copy_value was set to True
  *
- * Return: 
+ * Return: copy of node n
  */
-node *node_Copy(node *n,BOOL copy_value);
+node *node_Copy(node *n,BOOL copy_value); //TODO add copy_items list parameter 
 
 /**
- * node_() - 
+ * node_CopyTree() - Copy a Node-Tree
  * @n: Node to use
+ * @copy_calues: set to True if all values should be copied too
+ * @update_parents: set to True if you want to create a completely 
+ *  seperate tree with all parents correctly set
  *
- * 
+ * a whole new tree copy will be created with all parents updated
+ * if update_parents was set to True and all values copied
+ * if copy_values was set to True
  *
- * Return: 
+ * Return: node tree copy of node n
  */
 node *node_CopyTree(node *n,BOOL copy_values,BOOL update_parents);
 
@@ -285,18 +290,27 @@ void node_SetKey(node *n,char *key);
 /**
  * node_SetValue() - Sets the 8 byte data storage to a new value
  * @n: Node to use
+ * @value: 8 byte data store value
+ * @copy_value: set to True to make a true copy of the value
+ * @free_old_value: set to True to automatically free any memory used by currently set value
  *
- * 
- *
+ * Sets the node value to a new value.
+ * if copy_value was set to True a true copy of the value will be created and set as node value
+ * if free_old_value was set to True the old value of the node will be freed up
  */
 void node_SetValue(node *n,unsigned long long value,BOOL copy_value,BOOL free_old_value);
 
 /**
- * node_SetValueType() - 
+ * node_SetValueType() - Manually sets the 8 byte data storage to a new value and sets the type 
  * @n: Node to use
+ * @type: type used as new node type
+ * @value: 8 byte data store value
+ * @copy_value: set to True to make a true copy of the value
+ * @free_old_value: set to True to automatically free any memory used by currently set value
  *
- * 
- *
+ * Sets the node value and type.
+ * if copy_value was set to True a true copy of the value will be created and set as node value
+ * if free_old_value was set to True the old value of the node will be freed up
  */
 void node_SetValueType(node *n,unsigned char type,unsigned long long value,BOOL copy_value,BOOL free_old_value);
 
@@ -326,7 +340,8 @@ void *node_GetTag(node *n);
  * @n: Node to use
  * @type: the new node type
  * 
- * 
+ * update the type of the node
+ * Note: doesnt change anything else in the node
  *
  */
 void node_SetType(node *n,unsigned char type);
@@ -334,17 +349,20 @@ void node_SetType(node *n,unsigned char type);
 /**
  * node_SetParent() - Sets the node parent node
  * @n: Node to use
+ * @p: new parent node
  *
- * 
- *
+ * update the node parent pointer
  */
 void node_SetParent(node *n,node *p);
 
 /**
- * node_SetItems() - 
+ * node_SetItems() - Sets the node items list
  * @n: Node to use
- *
+ * @items: new items list
  * 
+ * updates the node items list
+ * Note: you dont need to manually free the list
+ * if the node is freed normally
  *
  */
 void node_SetItems(node *n, list *items);
@@ -353,117 +371,131 @@ void node_SetItems(node *n, list *items);
  * node_GetKey() - Gets the node key
  * @n: Node to use
  *
- * 
+ * Returns the key of the node 
  *
+ * Return: key string
  */
 char *node_GetKey(node *n);
 
 /**
- * node_GetValue() - 
+ * node_GetValue() - Gets the node value
  * @n: Node to use
  *
- * 
+ * Returns the data storage value of the node
  *
- * Return: 
+ * Return: 8 byte data store value
  */
 unsigned long long node_GetValue(node *n);
 
 /**
- * node_GetType() - 
+ * node_GetType() - Gets the node type
  * @n: Node to use
  *
- * 
+ * Returns the node type (see top for type defines)
  *
- * Return: 
+ * Return: type as unsigned char
  */
 unsigned char node_GetType(node *n);
 
 /**
- * node_IsType() - 
+ * node_IsType() - Check node type against specified type
  * @n: Node to use
- *
+ * @type: type the compare with
  * 
+ * Compares node type with the specified type 
+ * and returns True if types match
  *
- * Return: 
+ * Return: int set to 1 if the types are the same
  */
 int node_IsType(node *n, unsigned char type);
 
 /**
- * node_GetParent() - 
+ * node_GetParent() - Gets the node parent
  * @n: Node to use
  *
- * 
+ * Returns the node parent pointer ,
+ * can be NULL
  *
- * Return: 
+ * Return: parent node
  */
 node *node_GetParent(node *n);
 
 /**
- * node_GetItems() - 
+ * node_GetItems() - Gets the node item list
  * @n: Node to use
  *
- * 
+ * Returns the node item list pointer
  *
- * Return: 
+ * Return: item list
  */
 list *node_GetItems(node *n);
 
 /**
- * node_HasKey() - 
+ * node_HasKey() - Checks if the node has a key string set
  * @n: Node to use
  *
- * 
+ * Returns True if the node has a key string specified
  *
- * Return: 
+ * Return: int set to True if node has a key 
  */
 int node_HasKey(node *n);
 
 
-/*int node_HasValue(node *n);*/
+/*int node_HasValue(node *n);*/ //TODO
 
 /**
- * node_GetRoot() - 
+ * node_GetRoot() - Gets the node trees root node
  * @n: Node to use
  *
- * 
+ * the recursive function returns the root node pointer 
+ * of the tree (parents chain)
  *
- * Return: 
+ * Return: top node 
  */
 node *node_GetRoot(node *n);
 
 /**
- * node_StringPrint() - 
+ * node_StringPrint() - Prints node contents to a string
  * @n: Node to use
- *
+ * @with_key: print the node key (if any) if True
+ * @include_items: print sub items too if True
  * 
+ * Prints the node contents to a newly created string
+ * adds meta data if specified
+ *
  * Return: new string 
  */
 char *node_StringPrint(node *n,int with_key,int include_items);
 
 /**
- * node_Print() - 
+ * node_Print() - Prints the node to STDOUT
  * @n: Node to use
+ * @with_key: print the key string if True
+ * @include_items: print sub items if True
  *
- * 
- *
+ * Prints the node contents to STDOUT
+ * outputs meta data if specified
  */
 void node_Print(node *n,int with_key,int include_items);
 
 /**
- * node_PrintWithTabs() - 
+ * node_PrintWithTabs() - Prints the tabs formatted node to STDOUT
  * @n: Node to use
+ * @with_key: print the key string if True
+ * @tabs_num: number of tabs in front of each line
  *
- * 
- *
+ * Prints the node contents to STDOUT
+ * using tabs_num tabs in front of each line
+ * outputs meta data if specified
  */
 void node_PrintWithTabs(node *n,int with_key,int tabs_num);
 
 /**
- * node_PrintTree() - 
+ * node_PrintTree() - Prints the node tree to STDOUT
  * @n: Node to use
  *
- * 
- *
+ * Prints the node tree contents to STDOUT
+ * outputs all node meta data 
  */
 void node_PrintTree(node *n);
 
@@ -480,125 +512,151 @@ void node_ParseNumber(node *n,char *number_string);
 /*tree access*/
 
 /**
- * node_AddItem() - 
+ * node_AddItem() - Adds node to items list
  * @n: Node to use
- *
+ * @s: node to add
  * 
+ * Appends a node to the node sub items list
+ * and returns the index position
  *
- * Return: 
+ * Return: index of added item
  */
 long node_AddItem(node *n,node *s);
 
 /**
- * node_InsertItem() - 
+ * node_InsertItem() - Insert node into items list
  * @n: Node to use
+ * @s: node to insert
+ * @index: index at which the the node will be put
  *
- * 
- *
+ * Inserts a node at a specified index into the node 
+ * sub items list
  */
 void node_InsertItem(node *n,node *s,long index);
 
 /**
- * node_RemoveItem() - 
+ * node_RemoveItem() - Removes an item
  * @n: Node to use
- *
+ * @s: Node to remove
  * 
+ * Removes the specified node from the nodes
+ * sub items list and returns the index position
+ * of the removed node
  *
- * Return: 
+ * Return: index of removed node
  */
 int node_RemoveItem(node *n,node *s);
 
 /**
- * node_RemoveItemByIndex() - 
+ * node_RemoveItemByIndex() - Removes an item specified by the index
  * @n: Node to use
- *
+ * @index: index position of the node to be removed
  * 
+ * Removes the node at index from the node
+ * sub items list and returns a pointer to
+ * the removed node
  *
- * Return: 
+ * Return: removed node pointer
  */
 node *node_RemoveItemByIndex(node *n,long index);
 
 /**
- * node_RemoveItemByKey() - 
+ * node_RemoveItemByKey() - Removes an item specified by the key
  * @n: Node to use
- *
+ * @key: key string of the node to be removed
  * 
- *
- * Return: 
+ * Removes the first node with the specified
+ * key string from the node sub items list and 
+ * returns the index at which the node was found
+ * 
+ * Return: index of removed node
  */
 int node_RemoveItemByKey(node *n,char *key);
 
 /**
- * node_GetItemIndex() - 
+ * node_GetItemIndex() - Gets the item index
  * @n: Node to use
- *
+ * @s: node to get the index for
  * 
+ * Gets the items index and returns it
+ * if s was not found in the sub items list
+ * -1 will be returned
  *
- * Return: 
+ * Return: index of node
  */
 long node_GetItemIndex(node *n,node *s);
 
 /**
- * node_GetItem() - 
+ * node_GetItem() - Get node at index
  * @n: Node to use
- *
+ * @index: position of the node to be returned
  * 
- *
- * Return: 
+ * Gets the node at index in the node 
+ * sub items list and returns it
+ * if the index is out of range NULL is returned
+ * 
+ * Return: node pointer or NULL
  */
-void *node_GetItem(node *n,long index);
+void *node_GetItem(node *n,long index); //TODO return node*
 
 /**
- * node_GetItemsNum() - 
+ * node_GetItemsNum() - Gets the number of items
  * @n: Node to use
  *
- * 
+ * Returns the number of items in the
+ * node sub items list
  *
- * Return: 
+ * Return: number of items
  */
 long node_GetItemsNum(node *n);
 
 /**
- * node_HasItems() - 
+ * node_HasItems() - Check if node has items
  * @n: Node to use
  *
- * 
+ * Check if the node has any items in its
+ * sub items list and returns True if it has
  *
- * Return: 
+ * Return: True if node has sub items
  */
 int node_HasItems(node *n);
 
 /**
- * node_GetItemByKey() - 
+ * node_GetItemByKey() - Gets the node the specified key
  * @n: Node to use
- *
+ * @key: key string to search for
  * 
- *
- * Return: 
+ * Searches for the first node with the same key
+ * if none was found it returns NULL
+ * 
+ * Return: node pointer or NULL
  */
-node *node_GetItemByKey(node *n,char *key);
+node *node_GetItemByKey(node *n,char *key);//TODO add getitembykey(n,key,start_index)
 
 //int node_SetItemByKey(node *n,char *key,)
 
 /**
- * node_HasItem() - 
+ * node_HasItem() - Check s if the node has the item in its list
  * @n: Node to use
- *
+ * @s: node to search for
+ *  
+ * checks if the node is found in the node 
+ * sub items list and returns True if it is.
  * 
- *
- * Return: 
+ * Return: True if the node was found
  */
 int node_HasItem(node *n,node *s);
 
-//void *node_GetItemByPath(node *n,...);
+//void *node_GetItemByPath(node *n,...);//TODO
 
 
 /**
- * node_ClearItems() - 
+ * node_ClearItems() - Clears the items list
  * @n: Node to use
  *
- * 
- *
+ * Clears the items list
+ * Note: items will not be freed
+ * nor their parents updated
  */
 void node_ClearItems(node *n);
 
@@ -622,103 +680,106 @@ node *node_ItemIterate(node *n);
  * returns the previous node as pointer
  * decrements the nodes iteration index member
  *
- * Return: Node Pointer
+ * Return: node pointer of iteration item
  */
 node *node_ItemReverseIterate(node *n);
 
 /**
- * node_ItemPeek() - 
+ * node_ItemPeek() - Peek the next item
  * @n: Node to use
  *
- * 
+ * Temporarily iterates further and returns
+ * the item
  *
- * Return: 
+ * Return: node pointer of next iteration item
  */
 node *node_ItemPeek(node *n);
 
 /**
- * node_ItemPeekFurther() - 
+ * node_ItemPeekFurther() - Peeks the next item further
  * @n: Node to use
  *
- * 
+ * Temporarily iterates even further and returns
+ * the item
  *
- * Return: 
+ * Return: node pointer of peeked iteration item
  */
 node *node_ItemPeekFurther(node *n,long offset);
 
 
 /**
- * node_ItemIterationUnfinished() - 
+ * node_ItemIterationUnfinished() - Checks if the iteration has finished
  * @n: Node to use
  *
- * 
+ * Checks if the item iteration has completed
+ * and returns True if it has
  *
- * Return: 
+ * Return: True if the iteration has finished
  */
 int node_ItemIterationUnfinished(node *n);
 
 /**
- * node_ItemIterationUnfinished() - 
+ * node_ItemReverseIterationUnfinished() - Checks if the reverse iteration has finished
  * @n: Node to use
  *
- * 
+ * Checks if the item reverse iteration has completed
+ * and returns True if it has
  *
- * Return: 
+ * Return: True if the reverse iteration has finished
  */
 int node_ItemReverseIterationUnfinished(node *n);
 
 /**
- * node_ItemIterationReset() - 
+ * node_ItemIterationReset() - Resets the item iteration
  * @n: Node to use
  *
- * 
- *
+ * Sets the iteration index to 0
  */
 void node_ItemIterationReset(node *n);
 
 /**
- * node_ItemIterationReset() - 
+ * node_ItemReverseIterationReset() - Resets the reverse item iteration
  * @n: Node to use
  *
- * 
- *
+ * Sets the iteration index to items num - 1
  */
 void node_ItemReverseIterationReset(node *n);
 
 /**
- * node_GetItemIterationIndex() - 
+ * node_GetItemIterationIndex() - Gets the node item iteration index
  * @n: Node to use
  *
- * 
+ * Returns the actual item iteration index
  *
- * Return: 
+ * Return: index of iteration
  */
 long node_GetItemIterationIndex(node *n);
 
 /**
- * node_SetItemIterationIndex() - 
+ * node_SetItemIterationIndex() - Sets the item iteration index
  * @n: Node to use
+ * @iteration_index: new item iteration index value
  *
- * 
- *
- * Return: 
+ * Sets the item iteration index to a new index value
  */
 void node_SetItemIterationIndex(node *n,long iteration_index);
 
 /**
- * node_FreeItems() - 
+ * node_FreeItems() - Frees all sub items including values
  * @n: Node to use
  *
- * 
- *
+ * Frees all sub items including their values
+ * if the sub item is a tree the tree will
+ * also be freed
+ * Note: the containing node will not be freed
  */
 void node_FreeItems(node *n);
 
 /**
- * node_FreeTree() - 
+ * node_FreeTree() - Frees a node tree
  * @n: Node to use
  *
- * 
+ * Frees the node tree including all values
  *
  */
 void node_FreeTree(node *n);
@@ -727,296 +788,328 @@ void node_FreeTree(node *n);
 /*standard value types quick access*/
 
 /**
- * node_GetInt() - 
+ * node_GetInt() - Gets the node value as int
  * @n: Node to use
  *
- * 
+ * returns the node value as int
  *
- * Return: 
+ * Return: int
  */
 int node_GetInt(node *n);
 
 /**
- * node_GetFloat() - 
+ * node_GetFloat() - Get the node value as float
  * @n: Node to use
  *
- * 
+ * returns the value as float value
  *
- * Return: 
+ * Return: float value
  */
 float node_GetFloat(node *n);
 
 /**
- * node_GetDouble() - 
+ * node_GetDouble() - Gets the node value as double
  * @n: Node to use
  *
- * 
+ * returns the value as double value
  *
- * Return: 
+ * Return: double value
  */
 double node_GetDouble(node *n);
 
 /**
- * node_GetUint8() - 
+ * node_GetUint8() - Gets the node value as uint8
  * @n: Node to use
  *
- * 
+ * returns the value as unsigned char 
  *
- * Return: 
+ * Return: uint8 value
  */
 unsigned char node_GetUint8(node *n);
 
 /**
- * node_GetUint16() - 
+ * node_GetUint16() - Gets the node value uint16
  * @n: Node to use
  *
- * 
+ * returns the value as unsigned short
  *
- * Return: 
+ * Return: uint16
  */
 unsigned short node_GetUint16(node *n);
 
 /**
- * node_GetUint32() - 
+ * node_GetUint32() - Gets the node value as uint32
  * @n: Node to use
  *
- * 
+ * returns the value as unsigned long
  *
- * Return: 
+ * Return: uint32
  */
 unsigned long node_GetUint32(node *n);
 
 /**
- * node_GetUint64() - 
+ * node_GetUint64() - Gets the node value as uint64
  * @n: Node to use
  *
- * 
+ * returns the value as unsigned long long
  *
- * Return: 
+ * Return: uint64
  */
 unsigned long long node_GetUint64(node *n);
 
 /**
- * node_GetSint8() - 
+ * node_GetSint8() - Gets the node value as sint8
  * @n: Node to use
  *
- * 
+ * returns the value as char
  *
- * Return: 
+ * Return: sint8
  */
 char node_GetSint8(node *n);
 
 /**
- * node_GetSint16() - 
+ * node_GetSint16() - Gets the node value as sint16
  * @n: Node to use
  *
- * 
+ * returns the value as short
  *
- * Return: 
+ * Return: sint16
  */
 short node_GetSint16(node *n);
 
 /**
- * node_GetSint32() - 
+ * node_GetSint32() - Gets the node value as sint32
  * @n: Node to use
  *
- * 
+ * returns the value as long
  *
- * Return: 
+ * Return: sint32
  */
 long node_GetSint32(node *n);
 
 /**
- * node_GetSint64() - 
+ * node_GetSint64() - Gets the node value as sint64
  * @n: Node to use
  *
- * 
+ * returns the node value as long long
  *
- * Return: 
+ * Return: sint64
  */
 long long node_GetSint64(node *n);
 
 /**
- * node_GetString() - 
+ * node_GetString() - Gets the node value as string
  * @n: Node to use
  *
- * 
+ * returns the node value as char*
  *
- * Return: 
+ * Return: string
  */
 char *node_GetString(node *n);
 
 /**
- * node_GetBool() - 
+ * node_GetBool() - Gets the node value as bool
  * @n: Node to use
  *
- * 
+ * returns the node value as int
  *
- * Return: 
+ * Return: bool
  */
 int node_GetBool(node *n);
 
 /**
- * node_GetUser() - 
+ * node_GetUser() - Gets the node value as user pointer
  * @n: Node to use
  *
- * 
+ * returns the node value as void*
  *
- * Return: 
+ * Return: user pointer
  */
 void *node_GetUser(node *n);
 
 /**
- * node_GetNode() - 
+ * node_GetNode() - Gets the node value as node
  * @n: Node to use
  *
- * 
+ * returns the node value as node pointer
  *
- * Return: 
+ * Return: node pointer
  */
 node *node_GetNode(node *n);
 
 /**
- * node_SetNull() - 
+ * node_SetNull() - Sets the node value to NULL
  * @n: Node to use
  *
- * 
- *
+ * Sets the node value to NULL
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetNull(node *n);
 
 /**
- * node_SetBool() - 
+ * node_SetBool() - Sets the node value to a bool
  * @n: Node to use
+ * @b: new bool value
  *
- * 
- *
+ * Sets the node value to the bool specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetBool(node *n, int b);
 
 /**
- * node_SetInt() - 
+ * node_SetInt() - Sets the node value to an int
  * @n: Node to use
+ * @i: new int value
  *
- * 
- *
+ * Sets the node value to the int specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetInt(node *n, int i);
 
 /**
- * node_SetFloat() - 
+ * node_SetFloat() - Sets the node value to a float
  * @n: Node to use
+ * @f: new float value
  *
- * 
- *
+ * Sets the node value to the float specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetFloat(node *n,float f);
 
 /**
- * node_SetDouble() - 
+ * node_SetDouble() - Sets the node value to a double
  * @n: Node to use
+ * @f: new double value
  *
- * 
- *
+ * Sets the node value to the double specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetDouble(node *n,double d);
 
 /**
- * node_SetString() - 
+ * node_SetString() - Sets the node value to a string
  * @n: Node to use
+ * @f: new string
  *
- * 
- *
- */
+ * Sets the node value to the string specified
+ * updates the type and frees the previous
+ * value if needed
+ * Note: the string will be copied
+*/
 void node_SetString(node *n,char *s);
 
 /**
- * node_SetUint8() - 
+ * node_SetUint8() - Sets the node value to an uint8
  * @n: Node to use
+ * @f: new uint8 value
  *
- * 
- *
+ * Sets the node value to the uint8 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetUint8(node *n,unsigned char c);
 
 /**
- * node_SetUint16() - 
+ * node_SetUint16() - Sets the node value to an uint16
  * @n: Node to use
+ * @f: new uint16 value
  *
- * 
- *
+ * Sets the node value to the uint16 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetUint16(node *n,unsigned short s);
 
 /**
- * node_SetUint32() - 
+ * node_SetUint32() - Sets the node value to an uint32
  * @n: Node to use
+ * @f: new uint32 value
  *
- * 
- *
+ * Sets the node value to the uint32 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetUint32(node *n,unsigned long l);
 
 /**
- * node_SetUint64() - 
+ * node_SetUint64() - Sets the node value to an uint64
  * @n: Node to use
+ * @f: new uint64 value
  *
- * 
- *
+ * Sets the node value to the uint64 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetUint64(node *n,unsigned long long ll);
 
 /**
- * node_SetSint8() - 
+ * node_SetSint8() - Sets the node value to a sint8
  * @n: Node to use
+ * @f: new sint8 value
  *
- * 
- *
+ * Sets the node value to the sint8 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetSint8(node *n,char c);
 
 /**
- * node_SetSint16() - 
+ * node_SetSint16() - Sets the node value to a sint16
  * @n: Node to use
+ * @f: new sint16 value
  *
- * 
- *
+ * Sets the node value to the sint16 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetSint16(node *n,short s);
 
 /**
- * node_SetSint32() - 
+ * node_SetSint32() - Sets the node value to a sint32
  * @n: Node to use
+ * @f: new sint32 value
  *
- * 
- *
+ * Sets the node value to the sint32 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetSint32(node *n,long l);
 
 /**
- * node_SetSint64() - 
+ * node_SetSint64() - Sets the node value to a sint64
  * @n: Node to use
+ * @f: new sint64 value
  *
- * 
- *
+ * Sets the node value to the sint64 specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetSint64(node *n,long long ll);
 
 /**
- * node_SetNode() - 
+ * node_SetNode() - Sets the node value to a node
  * @n: Node to use
+ * @f: new node pointer
  *
- * 
- *
+ * Sets the node value to the node specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetNode(node *n,node *dst);
 
 /**
- * node_SetUser() - 
+ * node_SetUser() - Sets the node value to a user pointer
  * @n: Node to use
+ * @f: new user pointer
  *
- * 
- *
+ * Sets the node value to the user pointer specified
+ * updates the type and frees the previous
+ * value if needed
  */
 void node_SetUser(node *n,void *user);
 
@@ -1024,97 +1117,111 @@ void node_SetUser(node *n,void *user);
 /*special types*/
 
 /**
- * node_CreateArray() - 
+ * node_CreateArray() - Creates an array
  * @n: Node to use
  *
- * 
+ * Creates an array and returns it
  *
- * Return: 
+ * Return: node_array special type
  */
 node_array *node_CreateArray(long num);
 
 /**
- * node_FreeArray() - 
+ * node_FreeArray() - Frees an array
  * @n: Node to use
- *
+ * @free_nodes: True to free items
  * 
- *
+ * Frees the array and the items
+ * if specified
  */
 void node_FreeArray(node_array *array,BOOL free_nodes);
 
 /**
- * node_CopyArray() - 
+ * node_CopyArray() - Copies an array
  * @n: Node to use
- *
+ * @copy_values: True to copy values
  * 
+ * Copies an array and its values
+ * if specified.The new array will
+ * be returned
  *
- * Return: 
+ * Return: node_array
  */
 node_array *node_CopyArray(node_array *array,BOOL copy_values);
 
 
-/*binary type -> binary chunks managed by it need to be freed on its own at the moment*/
 
 /**
- * node_CreateBinary() - 
+ * node_CreateBinary() - Creates a binary
  * @n: Node to use
+ * @binary: pointer to memory
+ * @len: length of memory chunk
  *
- * 
+ * Creates a binary for the memory chunk specified
+ * doesnt copy the chunk
  *
- * Return: 
+ * Return: node_binary special type
  */
 node_binary *node_CreateBinary(void *binary,unsigned long len);
 
 /**
- * node_CopyBinary() - 
+ * node_CopyBinary() - Creates a binary with a memory chunk copy
  * @n: Node to use
+ * @binary: pointer to memory
+ * @len: length of memory chunk
  *
- * 
+ * Creates a binary for the memory chunk specified
+ * the memory chunk will be copied
  *
- * Return: 
+ * Return: node_binary special type
  */
 node_binary *node_CopyBinary(void *binary,unsigned long len);
 
 /**
- * node_FreeBinary() - 
+ * node_FreeBinary() - Frees a binary
  * @n: Node to use
- *
+ * @free_value: True if memory chunk should be freed
  * 
- *
+ * Frees the binary and if specified the memory chunk it
+ * points to
  */
 void node_FreeBinary(node_binary *binary,BOOL free_value);
 
 /**
- * node_SetBinary() - 
+ * node_SetBinary() - Sets the node value to a binary 
  * @n: Node to use
- *
+ * @binary: memory pointer
+ * @len: length of the memory chunk
  * 
- *
+ * Sets the node value to the memory chunk specified
+ * updates the type and frees the previous
+ * value if needed
+ * Note: doesnt copy the memory chunk
  */
 void node_SetBinary(node *n,void *binary,unsigned long len);
 
 /**
- * node_GetBinary() - 
+ * node_GetBinary() - Gets the binaries the memory pointer
  * @n: Node to use
  *
- * 
+ * Returns the memory pointer of the binary
  *
- * Return: 
+ * Return: pointer to memory chunk
  */
 void *node_GetBinary(node *n);
 
 /**
- * node_GetBinaryLength() - 
+ * node_GetBinaryLength() - Gets the binaries memory length
  * @n: Node to use
  *
- * 
+ * Returns the length of the memory chunk
  *
- * Return: 
+ * Return: memory length
  */
 unsigned long node_GetBinaryLength(node *n);
 
 
-//node_stub *node_CreateStub();
+//node_stub *node_CreateStub();//TODO
 //void node_FillStub(node *n);
 //void node_FreeStub();
 
@@ -1122,137 +1229,147 @@ unsigned long node_GetBinaryLength(node *n);
 /*node array access*/
 
 /**
- * node_SetArray() - 
+ * node_SetArray() - Sets the node value to an array 
  * @n: Node to use
- *
+ * @num: length of array
  * 
- *
+ * Create an array with the specified number of items
+ * and sets the node value to the array created
+ * updates the type and frees the previous
+ * value if needed
+ * Note: creates a new array
  */
 void node_SetArray(node *n,long num);
 
 /**
- * node_array_Add() - 
+ * node_array_Add() - add an item to the array
  * @n: Node to use
- *
+ * @s: item to be added
  * 
+ * Appends the item to array
  *
- * Return: 
+ * Return: index of array position where the item was added to
  */
 long node_array_Add(node *n,node *s);
 
 /**
- * node_array_Remove() - 
+ * node_array_Remove() - removes an item from the array
  * @n: Node to use
- *
+ * @index: position of the array item to be removed
  * 
- *
+ * Removes an array item at the index position
+ * and returns the pointer to it
+ * if the index was out of range it returns NULL
  * Return: 
  */
 node *node_array_Remove(node *n,long index);
 
 /**
- * node_array_Get() - 
+ * node_array_Get() - Gets the array item at the index position
  * @n: Node to use
- *
+ * @index: position of the array item to be returned
  * 
- *
- * Return: 
+ * Returns the array item at the index position
+ * if the index was out of range NULL will be returned
+ * Return: node pointer or NULL
  */
 node *node_array_Get(node *n,long index);
 
 /**
- * node_array_GetNum() - 
+ * node_array_GetNum() - Gets the number of array items 
  * @n: Node to use
  *
- * 
+ * Returns the number of array items
  *
- * Return: 
+ * Return: items num
  */
 long node_array_GetNum(node *n);
 
 /**
- * node_array_Clear() - 
+ * node_array_Clear() - Clears the array
  * @n: Node to use
  *
- * 
- *
+ * Clears the array.
+ * Note: doesnt free array items
  */
 void node_array_Clear(node *n);
 
 /**
- * node_array_Iterate() - 
+ * node_array_Iterate() - Iterate through all array Items
  * @n: Node to use
  *
- * 
+ * Iterates through all array items 
+ * returns the next node as pointer
+ * increments the nodes array iteration index member
  *
- * Return: 
+ * Return: Node Pointer
  */
 node *node_array_Iterate(node *n);
 
 /**
- * node_array_IterationUnfinished() - 
+ * node_array_IterationUnfinished() - Checks if the array iteration has finished
  * @n: Node to use
  *
- * 
+ * Returns True if the array iteration has completed
  *
- * Return: 
+ * Return: True if the array iteration has completed
  */
 int node_array_IterationUnfinished(node *n);
 
 /**
- * node_array_IterationReset() - 
+ * node_array_IterationReset() - Resets the array iteration
  * @n: Node to use
  *
- * 
- *
+ * Sets the array iteration index to 0
  */
 void node_array_IterationReset(node *n);
 
 /**
- * node_array_Iterate() - 
+ * node_array_ReverseIterate() - Reverse Iterate through all array Items
  * @n: Node to use
  *
- * 
+ * Reverse iterates through all sub items contained in the items list of n
+ * returns the next node as pointer
+ * decrements the nodes array iteration index member
  *
- * Return: 
+ * Return: Node Pointer
  */
 node *node_array_ReverseIterate(node *n);
 
 /**
- * node_array_IterationUnfinished() - 
+ * node_array_ReverseIterationUnfinished() - Checks if the reverse array iteration has finished
  * @n: Node to use
  *
- * 
+ * Returns True if the reverse array iteration has finished
  *
- * Return: 
+ * Return: True if the reverse array iteration has finished
  */
 int node_array_ReverseIterationUnfinished(node *n);
 
 /**
- * node_array_IterationReset() - 
+ * node_array_ReverseIterationReset() - Resets the array reverse iteration
  * @n: Node to use
  *
- * 
- *
+ * Sets the array iteration index to number of array items - 1
  */
 void node_array_ReverseIterationReset(node *n);
 
 /**
- * node_array_GetIterationIndex() - 
+ * node_array_GetIterationIndex() - Gets the array iteration index
  * @n: Node to use
  *
- * 
+ * Returns the actual array iteration index
  *
- * Return: 
+ * Return: array iteration index
  */
 long node_array_GetIterationIndex(node *n);
 
 /**
- * node_array_SetIterationIndex() - 
+ * node_array_SetIterationIndex() - Sets the array iteration index
  * @n: Node to use
- *
+ * @iteration_index: the new array iteration index value
  * 
- *
+ * Sets the array iteration index value
  */
 void node_array_SetIterationIndex(node *n,long iteration_index);
 

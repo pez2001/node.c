@@ -384,7 +384,7 @@ marshal_call_function:
 	movq	-120(%rbp), %rbx
 #APP
 # 145 "marshal_ABI_amd64.c" 1
-	call %rbx
+	call *%rbx
 	
 # 0 "" 2
 #NO_APP

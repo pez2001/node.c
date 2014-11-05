@@ -205,6 +205,10 @@ node *get_block_class(node *state);
 node *get_true_class(node *state);
 node *get_false_class(node *state);
 node *get_null_class(node *state);
+node *get_int_class(node *state);
+node *get_float_class(node *state);
+node *get_string_class(node *state);
+
 node *get_garbage(node *state);
 node *get_resolves(node *state);
 node *get_modules(node *state);

@@ -1148,29 +1148,44 @@ node *get_null_class(node *state)
   return(node_GetItem(state,4));
 }
 
-node *get_default_class_members(node *state)
+node *get_int_class(node *state)
 {
   return(node_GetItem(state,5));
 }
 
-node *get_default_block_class_members(node *state)
+node *get_float_class(node *state)
 {
   return(node_GetItem(state,6));
 }
 
-node *get_garbage(node *state)
+node *get_string_class(node *state)
 {
   return(node_GetItem(state,7));
 }
 
-node *get_resolves(node *state)
+node *get_default_class_members(node *state)
 {
   return(node_GetItem(state,8));
 }
 
-node *get_modules(node *state)
+node *get_default_block_class_members(node *state)
 {
   return(node_GetItem(state,9));
+}
+
+node *get_garbage(node *state)
+{
+  return(node_GetItem(state,10));
+}
+
+node *get_resolves(node *state)
+{
+  return(node_GetItem(state,11));
+}
+
+node *get_modules(node *state)
+{
+  return(node_GetItem(state,12));
 }
 
 node *copy_class(node *class_obj)
@@ -1182,7 +1197,10 @@ node *copy_class(node *class_obj)
   reset_obj_refcount(value);
   node *no_gc = node_GetItemByKey(value,"no_gc");
   if(no_gc)
+  {
     remove_obj_kv(value,no_gc);
+    node_FreeTree(no_gc);
+  }
   return(value);
 }
 
@@ -1583,7 +1601,7 @@ node *get_pre_ops(node *state,node *obj,char *ops)
         //if(!strcmp(node_GetString(member_name),key))
         //  return(member);
         long mmlen = str_MatchCount(node_GetString(member_name),check_ops);
-        if(mmlen>3 && mmlen==strlen(node_GetString(member_name)) && mmlen>match_len)
+        if(mmlen>3 && mmlen==(long)strlen(node_GetString(member_name)) && mmlen>match_len)
         {
           //is_def_member = 0;
           match = member; 
@@ -1598,7 +1616,7 @@ node *get_pre_ops(node *state,node *obj,char *ops)
       node *member = node_ItemIterate(def_members);
       node *member_name = node_GetItemByKey(member,"name");
       long mmlen = str_MatchCount(node_GetString(member_name),check_ops);
-      if(mmlen>3 && mmlen==strlen(node_GetString(member_name)) && mmlen>match_len)
+      if(mmlen>3 && mmlen==(long)strlen(node_GetString(member_name)) && mmlen>match_len)
       {
         is_def_member=1;
         match = member; 
@@ -1905,6 +1923,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
     else if(!strcmp(node_GetKey(token),"str"))
     {
       node *child = create_class_instance(base_class);
+      //node *child = get_string_class(state);      
+
       set_obj_string(child,"value",node_GetString(token));
       add_garbage(state,child);
       actual_obj = child;
@@ -2309,6 +2329,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       else if(node_GetType(token) == NODE_TYPE_SINT32)
       {
         node *child = create_class_instance(base_class);
+        //node *child = get_int_class(state);
         node *peek = node_ItemPeek(statement);
         node *peek_further = node_ItemPeekFurther(statement,2);
         if( peek!=NULL && !strcmp(node_GetKey(peek),"ops") && !strcmp(node_GetString(peek),".") && (peek_further!=NULL && node_GetType(peek_further) == NODE_TYPE_SINT32) )
@@ -2752,6 +2773,26 @@ node *create_nyx_state(node *base_class,node *block_class)
   set_obj_int(_null,"value",0);//TODO change to real null value
   set_obj_int(_null,"no_gc",1);
   add_obj_kv(state,_null);
+
+  node *_int = create_class_instance(base_class);
+  set_obj_string(_int,"name","Integer");
+  set_obj_int(_int,"value",0);
+  set_obj_int(_int,"no_gc",1);
+  add_obj_kv(state,_int);
+
+  node *_float = create_class_instance(base_class);
+  set_obj_string(_float,"name","Float");
+  set_obj_float(_float,"value",0.0f);
+  set_obj_int(_float,"no_gc",1);
+  add_obj_kv(state,_float);
+
+  node *_str = create_class_instance(base_class);
+  set_obj_string(_str,"name","String");
+  set_obj_string(_str,"value","");
+  set_obj_int(_str,"no_gc",1);
+  add_obj_kv(state,_str);
+
+
 
   node *default_class_members = create_class_instance(base_class);
   set_obj_string(default_class_members,"name","default_class_members");
