@@ -387,15 +387,12 @@ void node_ParseNumber(node *n,char *number_string)
 {
   if(!node_count_digits(number_string))
   {
-    //printf("number parse found string:%s\n",number_string);
     node_SetString(n,number_string);
     return;
   }
   if(node_NumberIsFloat(number_string))
   {
-    //printf("number parse found float:[%s]\n",number_string);
     double d = atof(number_string);
-    //printf("float:%f\n",(float)d);
     node_SetDouble(n,d);
   }
   else
@@ -1476,7 +1473,6 @@ void node_FreeItems(node *n)
 
 void node_FreeTree(node *n)
 {
-  //node_FreeItems(n);
   node_Free(n,True);
 }
 

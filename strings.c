@@ -24,6 +24,7 @@
 
 char *str_Base64Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 char *str_base64url_Chars= "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+
 char str_Base64Char(int index)
 {
   return(str_Base64Chars[index]);

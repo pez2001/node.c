@@ -500,11 +500,14 @@ void node_PrintWithTabs(node *n,int with_key,int tabs_num);
 void node_PrintTree(node *n);
 
 /**
- * node_ParseNumber() - 
+ * node_ParseNumber() - Parses a string
  * @n: Node to use
- *
+ * @number_string: string to parse for numbers
  * 
- *
+ * Sets the value of node n to the parsed number
+ * floats and integers formats are supported
+ * if no number was found the node will be set
+ * to the string
  */
 void node_ParseNumber(node *n,char *number_string);
 

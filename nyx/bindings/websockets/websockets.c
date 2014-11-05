@@ -30,7 +30,6 @@ node *websockets_create_class_object(void)
   node *base = create_base_obj_layout("websockets");
   add_class_object_function(base,"=",nyxh_assign);
   add_class_object_function(base,"start",websockets_start);
-  //add_class_object_function(base,"service",websockets_service);
   add_class_object_function(base,"stop",websockets_stop);
   return(base);
 }

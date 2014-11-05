@@ -35,9 +35,32 @@
 #endif
 
 
-
+/**
+ * str_EncodeBase64() - Encode memory chunk to Base64
+ * @data: memory chunk address pointer
+ * @len: length of chunk
+ *
+ * Encodes the memory chunk to Base64 encoding
+ * a new string will be created for the encoded string
+ *
+ * Return: encoded string
+ */
 char *str_EncodeBase64(char *data,unsigned long len);
 
+/**
+ * str_DecodeBase64() - Decodes a Base64 string to a memory chunk
+ * @data: base64 encoded input string
+ * @decoded:pointer to hold a pointer where the decoded base64 was stored
+ * @len:pointer to an int where the decoded base64 memory chunk length will be stored
+ *
+ * Decodes the base64 encoded input string and 
+ * creates a memory chunk for it.
+ * the address of the newly created memory chunk will
+ * be put into the decoded pointer parameter
+ * and the length into the len parameter
+ *
+ * Return: 0
+ */
 int str_DecodeBase64(char *data,char **decoded,unsigned long *len);
 
 
