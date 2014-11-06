@@ -156,6 +156,7 @@ function connect()
 	connection.onopen = function () 
 	{
 		add_message("Connected to server.");
+ 		setTimeout(function() { ping(); }, 10000);	
 		//connection.send("{$$ROOM$$}");
 		//connection.send("Hi there...");
 	};
@@ -185,6 +186,20 @@ function reconnect()
 {
 	add_message("Reconnecting...")
 	connect();
+}
+
+function ping()
+{
+	if(connection.readyState==2 || connection.readyState==3)
+	{
+		add_message("Connection Closed.")
+		add_message("Trying to reconnect in 10 seconds")
+ 		setTimeout(function() { reconnect(); }, 10000);	
+	}
+	else
+		connection.send("/ping");
+
+	setTimeout(function() { ping(); }, 10000);	
 }
 
 function verify_send(message)
