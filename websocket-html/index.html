@@ -201,9 +201,9 @@ function verify_send(message)
 
 function add_message(message)
 {
-	if(message.indexOf("bg_url:") != -1)
+	if(message.indexOf("/bg_url") != -1)
 	{
-		var url = message.substring(message.indexOf("bg_url:")+7);
+		var url = message.substring(message.indexOf("/bg_url ")+7);
 		var bg_div = document.getElementById("fs_window");
 	    bg_div.style.backgroundImage = "";
 	    bg_div.style.backgroundImage = "url(" + url + ")";
@@ -225,16 +225,7 @@ function send_message()
 {
 	var message = document.getElementById("chat_text").value;
 	verify_send(message);
-	if(message.indexOf("bg_url:") === 0)
-	{
-		add_message("You:"+message);
-		add_message("You changed the background image of all");
-	}
-	//else
-	//	add_message("You: "+message);
 	document.getElementById("chat_text").value="";
-
-	
 }
 
 function fix_focus()
@@ -267,7 +258,7 @@ function setup()
 </head>
 <body onload="setup()">
     <div id="fs_window" onfocus="fix_focus()" tabindex="-1">
-    	<textarea id="fs_chat" onfocus="fix_focus()" tabindex="-1">Welcome to our Chat-Example Page</textarea>
+    	<textarea id="fs_chat" onfocus="fix_focus()" tabindex="-1">Welcome to our anarcho chat (type /help for a list of commands)</textarea>
 		<div id="fs_input" onfocus="fix_focus()" tabindex="-1">
 			<input id="chat_text" type="text" name="message" size="160" x-webkit-speech>
 		</div>

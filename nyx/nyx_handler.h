@@ -124,6 +124,7 @@ node *nyxh_name(node *state,node *self,node *obj,node *block,node *parameters);
 
 node *nyxh_append_item(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_item_at(node *state,node *self,node *obj,node *block,node *parameters);
+node *nyxh_item_index_of(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_in(node *state,node *self,node *obj,node *block,node *parameters);
 node *nyxh_in_keys(node *state,node *self,node *obj,node *block,node *parameters);
 

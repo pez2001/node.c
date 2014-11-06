@@ -101,7 +101,11 @@ http_call={
 
 echo_call=
 {
+	room="";
+	skip=0;
 	println("serving request:["+arguments["message"]+"] : "+arguments["protocol"]+" : "+arguments["session"].id+" cookies: "+arguments["session"].cookie);
+	cookies=http.parse_cookies(arguments["session"].cookie);
+
 	(arguments["session"].has("uname")==0).do({arguments["session"].uname = arguments["session"].id.str()});
 	(arguments["session"].has("room_name")==0).do({
 		arguments["session"].room_name = "lobby";
@@ -110,9 +114,21 @@ echo_call=
 		println("users lobby len:"+@rooms["lobby"].users.len());
 		println("users:",@rooms["lobby"].users);
 		(@rooms["lobby"].topic!="").do({@daemon.send(arguments["protocol"],"lobby topic: "+@rooms["lobby"].topic,arguments["session"].id);});
+		(@rooms["lobby"].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms["lobby"].bg_url,arguments["session"].id);});
 	});
-	room="";
-	skip=0;
+
+	arguments["session"].pw_prompt.do({
+		(arguments["message"]==@rooms[arguments["session"].room_name].password).do({
+			@daemon.send(arguments["protocol"],"Password correct. ",arguments["session"].id);
+			arguments["session"].pw_prompt=0;
+			(@rooms[arguments["session"].room_name].topic!="").do({@daemon.send(arguments["protocol"],"room topic: "+@rooms[arguments["session"].room_name].topic,arguments["session"].id);});
+			(@rooms[arguments["session"].room_name].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms[arguments["session"].room_name].bg_url,arguments["session"].id);});
+		});
+		(arguments["message"]==@rooms[arguments["session"].room_name].password).else({@daemon.send(arguments["protocol"],"Wrong Password! Try again. ",arguments["session"].id);});
+		skip=1;
+	});
+
+
 	(arguments["message"].index_of("/room")==0).do(
 	{
 		room = arguments["message"].sub("/room ".len());
@@ -137,8 +153,14 @@ echo_call=
 			println("room_users len:"+@rooms[room].users.len());
 			@rooms[room].users.append_item(arguments["session"].id);
 
+			(@rooms[room].password!="").do({
+				@daemon.send(arguments["protocol"],"Enter room password: ",arguments["session"].id);
+				arguments["session"].pw_prompt=1;
+				});
+			(@rooms[room].password=="").do({
 			(@rooms[room].topic!="").do({@daemon.send(arguments["protocol"],"room topic: "+@rooms[room].topic,arguments["session"].id);});
-
+			(@rooms[room].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms[room].bg_url,arguments["session"].id);});
+			});
 		});
 		arguments["session"].room_name:=room;
 		
@@ -160,12 +182,46 @@ echo_call=
 		skip=1;
 	});
 
+	(arguments["message"].index_of("/treasure")==0).do(
+	{
+		@daemon.send(arguments["protocol"],"your last treasure: "+arguments["session"].treasure,arguments["session"].id);
+		skip=1;
+	});
+
+
+	(arguments["message"].index_of("/help")==0).do(
+	{
+		topic = arguments["message"].sub("/help ".len());
+		@daemon.send(arguments["protocol"],"
+			Commands List:
+			==============
+				/room [name] - join a room 
+				/pw [password] - sets password to enter the room
+				/name [name] - sets your username
+				/topic [caption] - set the topic of the room
+				/roll [treasure] - starts a raffle
+				/last - see your last result
+				/treasure - see your last treasure
+				/bg_url [url] - sets the background of the room 
+			",arguments["session"].id);
+		skip=1;
+	});
+
 	(arguments["message"].index_of("/topic")==0).do(
 	{
 		topic = arguments["message"].sub("/topic ".len());
  		@rooms[arguments["session"].room_name].topic:= topic;
 		@daemon.send(arguments["protocol"],"topic set to: "+topic,arguments["session"].id);
 		skip=1;
+	});
+
+	(arguments["message"].index_of("/bg_url")==0).do(
+	{
+		bg_url = arguments["message"].sub("/bg_url ".len());
+ 		@rooms[arguments["session"].room_name].bg_url:=bg_url;
+		@daemon.send(arguments["protocol"],"bg_url set to: "+bg_url,arguments["session"].id);
+		/*@daemon.send(arguments["protocol"],"/bg_url "+bg_url,arguments["session"].id);*/
+		/*skip=1;*/
 	});
 
 
@@ -179,24 +235,25 @@ echo_call=
 
 	(arguments["message"].index_of("/roll")==0).do(
 	{
-		println("number of sessions:"+arguments["daemon.sessions"].len());
+		treasure = arguments["message"].sub("/roll ".len());
 		di=0;
 		high=0;
 		winner=-1;
+		uname=arguments["session"].uname;
+		prot=arguments["protocol"];
+		println("user: "+uname+ " started a raffle.");
+		@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];@daemon.send(prot,uname+" started a raffle! ",sendid)});
+
 		?({di<arguments["daemon.sessions"].len()},
 		{
 			session = arguments["daemon.sessions"][di];
-			println("room== : "+ (session.room_name==arguments["session"].room_name));
-			println("session room : "+session.room_name);
-			println("arguments room : "+ arguments["session"].room_name);
 
-			((session.protocol==arguments["protocol"]) && (session.room_name==arguments["session"].room_name)).do({
-				session.dice := sys.random(6)+1;
-				(session.dice>high).do({high=session.dice;winner=session;});
+			((session.id!=arguments["session"].id) && (session.protocol==arguments["protocol"]) && (session.room_name==arguments["session"].room_name)).do({
+				session.dice := sys.random(100)+1;
+				(session.dice>high).do({high:=session.dice;winner=session;});
 				@daemon.send(arguments["protocol"],"you rolled: "+session.dice,session.id);
-				/*daemon.broadcast_other(arguments["protocol"],session.uname+" rolled: "+session.dice,session.id);*/
 				myid=session.id;
-				prot=arguments["protocol"];
+				/*prot=arguments["protocol"];*/
 				@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];(sendid!=myid).do({@daemon.send(prot,session.uname+" rolled: "+session.dice,sendid)})});
 
 			});
@@ -204,10 +261,15 @@ echo_call=
 		},{},1);
 
 		@daemon.send(arguments["protocol"],"you've won with:"+high,winner.id);
+		@daemon.send(arguments["protocol"],"1.",winner.id);
+		@daemon.send(arguments["protocol"],"2..",winner.id);
+		@daemon.send(arguments["protocol"],"3...",winner.id);
+		@daemon.send(arguments["protocol"],"Your Treasure: "+treasure,winner.id);
+		arguments["session"].treasure="GIFTED: "+treasure;
+		winner.treasure="RECEIVED: "+treasure;
 		prot=arguments["protocol"];
-		println("notifying loosers");
-		@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];(sendid!=winner.id).do({println("tx lost: "+sendid);@daemon.send(prot,"you've lost.",sendid)})});
-		println("done with that");
+		myid=arguments["session"].id;
+		@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];((sendid!=myid)&&(sendid!=winner.id)).do({@daemon.send(prot,"you've lost. Better luck next time!",sendid)})});
 		skip=1;
 	});
 
@@ -218,14 +280,19 @@ echo_call=
 		message="["+sys.string_time("%R")+"]["+arguments["session"].room_name+"]["+arguments["session"].uname+"]: "+arguments["message"];
 		prot=arguments["protocol"];
 		myid=arguments["session"].id;
+		sessions=arguments["daemon.sessions"];
 		@rooms[arguments["session"].room_name].users.each(
 		{
 			sendid=arguments[0];
 			/*(sendid!=myid).do({*/
+			/*session_index=arguments["sessions"].item_index(sendid);*/
+			ss=0;
+			sessions.each({(arguments[0].id==sendid).do({ss=arguments[0]})});
+			(ss.pw_prompt==0).do({
 				println("sending message:"+message+" to:"+sendid);
 				@daemon.send(prot,message,sendid);
 				println("sent message:"+message+" to:"+sendid);
-			/*});*/
+			});
 		});
 	});
 	ret="";
@@ -236,6 +303,7 @@ connect_call={
 	@rooms["lobby"].users_num = @rooms["lobby"].users_num + 1;
 	@rooms["lobby"].users.append_item(arguments["session"].id);
 	(@rooms["lobby"].topic!="").do({@daemon.send(arguments["protocol"],"lobby topic: "+@rooms["lobby"].topic,arguments["session"].id);});
+	(@rooms["lobby"].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms["lobby"].bg_url,arguments["session"].id);});
 
 	myid=arguments["session"].id;
 	message="["+sys.string_time("%R")+"]["+arguments["session"].room_name+"] a user has entered the lobby";
@@ -249,6 +317,10 @@ connect_call={
 			println("sent welcome message:"+message+" to:"+sendid);
 		});
 	});
+	(@rooms["lobby"].password!="").do({
+		@daemon.send(arguments["protocol"],"Enter lobby password: ",arguments["session"].id);
+		arguments["session"].pw_prompt=1;
+		});
 
 };
 

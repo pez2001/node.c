@@ -1863,6 +1863,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
       node *items = create_obj("items");
       add_obj_kv(child,items);
       add_class_object_function(child,"item_at",nyxh_item_at);
+      add_class_object_function(child,"item_index",nyxh_item_index_of);
       add_class_object_function(child,"append_item",nyxh_append_item);
       add_garbage(state,child);
       node_ItemIterationReset(token);

@@ -1380,6 +1380,31 @@ node *nyxh_item_at(node *state,node *self,node *obj,node *block,node *parameters
   return(value);
 }
 
+node *nyxh_item_index_of(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  long fi = -1;
+  if(node_GetItemsNum(parameters)>0)
+  {
+    node *items = node_GetItemByKey(obj,"items");
+    fi = node_GetItemIndex(items,node_GetItem(parameters,0));
+    node *found = NULL;
+    if(fi!=-1)
+      found = get_item(state,obj,node_GetItem(parameters,0),False);
+    if(found!=NULL)
+    {
+      fi = node_GetItemIndex(items,found);
+    }
+
+  }
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  add_garbage(state,value);
+  node *real_value = get_value(value);
+  node_SetSint32(real_value,fi);
+  return(value);
+}
+
+
 /*node *nyxh_remove_by_key(node *state,node *self,node *obj,node *block,node *parameters)
 {
 
