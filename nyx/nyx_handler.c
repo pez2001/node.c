@@ -1399,14 +1399,24 @@ node *nyxh_remove(node *state,node *self,node *obj,node *block,node *parameters)
   node *value = get_false_class(state);
   if(node_GetItemsNum(parameters)>0)
   {
-    node *array = obj;//node_GetItem(parameters,0);
-    node *found = get_item(state,array,node_GetItem(parameters,0),False);
+    node *items = node_GetItemByKey(obj,"items");
+    long fi = node_GetItemIndex(items,node_GetItem(parameters,0));
+    node *found = NULL;
+    if(fi!=-1)
+      found = node_GetItem(parameters,0);
+    if(!found)
+      found = get_item(state,obj,node_GetItem(parameters,0),False);
     if(found!=NULL)
     {
-      remove_item(array,found);
+      remove_item(obj,found);
       dec_obj_refcount(found);
       add_garbage(state,found);
       value = get_true_class(state);
+    }
+    else
+    {
+      printf("error removing item: %x - %s from %x\n",node_GetItem(parameters,0),get_obj_name(node_GetItem(parameters,0)),obj);
+      //node_PrintTree(obj);
     }
   }
   return(value);

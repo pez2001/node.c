@@ -80,6 +80,7 @@ node *sys_create_class_object(node *base_class)
   add_class_object_function(base,"change_working_directory",sys_change_working_directory);
   add_class_object_function(base,"dump",sys_dump);
   add_class_object_function(base,"time",sys_time);
+  add_class_object_function(base,"string_time",sys_string_time);
   add_class_object_function(base,"random",sys_random);
   add_class_object_function(base,"execute",sys_execute);
   add_class_object_function(base,"exit",sys_exit);
@@ -196,6 +197,45 @@ node *sys_time(node *state,node *self,node *obj,node *block,node *parameters)
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   node_SetSint32(real_value,(long)time(NULL));
+  return(value);
+}
+
+node *sys_string_time(node *state,node *self,node *obj,node *block,node *parameters)
+{
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  add_garbage(state,value);
+  node *real_value = node_GetItemByKey(value,"value");
+  long pnum = node_GetItemsNum(parameters);
+  node *format = NULL;
+  node *time_val = NULL;
+  if(pnum==1)
+  {
+    if(node_GetType(get_value(node_GetItem(parameters,0)))==NODE_TYPE_STRING)
+      format = node_GetItem(parameters,0);
+    else
+      time_val = node_GetItem(parameters,0);
+  }
+  if(pnum==2)
+  {
+    format = node_GetItem(parameters,0);
+    time_val = node_GetItem(parameters,1);
+  }
+  struct tm *ti;
+  char buffer[80];
+  long r = 0;
+  if(time_val)
+    r = node_GetSint32(get_value(time_val));
+  else
+    r = time(NULL);
+  ti = localtime(&r);
+  if(format)
+  {
+    strftime(buffer,80,node_GetString(get_value(format)),ti);
+    node_SetString(real_value,buffer);
+  }
+  else
+    node_SetString(real_value,asctime(ti));
   return(value);
 }
 

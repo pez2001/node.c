@@ -18,6 +18,8 @@ rooms=[];
 lobby_name="lobby";
 println("creating room: "+lobby_name);
 rooms[lobby_name].users_num = 0;
+rooms[lobby_name].name = "lobby";
+rooms[lobby_name].topic = "";
 rooms[lobby_name].created = sys.time();
 rooms[lobby_name].password="";
 rooms[lobby_name].bg_url="";
@@ -25,7 +27,7 @@ rooms[lobby_name].users = [];
 
 
 http_call={
-	println("serving request:",arguments["protocol"]);
+	/*println("serving request:",arguments["protocol"]);*/
 	url = arguments["url"];
 	println("serving url:["+url+"]");
 	/*println("url_stop:",(url=="/stop"));
@@ -93,9 +95,7 @@ http_call={
         "Content-Length: " + len(msg) + "\r\n";
     (cookie_room!="").do({header = header+"Set-Cookie: "+cookie_room+";path=/; Max-Age=360000\r\n";});
     (cookie_name!="").do({header = header+"Set-Cookie: "+cookie_name+";path=/; Max-Age=360000\r\n";});
-    /*header = header + "\r\n\r\n";*/
     header = header + "\r\n";
-	/*println("returning header:"+header);*/
 	ret = header + msg;
 };
 
@@ -109,15 +109,16 @@ echo_call=
 		@rooms["lobby"].users.append_item(arguments["session"].id);
 		println("users lobby len:"+@rooms["lobby"].users.len());
 		println("users:",@rooms["lobby"].users);
+		(@rooms["lobby"].topic!="").do({@daemon.send(arguments["protocol"],"lobby topic: "+@rooms["lobby"].topic,arguments["session"].id);});
 	});
 	room="";
 	skip=0;
-	(arguments["message"].index_of("room:")==0).do(
+	(arguments["message"].index_of("/room")==0).do(
 	{
-		room = arguments["message"].sub("room:".len());
+		room = arguments["message"].sub("/room ".len());
 		(room=="").do({room="lobby"});
-		arguments["session"].room := room;
 		(arguments["session"].has("room_name")).do({
+			println("removing user from:"+arguments["session"].room_name);
 			@rooms[arguments["session"].room_name].users_num = @rooms[arguments["session"].room_name].users_num - 1;
 			@rooms[arguments["session"].room_name].users.remove(arguments["session"].id);
 		});
@@ -126,6 +127,7 @@ echo_call=
 			@rooms[room].users_num = 0;
 			@rooms[room].created = sys.time;
 	  		@rooms[room].password="";
+	  		@rooms[room].topic="";
 	  		@rooms[room].bg_url="";
 			@rooms[room].users = [];
 		});
@@ -133,19 +135,39 @@ echo_call=
 			println("room_users:"+@rooms[room].users_num);
 			@rooms[room].users_num = @rooms[room].users_num + 1;
 			println("room_users len:"+@rooms[room].users.len());
-			/*rooms[room].users[arguments["session"].id] = arguments["session"];*/
 			@rooms[room].users.append_item(arguments["session"].id);
-			arguments["session"].room_name:=room;
+
+			(@rooms[room].topic!="").do({@daemon.send(arguments["protocol"],"room topic: "+@rooms[room].topic,arguments["session"].id);});
+
 		});
+		arguments["session"].room_name:=room;
 		
 		skip=1;
 	});
-	(arguments["message"].index_of("name:")==0).do(
+	(arguments["message"].index_of("/name")==0).do(
 	{
-		chat_name = arguments["message"].sub("name:".len());
+		chat_name = arguments["message"].sub("/name ".len());
 		arguments["session"].uname = chat_name;/*if a simple assign is used here it would resetted with each new echo_call run*/
+		@daemon.send(arguments["protocol"],"name set to: "+chat_name,arguments["session"].id);
 		skip=1;
 	});
+
+	(arguments["message"].index_of("/pw")==0).do(
+	{
+		pw = arguments["message"].sub("/pw ".len());
+ 		@rooms[arguments["session"].room_name].password:= pw;
+		@daemon.send(arguments["protocol"],"password set to: "+pw,arguments["session"].id);
+		skip=1;
+	});
+
+	(arguments["message"].index_of("/topic")==0).do(
+	{
+		topic = arguments["message"].sub("/topic ".len());
+ 		@rooms[arguments["session"].room_name].topic:= topic;
+		@daemon.send(arguments["protocol"],"topic set to: "+topic,arguments["session"].id);
+		skip=1;
+	});
+
 
 	(arguments["message"].index_of("/last")==0).do(
 	{
@@ -154,8 +176,6 @@ echo_call=
 		});
 		skip=1;
 	});
-
-	arguments["session"].has("room").do({println("new room:"+arguments["session"].room);room=arguments["session"].room});
 
 	(arguments["message"].index_of("/roll")==0).do(
 	{
@@ -195,28 +215,47 @@ echo_call=
 	(!skip).do(
 	{
 		println("sending message to room users:"+arguments["session"].room_name);
-		message=arguments["session"].uname+" ("+room+") : "+arguments["message"];
+		message="["+sys.string_time("%R")+"]["+arguments["session"].room_name+"]["+arguments["session"].uname+"]: "+arguments["message"];
 		prot=arguments["protocol"];
 		myid=arguments["session"].id;
 		@rooms[arguments["session"].room_name].users.each(
 		{
 			sendid=arguments[0];
-			(sendid!=myid).do({
+			/*(sendid!=myid).do({*/
 				println("sending message:"+message+" to:"+sendid);
 				@daemon.send(prot,message,sendid);
 				println("sent message:"+message+" to:"+sendid);
-			});
+			/*});*/
 		});
 	});
 	ret="";
 };
 
 connect_call={
-	println("connection closed with id:");
+	arguments["session"].room_name = "lobby";
+	@rooms["lobby"].users_num = @rooms["lobby"].users_num + 1;
+	@rooms["lobby"].users.append_item(arguments["session"].id);
+	(@rooms["lobby"].topic!="").do({@daemon.send(arguments["protocol"],"lobby topic: "+@rooms["lobby"].topic,arguments["session"].id);});
+
+	myid=arguments["session"].id;
+	message="["+sys.string_time("%R")+"]["+arguments["session"].room_name+"] a user has entered the lobby";
+	prot=arguments["protocol"];
+	@rooms["lobby"].users.each(
+	{
+		sendid=arguments[0];
+		(sendid!=myid).do({
+			println("sending welcome message:"+message+" to:"+sendid);
+			@daemon.send(prot,message,sendid);
+			println("sent welcome message:"+message+" to:"+sendid);
+		});
+	});
+
 };
 
 disconnect_call={
-	println("connection closed with id:");
+	println("client "+arguments["session"].id+" disconnected.")
+	@rooms[arguments["session"].room_name].users_num = @rooms[arguments["session"].room_name].users_num - 1;
+	@rooms[arguments["session"].room_name].users.remove(arguments["session"].id);
 };
 
 callbacks=["http-only":http_call,"echo":echo_call];

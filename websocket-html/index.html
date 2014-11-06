@@ -1,15 +1,25 @@
 <html>
 <head><title>Websockets Chat Example</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link href='http://fonts.googleapis.com/css?family=Droid+Sans+Mono' rel='stylesheet' type='text/css'>
+<style type="text/css">
+ 
+ /*
+<link href='http://fonts.googleapis.com/css?family=Ubuntu:300' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+<link href='http://fonts.googleapis.com/css?family=Vollkorn' rel='stylesheet' type='text/css'>
 <link href='http://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
- <style type="text/css">
+
+ */
+
  	html, body 
  	{
   		height: 100%;
     	margin: 0;
     	padding: 0;
     	overflow:hidden;
-		font-family: 'Indie Flower', cursive;
+		/*font-family: 'Indie Flower', cursive;*/
+		font-family: 'Droid Sans Mono',;
   		font-size: 48px;
   		text-shadow: 4px 4px 4px #aaa;
     }
@@ -104,8 +114,10 @@
 	textarea 
 	{
 		resize: none;
-		font-family: 'Indie Flower', cursive;
-  		font-size: 18px;
+		/*font-family: 'Indie Flower', cursive;*/
+		/*font-family: 'Ubuntu:300', cursive;*/
+		font-family: 'Droid Sans Mono',;
+  		font-size: 13px;
   		color: #FEF4FF;
   		text-shadow: 3px 3px 3px #030303;
     }
@@ -218,8 +230,8 @@ function send_message()
 		add_message("You:"+message);
 		add_message("You changed the background image of all");
 	}
-	else
-		add_message("You: "+message);
+	//else
+	//	add_message("You: "+message);
 	document.getElementById("chat_text").value="";
 
 	

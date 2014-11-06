@@ -64,6 +64,7 @@ node *sys_change_working_directory(node *state,node *self,node *obj,node *block,
 node *sys_execute(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_dump(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_time(node *state,node *self,node *obj,node *block,node *parameters);
+node *sys_string_time(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_sleep(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_interpreter_version(node *state,node *self,node *obj,node *block,node *parameters);
 node *sys_interpreter_filename(node *state,node *self,node *obj,node *block,node *parameters);
