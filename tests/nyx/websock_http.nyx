@@ -5,6 +5,9 @@ copco.data = copco.file.readallbytes().close();
 fav.file = file.open("websocket-html/logo_draft.ico","rb"); 
 fav.data = fav.file.readallbytes().close();
 
+/*js.file = file.open("websocket-html/jquery.nanoscroller.min.js","rb"); 
+js.data = js.file.readall().close();*/
+
 
 SERVER_PORT=sys.get_env("SERVER_PORT");
 SERVER_HOST=sys.get_env("SERVER_HOST");
@@ -22,25 +25,21 @@ rooms[lobby_name].name = "lobby";
 rooms[lobby_name].topic = "";
 rooms[lobby_name].created = sys.time();
 rooms[lobby_name].password="";
-rooms[lobby_name].bg_url="";
+rooms[lobby_name].bg_url="http://www.daswallpaper.de/wallpaper/original/black-and-blue-cubes-wallpaper.jpg";
 rooms[lobby_name].users = [];
 
 
 http_call={
-	/*println("serving request:",arguments["protocol"]);*/
 	url = arguments["url"];
 	println("serving url:["+url+"]");
-	/*println("url_stop:",(url=="/stop"));
-	println("@url_stop:",((@url)=="/stop"));
-	println("index:",@index.html);*/
 	msg=@index.html;
 	type="text/html";
+	
+	/*(url=="/jquery.nanoscroller.min.js").do({println("sending js");@msg = @js.data;@type="text/javascript";});*/
 	(url=="/status").do({@msg = "actual chat server status";@daemon.broadcast("echo","someone is watching the status");});
 	(url=="/stop").do({@msg = "stopping server";@running=0;});
 	(url=="/copco").do({@msg = @copco.data;@type="image/png";});
-	(url=="/favicon.ico").do({println("sending icon");@msg = @fav.data;@type="image/ico";});
-
-	/*TODO sending fav 2 times crashes*/
+	(url=="/favicon.ico").do({@msg = @fav.data;@type="image/ico";});
 
 	room="lobby";
 	cookie_room="room=lobby";
@@ -57,11 +56,10 @@ http_call={
 	  		@rooms[room].users_num=0;
 	  		@rooms[room].users=[];
 	  		@rooms[room].password="";
-	  		@rooms[room].bg_url="";
+	  		@rooms[room].bg_url="http://www.daswallpaper.de/wallpaper/original/black-and-blue-cubes-wallpaper.jpg";
 	  	});
 	  	cookie_room = "room="+room;
 	});
-
 	(url.index_of("/name/")!=-1).do(
 	{
 		name = url.sub(url.index_of("/name/")+"/name/".len());
@@ -69,7 +67,6 @@ http_call={
 		(end!=-1).do({name = name.sub(0,end);});
 	  	cookie_name = "name="+name;
 	});
-
 	(url.index_of("/admin/")!=-1).do(
 	{
 		chat = url.sub(url.index_of("/admin/")+"/admin/".len());
@@ -77,21 +74,19 @@ http_call={
 		(end!=-1).do({chat = chat.sub(0,end);});
 	  	msg = "sending message: "+chat+" to "+room;
 		/*@daemon.broadcast("echo","("+room+")admin: "+chat);*/
-		println(@rooms[room]);
+		println(@rooms[room].name);
 		@rooms[room].users.each(
 		{
-			sendid=arguments[0];
-			println("sending message:"+chat+" to:"+sendid);
-			@daemon.send("echo",chat,sendid);
-			println("sent message:"+chat+" to:"+sendid);
+			sender=arguments[0];
+			println("sending message:"+chat+" to:"+sender.id);
+			@daemon.send("echo",chat,sender.id);
+			println("sent message:"+chat+" to:"+sender.id);
 		});
-
 	});
-
-
 	header = "HTTP/1.0 200 OK\r\n" +
         "Server: nyx_chat_example\r\n" +
         "Content-Type: "+type+"\r\n" + 
+        "Connection: close\r\n" + 
         "Content-Length: " + len(msg) + "\r\n";
     (cookie_room!="").do({header = header+"Set-Cookie: "+cookie_room+";path=/; Max-Age=360000\r\n";});
     (cookie_name!="").do({header = header+"Set-Cookie: "+cookie_name+";path=/; Max-Age=360000\r\n";});
@@ -101,30 +96,68 @@ http_call={
 
 echo_call=
 {
+	message="";
+	command="";
 	room="";
 	skip=0;
-	println("serving request:["+arguments["message"]+"] : "+arguments["protocol"]+" : "+arguments["session"].id+" cookies: "+arguments["session"].cookie);
+	/*println("serving request:["+arguments["message"]+"] : "+arguments["protocol"]+" : "+arguments["session"].id+" cookies: "+arguments["session"].cookie);*/
 	cookies=http.parse_cookies(arguments["session"].cookie);
+	c2=arguments["session"].cookie.split(";");
+	c2.each({
+		cookie=arguments[0];
+		c3=cookie.split("=");
+		/*println("key:"+c3[0]+" value:"+c3[1]);*/
+		/*(c3[0]=="room").do({@room=c3[1];});*/
+	});
 
-	(arguments["session"].has("uname")==0).do({arguments["session"].uname = arguments["session"].id.str()});
-	(arguments["session"].has("room_name")==0).do({
+	(arguments["message"].index_of("/ping")==0).do(
+	{
+		@daemon.send(arguments["protocol"],"/pong",arguments["session"].id);
+		skip=1;
+		ret="";
+		break(2);
+	});
+	(arguments["message"].index_of("/pong")==0).do(
+	{
+		@daemon.send(arguments["protocol"],"/pong",arguments["session"].id);
+		skip=1;
+		ret="";
+		break(2);
+	});
+
+	/*(arguments["session"].has("uname")==0).do({arguments["session"].uname = arguments["session"].id.str()});*/
+	/*(arguments["session"].has("room_name")==0).do({
 		arguments["session"].room_name = "lobby";
 		@rooms["lobby"].users_num = @rooms["lobby"].users_num + 1;
 		@rooms["lobby"].users.append_item(arguments["session"].id);
-		println("users lobby len:"+@rooms["lobby"].users.len());
-		println("users:",@rooms["lobby"].users);
-		(@rooms["lobby"].topic!="").do({@daemon.send(arguments["protocol"],"lobby topic: "+@rooms["lobby"].topic,arguments["session"].id);});
+		@daemon.send(arguments["protocol"],"/topic "+@rooms["lobby"].topic,arguments["session"].id);
 		(@rooms["lobby"].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms["lobby"].bg_url,arguments["session"].id);});
-	});
+	});*/
 
 	arguments["session"].pw_prompt.do({
 		(arguments["message"]==@rooms[arguments["session"].room_name].password).do({
-			@daemon.send(arguments["protocol"],"Password correct. ",arguments["session"].id);
+			@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: Password correct. ",arguments["session"].id);
 			arguments["session"].pw_prompt=0;
-			(@rooms[arguments["session"].room_name].topic!="").do({@daemon.send(arguments["protocol"],"room topic: "+@rooms[arguments["session"].room_name].topic,arguments["session"].id);});
+			@daemon.send(arguments["protocol"],"/topic "+@rooms[arguments["session"].room_name].topic,arguments["session"].id);
 			(@rooms[arguments["session"].room_name].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms[arguments["session"].room_name].bg_url,arguments["session"].id);});
+
+			myid=arguments["session"].id;
+			prot=arguments["protocol"];
+			name = arguments["session"].uname;
+			ulist = "";
+			@rooms[arguments["session"].room_name].users.each(
+			{
+				sender=arguments[0];
+				(sender.id!=myid).do({
+					@daemon.send(@prot,"/join "+@name,sender.id);
+					@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: <font color=\"lightgreen\">"+@name+"</font><font color=\"red\"> has joined</font>",sender.id);
+				});
+				@ulist = @ulist+ " " + sender.uname;
+			});
+			@daemon.send(prot,"/users "+ulist,myid);
+			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>] you joined <font color=\"cyan\">"+arguments["session"].room_name+"</font> <font color=\"lightgreen\">",myid);
 		});
-		(arguments["message"]==@rooms[arguments["session"].room_name].password).else({@daemon.send(arguments["protocol"],"Wrong Password! Try again. ",arguments["session"].id);});
+		(arguments["message"]==@rooms[arguments["session"].room_name].password).else({@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: Wrong Password! Try again. ",arguments["session"].id);});
 		skip=1;
 	});
 
@@ -136,7 +169,18 @@ echo_call=
 		(arguments["session"].has("room_name")).do({
 			println("removing user from:"+arguments["session"].room_name);
 			@rooms[arguments["session"].room_name].users_num = @rooms[arguments["session"].room_name].users_num - 1;
-			@rooms[arguments["session"].room_name].users.remove(arguments["session"].id);
+			@rooms[arguments["session"].room_name].users.remove(arguments["session"]);
+			myid=arguments["session"].id;
+			prot=arguments["protocol"];
+			name = arguments["session"].uname;
+			@rooms[arguments["session"].room_name].users.each(
+			{
+				sender=arguments[0];
+				(sender.id!=myid).do({
+					@daemon.send(@prot,"/part "+@name,sender.id);
+					@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: <font color=\"lightgreen\">"+@name+"</font><font color=\"red\"> has left</font>",sender.id);
+				});
+			});
 		});
 		(!(room.in_keys(@rooms))).do({
 			println("creating room:"+room);
@@ -148,18 +192,30 @@ echo_call=
 			@rooms[room].users = [];
 		});
 		(room.in_keys(@rooms)).do({
-			println("room_users:"+@rooms[room].users_num);
 			@rooms[room].users_num = @rooms[room].users_num + 1;
-			println("room_users len:"+@rooms[room].users.len());
-			@rooms[room].users.append_item(arguments["session"].id);
+			@rooms[room].users.append_item(arguments["session"]);
 
 			(@rooms[room].password!="").do({
 				@daemon.send(arguments["protocol"],"Enter room password: ",arguments["session"].id);
 				arguments["session"].pw_prompt=1;
 				});
 			(@rooms[room].password=="").do({
-			(@rooms[room].topic!="").do({@daemon.send(arguments["protocol"],"room topic: "+@rooms[room].topic,arguments["session"].id);});
+			@daemon.send(arguments["protocol"],"/topic "+@rooms[room].topic,arguments["session"].id);
 			(@rooms[room].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms[room].bg_url,arguments["session"].id);});
+			myid=arguments["session"].id;
+			prot=arguments["protocol"];
+			name = arguments["session"].uname;
+			ulist = "";
+			@rooms[room].users.each({
+				sender=arguments[0];
+				(sender.id!=myid).do({
+					@daemon.send(@prot,"/join "+@name,sender.id);
+					@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: <font color=\"lightgreen\">"+@name+"</font><font color=\"red\"> has joined</font>",sender.id);
+					});
+				@ulist = @ulist+ " " + sender.uname;
+				});
+			@daemon.send(prot,"/users "+ulist,myid);
+			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: you joined <font color=\"cyan\">"+room+"</font> <font color=\"lightgreen\">",myid);
 			});
 		});
 		arguments["session"].room_name:=room;
@@ -169,40 +225,54 @@ echo_call=
 	(arguments["message"].index_of("/name")==0).do(
 	{
 		chat_name = arguments["message"].sub("/name ".len());
-		arguments["session"].uname = chat_name;/*if a simple assign is used here it would resetted with each new echo_call run*/
-		@daemon.send(arguments["protocol"],"name set to: "+chat_name,arguments["session"].id);
-		skip=1;
+		end = chat_name.index_of(" ");
+		(end!=-1).do({chat_name=chat_name.sub(0,end);});
+		sid=arguments["session"].id;
+		prot=arguments["protocol"];
+		dupe=0;
+		arguments["daemon.sessions"].each({s=arguments[0];(s.uname==chat_name).do({
+			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: name change failed : "+@chat_name+" is already used",@sid);
+			@dupe=1;
+			@skip=1;
+			});});
+		!dupe.do({
+			command="/name_change "+arguments["session"].uname+" "+chat_name;
+			arguments["session"].uname := chat_name;
+			@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: name set to "+chat_name,sid);
+			});/*if a simple assign is used here it would resetted with each new echo_call run*/
+		/*skip=1;*/
 	});
 
 	(arguments["message"].index_of("/pw")==0).do(
 	{
 		pw = arguments["message"].sub("/pw ".len());
  		@rooms[arguments["session"].room_name].password:= pw;
-		@daemon.send(arguments["protocol"],"password set to: "+pw,arguments["session"].id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: password set to "+pw,arguments["session"].id);
 		skip=1;
 	});
 
 	(arguments["message"].index_of("/treasure")==0).do(
 	{
-		@daemon.send(arguments["protocol"],"your last treasure: "+arguments["session"].treasure,arguments["session"].id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: your last treasure: "+arguments["session"].treasure,arguments["session"].id);
 		skip=1;
 	});
 
-
 	(arguments["message"].index_of("/help")==0).do(
 	{
+		println("help was requested from:"+arguments["session"].id);
 		topic = arguments["message"].sub("/help ".len());
-		@daemon.send(arguments["protocol"],"
-			Commands List:
-			==============
-				/room [name] - join a room 
-				/pw [password] - sets password to enter the room
-				/name [name] - sets your username
-				/topic [caption] - set the topic of the room
-				/roll [treasure] - starts a raffle
-				/last - see your last result
-				/treasure - see your last treasure
-				/bg_url [url] - sets the background of the room 
+		@daemon.send(arguments["protocol"],"<br>
+			Commands List:<br>
+			==============<br>
+				/room [name] - join a room<br>
+				/pw [password] - sets password to enter the room<br>
+				/name [name] - sets your username<br>
+				/topic [caption] - set the topic of the room<br>
+				/roll [treasure] - starts a raffle<br>
+				/last - see your last result<br>
+				/treasure - see your last treasure<br>
+				/bg_url [url] - sets the background of the room<br>
+				/clear - clears the screen<br><br>
 			",arguments["session"].id);
 		skip=1;
 	});
@@ -211,24 +281,25 @@ echo_call=
 	{
 		topic = arguments["message"].sub("/topic ".len());
  		@rooms[arguments["session"].room_name].topic:= topic;
-		@daemon.send(arguments["protocol"],"topic set to: "+topic,arguments["session"].id);
-		skip=1;
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: topic set to "+topic,arguments["session"].id);
+		command="/topic "+topic;
 	});
 
 	(arguments["message"].index_of("/bg_url")==0).do(
 	{
+		println("changing bg");
 		bg_url = arguments["message"].sub("/bg_url ".len());
  		@rooms[arguments["session"].room_name].bg_url:=bg_url;
-		@daemon.send(arguments["protocol"],"bg_url set to: "+bg_url,arguments["session"].id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: bg_url set to: "+bg_url,arguments["session"].id);
+		command="/bg_url "+bg_url;
 		/*@daemon.send(arguments["protocol"],"/bg_url "+bg_url,arguments["session"].id);*/
 		/*skip=1;*/
 	});
 
-
 	(arguments["message"].index_of("/last")==0).do(
 	{
 		arguments["session"].has("dice").do({
-		@daemon.send(arguments["protocol"],"your last roll was: "+arguments["session"].dice,arguments["session"].id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: your last roll was: "+arguments["session"].dice,arguments["session"].id);
 		});
 		skip=1;
 	});
@@ -241,8 +312,7 @@ echo_call=
 		winner=-1;
 		uname=arguments["session"].uname;
 		prot=arguments["protocol"];
-		println("user: "+uname+ " started a raffle.");
-		@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];@daemon.send(prot,uname+" started a raffle! ",sendid)});
+		@rooms[arguments["session"].room_name].users.each({sender=arguments[0];@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: "+uname+" started a raffle! ",sender.id)});
 
 		?({di<arguments["daemon.sessions"].len()},
 		{
@@ -251,47 +321,51 @@ echo_call=
 			((session.id!=arguments["session"].id) && (session.protocol==arguments["protocol"]) && (session.room_name==arguments["session"].room_name)).do({
 				session.dice := sys.random(100)+1;
 				(session.dice>high).do({high:=session.dice;winner=session;});
-				@daemon.send(arguments["protocol"],"you rolled: "+session.dice,session.id);
+				@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: you rolled: "+session.dice,session.id);
 				myid=session.id;
 				/*prot=arguments["protocol"];*/
-				@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];(sendid!=myid).do({@daemon.send(prot,session.uname+" rolled: "+session.dice,sendid)})});
+				@rooms[arguments["session"].room_name].users.each({sender=arguments[0];(sender.id!=myid).do({@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: "+session.uname+" rolled: "+session.dice,sender.id)})});
 
 			});
 			di=di+1;
 		},{},1);
 
-		@daemon.send(arguments["protocol"],"you've won with:"+high,winner.id);
-		@daemon.send(arguments["protocol"],"1.",winner.id);
-		@daemon.send(arguments["protocol"],"2..",winner.id);
-		@daemon.send(arguments["protocol"],"3...",winner.id);
-		@daemon.send(arguments["protocol"],"Your Treasure: "+treasure,winner.id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: you've won with:"+high,winner.id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: 1.",winner.id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: 2..",winner.id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: 3...",winner.id);
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: Your Treasure: "+treasure,winner.id);
 		arguments["session"].treasure="GIFTED: "+treasure;
 		winner.treasure="RECEIVED: "+treasure;
 		prot=arguments["protocol"];
 		myid=arguments["session"].id;
-		@rooms[arguments["session"].room_name].users.each({sendid=arguments[0];((sendid!=myid)&&(sendid!=winner.id)).do({@daemon.send(prot,"you've lost. Better luck next time!",sendid)})});
+		@rooms[arguments["session"].room_name].users.each({sender=arguments[0];((sender.id!=myid)&&(sender.id!=winner.id)).do({
+			@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: you've lost. Better luck next time!",sender.id);
+			@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: the raffle was won by: <font color=\"lightgreen\">"+winner.uname+"</font>",sender.id);
+		})});
 		skip=1;
 	});
 
-
 	(!skip).do(
 	{
-		println("sending message to room users:"+arguments["session"].room_name);
-		message="["+sys.string_time("%R")+"]["+arguments["session"].room_name+"]["+arguments["session"].uname+"]: "+arguments["message"];
+		/*println("sending message to room users:"+arguments["session"].room_name);*/
+		(command=="").do({
+			message="[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>][<font color=\"lightgreen\">"+arguments["session"].uname+"</font>]: "+arguments["message"];
+			});
+		(command!="").do({println("sending command message:"+@command);@message:=@command;@command="";});			
 		prot=arguments["protocol"];
 		myid=arguments["session"].id;
 		sessions=arguments["daemon.sessions"];
 		@rooms[arguments["session"].room_name].users.each(
 		{
-			sendid=arguments[0];
+			sender=arguments[0];
 			/*(sendid!=myid).do({*/
 			/*session_index=arguments["sessions"].item_index(sendid);*/
 			ss=0;
-			sessions.each({(arguments[0].id==sendid).do({ss=arguments[0]})});
+			sessions.each({(arguments[0].id==sender.id).do({ss=arguments[0]})});
 			(ss.pw_prompt==0).do({
-				println("sending message:"+message+" to:"+sendid);
-				@daemon.send(prot,message,sendid);
-				println("sent message:"+message+" to:"+sendid);
+				/*println("sending message:"+@message+" to:"+sendid);*/
+				@daemon.send(prot,@message,sender.id);
 			});
 		});
 	});
@@ -300,34 +374,55 @@ echo_call=
 
 connect_call={
 	arguments["session"].room_name = "lobby";
-	@rooms["lobby"].users_num = @rooms["lobby"].users_num + 1;
-	@rooms["lobby"].users.append_item(arguments["session"].id);
-	(@rooms["lobby"].topic!="").do({@daemon.send(arguments["protocol"],"lobby topic: "+@rooms["lobby"].topic,arguments["session"].id);});
+	arguments["session"].uname = "User"+arguments["session"].id.str();
+	@daemon.send(arguments["protocol"],"/topic "+@rooms["lobby"].topic,arguments["session"].id);
 	(@rooms["lobby"].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms["lobby"].bg_url,arguments["session"].id);});
 
 	myid=arguments["session"].id;
-	message="["+sys.string_time("%R")+"]["+arguments["session"].room_name+"] a user has entered the lobby";
 	prot=arguments["protocol"];
+	name = arguments["session"].uname;
+	message="[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: <font color=\"lightgreen\">"+name+"</font><font color=\"red\"> has entered the lobby</font>";
+	ulist="";
 	@rooms["lobby"].users.each(
 	{
-		sendid=arguments[0];
-		(sendid!=myid).do({
-			println("sending welcome message:"+message+" to:"+sendid);
-			@daemon.send(prot,message,sendid);
-			println("sent welcome message:"+message+" to:"+sendid);
+		sender=arguments[0];
+		ulist=ulist+" "+sender.uname;
+		(sender.id!=myid).do({
+			@daemon.send(prot,message,sender.id);
 		});
+		(@rooms["lobby"].password=="").do({
+			@daemon.send(prot,"/join "+name,sender.id);
+			});
 	});
+	ulist = ulist + " " + name;
+	(@rooms["lobby"].password=="").do({
+		@daemon.send(prot,"/users "+ulist,myid);
+		});
+
 	(@rooms["lobby"].password!="").do({
 		@daemon.send(arguments["protocol"],"Enter lobby password: ",arguments["session"].id);
 		arguments["session"].pw_prompt=1;
 		});
+
+	@rooms["lobby"].users_num = @rooms["lobby"].users_num + 1;
+	@rooms["lobby"].users.append_item(arguments["session"]);
 
 };
 
 disconnect_call={
 	println("client "+arguments["session"].id+" disconnected.")
 	@rooms[arguments["session"].room_name].users_num = @rooms[arguments["session"].room_name].users_num - 1;
-	@rooms[arguments["session"].room_name].users.remove(arguments["session"].id);
+	@rooms[arguments["session"].room_name].users.remove(arguments["session"]);
+	prot=arguments["protocol"];
+	name = arguments["session"].uname;
+	@rooms[arguments["session"].room_name].users.each(
+	{
+		sender=arguments[0];
+		(sender.id!=myid).do({
+			@daemon.send(@prot,"/part "+@name,sender.id);
+			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: <font color=\"lightgreen\">"+@name+"</font><font color=\"red\"> has disconnected</font>",sender.id);
+		});
+	});
 };
 
 callbacks=["http-only":http_call,"echo":echo_call];

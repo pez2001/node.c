@@ -110,6 +110,10 @@ sys.actual script line number
 debug output channel (synced output)
 
 
+switch := and = -> a lot more intuitive
+
+
+
 hommage release names
 onyxia
 nyx assassin

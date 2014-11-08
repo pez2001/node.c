@@ -151,9 +151,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
 
       if(found_prot)
       {
+        printf("found prot in http callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
         if(!pss->session)
         {
-          //printf("found prot in http callback : %d,num:%d\n",lsession_uid,lsessions_num);
           lsession_uid++;
           node *session_uid_value = node_GetItemByKey(session_uid,"value");
           node_SetSint32(session_uid_value,lsession_uid);
@@ -231,6 +231,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
         node_SetSint32(sessions_num_value,lsessions_num);
         delete_session(state,sessions,pss->session);
+        pss->session = NULL;
         if(daemon_obj)
         {
           printf("http: found daemon_obj\n");
@@ -287,9 +288,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         /*[WSI_TOKEN_MUXURL]  =*/ "MuxURL",
       };
 
+      printf("found prot in http filter callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
       if(!pss->session)
       {
-        //printf("found prot in http filter callback : %d,num:%d\n",lsession_uid,lsessions_num);
         lsession_uid++;
         node *session_uid_value = node_GetItemByKey(session_uid,"value");
         node_SetSint32(session_uid_value,lsession_uid);
@@ -300,6 +301,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *session_privates = node_GetItemByKey(pss->session,"privates");
         //set_obj_int(session_privates,"is_http",1);
       }
+      printf("filter sess:%x\n",pss->session);
 
 
       for(n=0;n<(int)(sizeof(token_names)/sizeof(token_names[0]));n++) 
@@ -330,6 +332,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     case LWS_CALLBACK_HTTP_WRITEABLE: 
     case LWS_CALLBACK_SERVER_WRITEABLE:
       {
+        //node_PrintTree(pss->session);
         node *message = get_member(pss->session,"message");
         node *session_privates = node_GetItemByKey(pss->session,"privates");
         node *http_only = node_GetItemByKey(session_privates,"is_http");
@@ -382,12 +385,14 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         }
         if(http_only)
         {
-          //printf("removing http session num:%d\n",lsessions_num);
+          printf("removing http session num:%d\n",lsessions_num);
           lsessions_num--;
           node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
           node_SetSint32(sessions_num_value,lsessions_num);
           delete_session(state,sessions,pss->session);
+          pss->session = NULL;
           //printf("removed http\n");
+          return(-1);
         }
       }
       break;
@@ -395,9 +400,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     case LWS_CALLBACK_ESTABLISHED:
       if(found_prot)
       {
+        printf("found prot in establish callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
         if(!pss->session)
         {
-          //printf("found prot in establish callback : %d,num:%d\n",lsession_uid,lsessions_num);
           lsession_uid++;
           node *session_uid_value = node_GetItemByKey(session_uid,"value");
           node_SetSint32(session_uid_value,lsession_uid);
@@ -448,7 +453,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
       if(found_prot)
       {
-        //printf("found prot in closed callback : %d,num:%d\n",lsession_uid,lsessions_num);
+        printf("found prot in closed callback : uid:%d,num:%d (sess:%x)\n",lsession_uid,lsessions_num,pss->session);
         if(daemon_obj)
         {
         //printf("closed: found daemon_obj\n");
@@ -489,6 +494,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
         node_SetSint32(sessions_num_value,lsessions_num);
         delete_session(state,sessions,pss->session);
+        pss->session = NULL;
         //printf("disconnected\n");
       }
       break;
