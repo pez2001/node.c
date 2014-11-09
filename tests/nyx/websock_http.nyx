@@ -289,7 +289,7 @@ echo_call=
 	(arguments["message"].index_of("/help")==0).do(
 	{
 		println("help was requested from:"+arguments["session"].id);
-		topic = arguments["message"].sub("/help ".len());
+		help_topic = arguments["message"].sub("/help ".len());
 		@daemon.send(arguments["protocol"],"<br>
 			Commands List:<br>
 			==============<br>
