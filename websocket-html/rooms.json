@@ -1,0 +1,42 @@
+{
+
+{
+	"rooms": [		
+		{
+			"name": "lobby",
+			"topic": "Main Lobby (Nyx Interpreter Application)",
+			"created": 1415564714,
+			"password": "",
+			"bg_url": "http://www.daswallpaper.de/wallpaper/original/black-and-blue-cubes-wallpaper.jpg",
+			"ops": [
+],
+			"users": [
+],
+			"users_num": 2,
+		},		
+		{
+			"name": "hs",
+			"topic": "Blizzard's Hearthstone",
+			"created": 1415487100,
+			"password": "",
+			"bg_url": "http://images.gamestar.de/images/idgwpgsgp/bdb/2587461/600x.jpg",
+			"ops": [				"pez2001",				"brutzel",
+],
+			"users": [
+],
+			"users_num": 0,
+		},		
+		{
+			"name": "vp.org",
+			"created": 0,
+			"bg_url": "",
+			"ops": [				"pez2001",
+],
+			"topic": "Voyager Project Development Channel",
+			"password": "pez",
+			"users": [
+],
+			"users_num": 0,
+		},
+],
+}}

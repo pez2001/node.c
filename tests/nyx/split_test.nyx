@@ -1,0 +1,8 @@
+
+text="cookie=2; name=\"hallo\"";
+cs=text.split(";");
+println(cs);
+kv=cs[0].split("=");
+println(kv);
+b="".split();
+println(b);

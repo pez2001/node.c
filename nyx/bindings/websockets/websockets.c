@@ -385,14 +385,18 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         }
         if(http_only)
         {
-          printf("removing http session num:%d\n",lsessions_num);
-          lsessions_num--;
-          node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
-          node_SetSint32(sessions_num_value,lsessions_num);
-          delete_session(state,sessions,pss->session);
-          pss->session = NULL;
-          //printf("removed http\n");
-          return(-1);
+          if (lws_http_transaction_completed(wsi))
+          {
+            printf("removing http session num:%d\n",lsessions_num);
+            lsessions_num--;
+            node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
+            node_SetSint32(sessions_num_value,lsessions_num);
+            delete_session(state,sessions,pss->session);
+            pss->session = NULL;
+            //printf("removed http\n");
+              return -1;
+            //return(-1);
+          }
         }
       }
       break;

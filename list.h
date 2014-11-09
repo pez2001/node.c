@@ -68,6 +68,14 @@ typedef struct
 
 //#define LIST_STATIC 1		// TODO add support for static lists , so indices wont change
 
+/**
+ * list_() - 
+ * @l: list to use
+ *
+ * 
+ *
+ * Return: 
+ */
 list *list_Create(long num, unsigned char flags); /* returns item_list*/
 
 list *list_Copy(list *l);

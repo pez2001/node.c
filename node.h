@@ -33,10 +33,7 @@
 #include "strings.h"
 
 
-//#include <wchar.h>
-
 //#define USE_WHOLE_NODE_FUNCTION_SET ;TODO Later filter some functions to get even smaller code
-
 
 
 
@@ -46,7 +43,6 @@ extern "C"  {
 
 
 //#define USE_FNV_HASHES
-
 
 #define NODE_TYPE_NULL 0
 #define NODE_TYPE_INT 1

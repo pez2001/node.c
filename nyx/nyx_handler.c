@@ -2188,6 +2188,8 @@ node *nyxh_split(node *state,node *self,node *obj,node *block,node *parameters)
 
   node *real_value2 = get_value(value2);
   node *splitter_value = get_value(splitter);
+  if(node_GetType(real_value2)!=NODE_TYPE_STRING || node_GetType(splitter_value)!=NODE_TYPE_STRING)
+    return(value);
   char *str = node_GetString(real_value2);
   char *splitter_str = node_GetString(splitter_value);
   //now split the string
