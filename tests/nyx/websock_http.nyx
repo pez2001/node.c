@@ -182,7 +182,7 @@ echo_call=
 				@ulist = @ulist+ " " + sender.uname;
 			});
 			@daemon.send(prot,"/users "+ulist,myid);
-			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>] you joined <font color=\"cyan\">"+arguments["session"].room_name+"</font> <font color=\"lightgreen\">",myid);
+			@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>] you joined <font color=\"cyan\">"+arguments["session"].room_name+"</font> <font color=\"lightgreen\">",myid);
 		});
 		(arguments["message"]==@rooms[arguments["session"].room_name].password).else({@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: Wrong Password! Try again. ",arguments["session"].id);});
 		skip=1;
@@ -260,7 +260,7 @@ echo_call=
 		prot=arguments["protocol"];
 		dupe=0;
 		arguments["daemon.sessions"].each({s=arguments[0];(s.uname==chat_name).do({
-			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: name change failed : "+@chat_name+" is already used",@sid);
+			@daemon.send(prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: name change failed : "+chat_name+" is already used",sid);
 			@dupe=1;
 			@skip=1;
 			});});
@@ -401,7 +401,7 @@ echo_call=
 			sessions.each({(arguments[0].id==sender.id).do({ss=arguments[0]})});
 			(ss.pw_prompt==0).do({
 				/*println("sending message:"+@message+" to:"+sendid);*/
-				@daemon.send(prot,@message,sender.id);
+				@daemon.send(@prot,@message,sender.id);
 			});
 		});
 	});
@@ -427,7 +427,7 @@ connect_call={
 			@daemon.send(prot,message,sender.id);
 		});
 		(@rooms["lobby"].password=="").do({
-			@daemon.send(prot,"/join "+name,sender.id);
+			@daemon.send(@prot,"/join "+@name,sender.id);
 			});
 	});
 	ulist = ulist + " " + name;
@@ -452,12 +452,13 @@ disconnect_call={
 	prot=arguments["protocol"];
 	myid=arguments["session"].id;
 	name = arguments["session"].uname;
+	rname = arguments["session"].room_name;
 	@rooms[arguments["session"].room_name].users.each(
 	{
 		sender=arguments[0];
 		(sender.id!=myid).do({
 			@daemon.send(@prot,"/part "+@name,sender.id);
-			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+arguments["session"].room_name+"</font>]: <font color=\"lightgreen\">"+@name+"</font><font color=\"red\"> has disconnected</font>",sender.id);
+			@daemon.send(@prot,"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>][<font color=\"cyan\">"+@rname+"</font>]: <font color=\"lightgreen\">"+@name+"</font><font color=\"red\"> has disconnected</font>",sender.id);
 		});
 	});
 };
