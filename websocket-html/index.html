@@ -465,7 +465,7 @@ function add_message(message)
 		var dst=nlist[1];
 		var name_el = document.getElementById("user_"+src);
 		name_el.innerHTML = dst;
-		name_el.setAttribute("id",dst);
+		name_el.setAttribute("id","user_"+dst);
 	}
 	else if(message.indexOf("/join") == 0)
 	{
