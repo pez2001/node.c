@@ -501,6 +501,12 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         pss->session = NULL;
         //printf("disconnected\n");
       }
+      else 
+      {
+        printf("closed connection without prot found\n");
+        if(pss->session)
+          printf("but a session was found\n");
+      }
       break;
 
     case LWS_CALLBACK_RECEIVE:
