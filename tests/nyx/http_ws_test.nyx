@@ -1,0 +1,22 @@
+post_url(url="http://openstrike.de/aluria/client/clients.json",body="")=
+{
+parsed_url=http.parse_url(url);
+sock=socket.open(socket.SOCK_STREAM);
+connected=sock.connect(parsed_url["host"],parsed_url["port"]).else({restart(1)});
+request = http.create_request(parsed_url["host"],"port":parsed_url["port"],"uri":parsed_url["uri"],"agent":"Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36","body":body,"method":"POST","content_length":len(body),"content_type":"application/x-www-form-urlencoded");
+/*println("request:["+request+"]");*/
+sock.write(request);
+timeouts=1000;
+r=sock.read();
+c:=r;
+?({(len(r)||timeouts)&&sock.is_connected},{r=sock.read();c=c+r;?(len(r)==0,{timeouts=timeouts-1},{},0);},{},1);
+sock.close();
+j=http.parse_answer(c)["body"];
+/*println(j);*/
+};
+
+
+data = post_url("http://192.168.0.2:8080/","Disconnect=Trennen&ConMethod=Disconnect&pppoe2=");
+println(data);
+
+

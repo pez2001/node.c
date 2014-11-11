@@ -220,7 +220,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       }
       else
         printf("body closed: prot not found\n");
-      lwsl_notice("LWS_CALLBACK_HTTP_BODY_COMPLETION\n");
+      //lwsl_notice("LWS_CALLBACK_HTTP_BODY_COMPLETION\n");
       libwebsockets_return_http_status(context,wsi,HTTP_STATUS_OK,NULL);
      return(-1);
 
@@ -456,6 +456,8 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       break;
 
     case LWS_CALLBACK_CLOSED_HTTP:
+    break;
+    
     case LWS_CALLBACK_CLOSED:
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
       if(found_prot)
