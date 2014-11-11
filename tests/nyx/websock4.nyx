@@ -4,6 +4,7 @@ running = 1;
 
 echo_call=
 {
+	@running=0;
 	ret="Hallo";
 };
 

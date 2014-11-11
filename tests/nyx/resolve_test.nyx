@@ -1,0 +1,14 @@
+top="hi";
+f()=
+{
+txt=@top;
+txt="cya";
+};
+
+f();
+f();
+
+b="tt";
+c=b;
+b=top;
+println(b);

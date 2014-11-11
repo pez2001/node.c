@@ -163,6 +163,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
           pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
           node *session_privates = node_GetItemByKey(pss->session,"privates");
           set_obj_int(session_privates,"is_http",1);
+          printf("created new session :%d actual sessions num:%d\n",lsession_uid,lsessions_num);
         }
         
 
@@ -288,7 +289,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         /*[WSI_TOKEN_MUXURL]  =*/ "MuxURL",
       };
 
-      printf("found prot in http filter callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
+      //printf("found prot in http filter callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
       if(!pss->session)
       {
         lsession_uid++;
@@ -301,7 +302,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *session_privates = node_GetItemByKey(pss->session,"privates");
         //set_obj_int(session_privates,"is_http",1);
       }
-      printf("filter sess:%x\n",pss->session);
+      //printf("filter sess:%x\n",pss->session);
 
 
       for(n=0;n<(int)(sizeof(token_names)/sizeof(token_names[0]));n++) 
@@ -371,7 +372,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
             printf("ERROR %d writing to socket, hanging up\n", n);
             return(1);
           }
-          if(n<(int)strlen((char*)me))
+          if(n<(long)me_len)
           {
             printf("Partial write\n");
             return(-1);
@@ -385,8 +386,8 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         }
         if(http_only)
         {
-          if (lws_http_transaction_completed(wsi))
-          {
+          //if(lws_http_transaction_completed(wsi))
+          //{
             printf("removing http session num:%d\n",lsessions_num);
             lsessions_num--;
             node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
@@ -396,7 +397,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
             //printf("removed http\n");
               return -1;
             //return(-1);
-          }
+          //}
+          //else
+          //  libwebsocket_callback_on_writable(context, wsi);
         }
       }
       break;
@@ -457,7 +460,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     case LWS_CALLBACK_CLIENT_CONNECTION_ERROR:
       if(found_prot)
       {
-        printf("found prot in closed callback : uid:%d,num:%d (sess:%x)\n",lsession_uid,lsessions_num,pss->session);
+        //printf("found prot in closed callback : uid:%d,num:%d (sess:%x)\n",lsession_uid,lsessions_num,pss->session);
         if(daemon_obj)
         {
         //printf("closed: found daemon_obj\n");
@@ -580,6 +583,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       {
         //printf("returning message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
         node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
+        reset_obj_refcount(ret_obj_copy);
         set_obj_string(ret_obj_copy,"name","message");
         add_member(pss->session,ret_obj_copy);
         inc_obj_refcount(ret_obj_copy);

@@ -724,6 +724,7 @@ node *nyxh_copy(node *state,node *self,node *obj,node *block,node *parameters)
 // = handler
 node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
 {
+  node *assign_obj = obj;
 
   node *resolves = get_resolves(state);
   //printf("num of resolves in evaluate:%d\n",node_GetItemsNum(resolves));
@@ -732,24 +733,27 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
   {
     node *resolved = node_ItemIterate(resolves);
     node *resolved_target = get_proxy_target(resolved);
-    if(resolved_target == obj)
+    if(resolved_target == assign_obj)
     {
-      //printf("assigning item :%x - %s was resolved from :%x - %s\n",obj,get_obj_name(obj),resolved,get_obj_name(resolved));
-      obj = resolved;
+      //printf("assigning item :%x - %s was resolved from :%x - %s\n",assign_obj,get_obj_name(assign_obj),resolved,get_obj_name(resolved));
+      assign_obj = resolved;
+      dec_obj_refcount(resolved_target);
+      //printf("proxy_target %x - %s rc: %d\n",resolved_target,get_obj_name(resolved_target),get_obj_refcount(resolved_target));
+      add_garbage(state,resolved_target);
     }
   }
 
 
-  node *obj_name = node_GetItemByKey(obj,"name");
+  node *obj_name = node_GetItemByKey(assign_obj,"name");
   //printf("assigning:%s,%x(rc:%d) with: %s,%x(rc:%d)\n",get_obj_name(obj),obj,get_obj_refcount(obj),get_obj_name(node_GetItem(parameters,0)),node_GetItem(parameters,0),get_obj_refcount(node_GetItem(parameters,0)));
   //fflush(stdout);
 
-  node *root = node_GetRoot(obj);
+  node *root = node_GetRoot(assign_obj);
   //printf("obj:%s %x ,self:%s %x ,block:%s %x ,root: %x ,%s ,%d\n",get_obj_name(obj),obj,get_obj_name(self),self,get_obj_name(block),block,root,node_GetKey(root),node_GetType(root));
 
 
   //needed for sub id definitions
-  if(root!=obj && !strcmp(node_GetKey(root),"nyx_object") && !get_obj_refcount(root))
+  if(root!=assign_obj && !strcmp(node_GetKey(root),"nyx_object") && !get_obj_refcount(root))
   //if(root!=obj && strcmp(node_GetKey(root),"nyx_state"))
   {
     //printf("adding non bound obj %x to block %x\n",root,block);
@@ -763,7 +767,7 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
   //dec_obj_refcount(obj); //old call model
   //add_garbage(state,obj); //old call model
 
-  node *item_index = node_GetItemByKey(obj,"item_index");
+  node *item_index = node_GetItemByKey(assign_obj,"item_index");
 
   /* old by value call model
   node *value = node_CopyTree(node_GetItem(parameters,0),True,True);
@@ -772,19 +776,19 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
   */
 
   node *value = NULL;
-  if(node_GetItem(parameters,0)==obj)
+  if(node_GetItem(parameters,0)==assign_obj)
   {
     //printf("assigning obj to itself, skipping\n");
-    value = obj;
+    value = assign_obj;
   }
   else
   {
-
-    node *parent = node_GetParent(obj);
+    node *parent = node_GetParent(assign_obj);
     if(parent)
     {
-      int r = node_RemoveItem(parent,obj);
-      node_SetParent(obj,NULL);
+      int r = node_RemoveItem(parent,assign_obj);
+      node_SetParent(assign_obj,NULL);
+      dec_obj_refcount(assign_obj);
       if(r==-1)
       {
         printf("error item not removed\n");
@@ -794,19 +798,26 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
 
     if(get_obj_refcount(node_GetItem(parameters,0)))
     {
-      value = create_proxy_object(state,node_GetItem(parameters,0),node_GetString(obj_name));
+      //value = create_proxy_object(state,node_GetItem(parameters,0),node_GetString(obj_name));
+      value = assign_obj;
+      set_obj_string(value,"type","proxy");
+      //set_obj_string(value,"name",name);
+      //printf("switch proxy:%x for %x,%s\n",value,node_GetItem(parameters,0),get_obj_name(node_GetItem(parameters,0)));
+      set_obj_ptr(value,"target",(void*)node_GetItem(parameters,0));
+
       //printf("created proxy: %x (%s) for %x (%s)\n",value,get_obj_name(value),node_GetItem(parameters,0),get_obj_name(node_GetItem(parameters,0)));
       //fflush(stdout);
-      dec_obj_refcount(obj);
-      add_garbage(state,obj); 
+      //dec_obj_refcount(assign_obj);
+      //add_garbage(state,assign_obj); 
       inc_obj_refcount(node_GetItem(parameters,0));
     }
     else
     { 
-      value = obj;
+      value = assign_obj;
       //printf("clean move\n");
       clean_move(state,value,node_GetItem(parameters,0));
       reset_obj_refcount(value);
+      //inc_obj_refcount(value);
       node *anon = node_GetItemByKey(value,"anonymous_block_parent");
       if(anon)
       {
@@ -834,7 +845,7 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
   
   if(item_index!=NULL) //TODO check if really working like expected
   {
-    node_RemoveItem(obj,item_index);
+    node_RemoveItem(assign_obj,item_index);
     node_SetParent(item_index,value);
     node_AddItem(value,item_index);
   }
@@ -906,6 +917,7 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
     {
       int r = node_RemoveItem(parent,obj);
       node_SetParent(obj,NULL);
+      //dec_obj_refcount(obj);
       if(r==-1)
       {
         printf("error item not removed\n");
@@ -938,8 +950,8 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
       //printf("adding %x to parent %x(pp:%x)\n",value,parent,node_GetParent(parent));
       //fflush(stdout);
       node_AddItem(parent,value);
-      node_SetParent(value,parent);
-      inc_obj_refcount(value);
+      //node_SetParent(value,parent);
+      //inc_obj_refcount(value);
     }
     else
     {

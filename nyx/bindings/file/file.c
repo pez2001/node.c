@@ -207,7 +207,12 @@ node *file_readall(node *state,node *self,node *obj,node *block,node *parameters
 node *file_writeall(node *state,node *self,node *obj,node *block,node *parameters)
 {
   //writes string to file 
-  node *value = get_false_class(state);
+
+  node *base_class = get_base_class(state);
+  node *value = create_class_instance(base_class);
+  reset_obj_refcount(value);
+  add_garbage(state,value);
+  set_obj_int(value,"value",0);
   node *value2 = NULL;
   if(node_GetItemsNum(parameters))
   {
@@ -223,7 +228,8 @@ node *file_writeall(node *state,node *self,node *obj,node *block,node *parameter
       fwrite(content,len,1,fhandle);
       node *value_privates = node_GetItemByKey(value,"privates");
       set_obj_ptr(value_privates,"file_handle",fhandle);
-      value = get_true_class(state);
+      set_obj_int(value,"value",1);
+      add_class_object_function(value,"close",file_close);
     }
   }
   return(value);

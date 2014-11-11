@@ -44,8 +44,8 @@ rooms[lobby_name].ops = [];
 
 
 rooms_json.rooms.each({
-	r=arguments[0];
-	(r.name!="lobby").do({println("r:"+r.name);@rooms[r.name]:=r;println("adding room:"+@rooms[r.name].name);});
+	r:=arguments[0];
+	(r.name!="lobby").do({println("r:"+r.name);@rooms[r.name]=r;println("adding room:"+@rooms[r.name].name);});
 	rooms[r.name].users = [];
 	rooms[r.name].users_num = 0;
 });
@@ -54,7 +54,6 @@ rooms.each({
 println("rooms:",arguments[0].name);
 println("r_bg:"+arguments[0].bg_url);
 });
-println("hs_url:"+rooms["hs"].bg_url);
 
 
 http_call={
@@ -411,6 +410,7 @@ echo_call=
 connect_call={
 	arguments["session"].room_name = "lobby";
 	arguments["session"].uname = "User"+arguments["session"].id.str();
+	println("client "+arguments["session"].id+" connected.");
 	@daemon.send(arguments["protocol"],"/topic "+@rooms["lobby"].topic,arguments["session"].id);
 	(@rooms["lobby"].bg_url!="").do({@daemon.send(arguments["protocol"],"/bg_url "+@rooms["lobby"].bg_url,arguments["session"].id);});
 
@@ -446,7 +446,7 @@ connect_call={
 };
 
 disconnect_call={
-	println("client "+arguments["session"].id+" disconnected.")
+	println("client "+arguments["session"].id+" disconnected.");
 	@rooms[arguments["session"].room_name].users_num = @rooms[arguments["session"].room_name].users_num - 1;
 	@rooms[arguments["session"].room_name].users.remove(arguments["session"]);
 	prot=arguments["protocol"];
@@ -472,10 +472,14 @@ println("servicing");
 running=1;
 ?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
 
+
 rooms_file = file.open("websocket-html/rooms.json","wb"); 
 db_rooms.rooms := rooms;
 println("rooms:\n"+db_rooms.to_json());
 rooms_file.writeall(db_rooms.to_json()).close();
+/*ro = to_json(db_rooms);
+rooms_file.writeall(ro);
+rooms_file.close();*/
 
 
 

@@ -796,7 +796,7 @@ node *get_item(node *state,node *obj,node *key,BOOL append_new_item)//TODO remov
       //  item_index = 0;
       set_obj_int(item,"item_index",item_index);
       set_obj_string(item,"name",key_name);
-      //printf("iindex:%d,name:[%s]\n",item_index,key_name);
+      printf("appended item: index:%d,name:[%s]\n",item_index,key_name);
     }
     else if(node_GetType(key_value) == NODE_TYPE_SINT32)
     {
@@ -1071,10 +1071,10 @@ void free_garbage(node *state,long min_level,node *skip_this)
       if(!strcmp(get_obj_type(gc),"proxy"))
       {
         //printf("removing proxy:%x (%s)\n",gc,get_obj_name(gc));
-        ///fflush(stdout);
+        //fflush(stdout);
         node *ptarget = get_proxy_target(gc);
-        ///printf("proxy target: %x (%s)\n",ptarget,get_obj_name(ptarget));
-        ///fflush(stdout);
+        //printf("proxy target: %x\n",ptarget);
+        //fflush(stdout);
         dec_obj_refcount(ptarget);
         add_garbage(state,ptarget);
       }

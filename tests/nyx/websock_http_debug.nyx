@@ -1,0 +1,41 @@
+/*index.file = file.open("websocket-html/index.html","rb"); 
+index.html = index.file.readall().close();*/
+/*index.html ="hi guy";*/
+html = "hi html";
+
+http_call={
+        url = arguments["url"];
+        println("serving url:["+url+"]");
+        /*msg=@index.html;*/
+        msg=@html;
+        type="text/html";
+        /*(url=="/stop").do({@msg = "stopping server";@running=0;});*/
+        msg="cya";
+	@running=0;
+	header = "HTTP/1.0 200 OK\r\n" +
+        "Server: nyx_chat_example\r\n" +
+        "Content-Type: "+type+"\r\n" + 
+        "Connection: close\r\n" + 
+        "Content-Length: " + len(msg) + "\r\n";
+        header = header + "\r\n";
+	ret = header + msg;
+};
+
+connect_call={
+	println("client "+arguments["session"].id+" connected.")
+};
+
+disconnect_call={
+	println("client "+arguments["session"].id+" disconnected.")
+};
+
+callbacks=["http-only":http_call];
+daemon=websockets.start(8080,callbacks);
+daemon.connect_handler = connect_call;
+daemon.disconnect_handler = disconnect_call;
+timeout=10;
+println("servicing");
+running=1;
+?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
+
+
