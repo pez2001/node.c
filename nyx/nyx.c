@@ -796,7 +796,7 @@ node *get_item(node *state,node *obj,node *key,BOOL append_new_item)//TODO remov
       //  item_index = 0;
       set_obj_int(item,"item_index",item_index);
       set_obj_string(item,"name",key_name);
-      printf("appended item: index:%d,name:[%s]\n",item_index,key_name);
+      //printf("appended item: index:%d,name:[%s]\n",item_index,key_name);
     }
     else if(node_GetType(key_value) == NODE_TYPE_SINT32)
     {

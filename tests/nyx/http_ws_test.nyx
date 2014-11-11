@@ -16,7 +16,8 @@ j=http.parse_answer(c)["body"];
 };
 
 
-data = post_url("http://192.168.0.2:8080/","Disconnect=Trennen&ConMethod=Disconnect&pppoe2=");
+/*data = post_url("http://192.168.0.2:8080/","Disconnect=Trennen&ConMethod=Disconnect&pppoe2=");*/
+data = post_url("http://voyagerproject.org:8080/","Disconnect=Trennen&ConMethod=Disconnect&pppoe2=");
 println(data);
 
 
