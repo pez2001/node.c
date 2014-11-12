@@ -153,7 +153,7 @@ node *copy_class(node *class_obj);
 node *create_proxy_object(node *state,node *target,char *name);
 node *get_proxy_target(node *proxy);
 node *resolve_object(node *state,node *obj);
-
+node *resolve_object_recursive(node *state,node *obj);
 
 void clean_move(node *state,node *dst,node *src);
 

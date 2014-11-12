@@ -7,7 +7,8 @@ fav.data = fav.file.readallbytes().close();
 
 
 rooms_file = file.open("websocket-html/rooms.json","rb"); 
-rooms_json = rooms_file.readall().close().from_json();
+rooms_data = rooms_file.readall().close();
+rooms_json = rooms_data.from_json();
 
 /*
 users_file = file.open("websocket-html/users.json","rb"); 
@@ -44,7 +45,8 @@ rooms[lobby_name].ops = [];
 
 
 rooms_json.rooms.each({
-	r:=arguments[0];
+	r=arguments[0];
+	println("checking db room:"+r.name);
 	(r.name!="lobby").do({println("r:"+r.name);@rooms[r.name]=r;println("adding room:"+@rooms[r.name].name);});
 	rooms[r.name].users = [];
 	rooms[r.name].users_num = 0;
@@ -473,10 +475,13 @@ running=1;
 ?({running},{daemon.service(timeout)},{println("stopping daemon");daemon.service(1000);daemon.stop()},1);
 
 
-rooms_file = file.open("websocket-html/rooms.json","wb"); 
 db_rooms.rooms := rooms;
 println("rooms:\n"+db_rooms.to_json());
+println("rooms:\n"+rooms.to_json());
+rooms_file = file.open("websocket-html/rooms.json","wb"); 
 rooms_file.writeall(db_rooms.to_json()).close();
+
+
 /*ro = to_json(db_rooms);
 rooms_file.writeall(ro);
 rooms_file.close();*/

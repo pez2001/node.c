@@ -27,9 +27,10 @@
 
 node *nyxh_pre_add(node *state,node *self,node *obj,node *block,node *parameters)//TODO
 {
-  node *value = node_CopyTree(obj,True,True);
-  node_SetParent(value,NULL);
-  reset_obj_refcount(value);
+  //node *value = node_CopyTree(obj,True,True);
+  //node_SetParent(value,NULL);
+  //reset_obj_refcount(value);
+  node *value = copy_class(obj);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(value,"value");
   if(node_GetType(real_value)==NODE_TYPE_SINT32)
@@ -728,11 +729,13 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
 
   node *resolves = get_resolves(state);
   //printf("num of resolves in evaluate:%d\n",node_GetItemsNum(resolves));
+  
   node_ItemIterationReset(resolves);
   while(node_ItemIterationUnfinished(resolves))
   {
     node *resolved = node_ItemIterate(resolves);
     node *resolved_target = get_proxy_target(resolved);
+    //printf("checking for resolve: %x - %s , target: %x - %s against: %x - %s\n",resolved,get_obj_name(resolved),resolved_target,get_obj_name(resolved_target),assign_obj,get_obj_name(assign_obj));
     if(resolved_target == assign_obj)
     {
       //printf("assigning item :%x - %s was resolved from :%x - %s\n",assign_obj,get_obj_name(assign_obj),resolved,get_obj_name(resolved));
@@ -743,8 +746,7 @@ node *nyxh_assign(node *state,node *self,node *obj,node *block,node *parameters)
     }
   }
 
-
-  node *obj_name = node_GetItemByKey(assign_obj,"name");
+  //node *obj_name = node_GetItemByKey(assign_obj,"name");
   //printf("assigning:%s,%x(rc:%d) with: %s,%x(rc:%d)\n",get_obj_name(obj),obj,get_obj_refcount(obj),get_obj_name(node_GetItem(parameters,0)),node_GetItem(parameters,0),get_obj_refcount(node_GetItem(parameters,0)));
   //fflush(stdout);
 
@@ -1107,9 +1109,10 @@ node *nyxh_switch_name_value(node *state,node *self,node *obj,node *block,node *
 
 node *nyxh_immediate_add(node *state,node *self,node *obj,node *block,node *parameters) //TODO rename to delayed_add
 {
-  node *value = node_CopyTree(obj,True,True);
-  node_SetParent(value,NULL);
-  reset_obj_refcount(value);
+  //node *value = node_CopyTree(obj,True,True);
+  node *value = copy_class(obj);
+  //node_SetParent(value,NULL);
+  //reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(obj,"value");
   if(node_GetType(real_value)==NODE_TYPE_DOUBLE)
@@ -1129,9 +1132,10 @@ node *nyxh_immediate_add(node *state,node *self,node *obj,node *block,node *para
 
 node *nyxh_immediate_sub(node *state,node *self,node *obj,node *block,node *parameters)
 {
-  node *value = node_CopyTree(obj,True,True);
-  node_SetParent(value,NULL);
-  reset_obj_refcount(value);
+  node *value = copy_class(obj);
+  //node *value = node_CopyTree(obj,True,True);
+  //node_SetParent(value,NULL);
+  //reset_obj_refcount(value);
   add_garbage(state,value);
   node *real_value = node_GetItemByKey(obj,"value");
   if(node_GetType(real_value)==NODE_TYPE_DOUBLE)

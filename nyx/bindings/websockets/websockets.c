@@ -199,8 +199,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         if( (node_GetType(ret_obj_value)==NODE_TYPE_STRING && strlen(node_GetString(ret_obj_value))) || (node_GetType(ret_obj_value)==NODE_TYPE_BINARY && node_GetBinaryLength(ret_obj_value)) )
         {
           //printf("returning http message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
-          node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
-          reset_obj_refcount(ret_obj_copy);
+          //node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
+          node *ret_obj_copy = copy_class(ret_obj);
+          //reset_obj_refcount(ret_obj_copy);
           set_obj_string(ret_obj_copy,"name","message");
           add_member(pss->session,ret_obj_copy);
           inc_obj_refcount(ret_obj_copy);
@@ -299,7 +300,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
         node_SetSint32(sessions_num_value,lsessions_num);
         pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
-        node *session_privates = node_GetItemByKey(pss->session,"privates");
+        //node *session_privates = node_GetItemByKey(pss->session,"privates");
         //set_obj_int(session_privates,"is_http",1);
       }
       //printf("filter sess:%x\n",pss->session);
@@ -584,8 +585,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
       if(node_GetType(ret_obj_value)==NODE_TYPE_STRING && strlen(node_GetString(ret_obj_value)))
       {
         //printf("returning message: [%s] :%d\n",node_GetString(ret_obj_value),strlen(node_GetString(ret_obj_value)));
-        node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
-        reset_obj_refcount(ret_obj_copy);
+        //node *ret_obj_copy = node_CopyTree(ret_obj,True,True);
+        node *ret_obj_copy = copy_class(ret_obj);
+        //reset_obj_refcount(ret_obj_copy);
         set_obj_string(ret_obj_copy,"name","message");
         add_member(pss->session,ret_obj_copy);
         inc_obj_refcount(ret_obj_copy);
@@ -919,9 +921,10 @@ node *websockets_start(node *state,node *self,node *obj,node *block,node *parame
     node_AddItem(wsd_state,daemon);//2
     inc_obj_refcount(daemon);
     
-    node *state_protocols = node_CopyTree(protocols,True,True);
-    node_SetParent(state_protocols,NULL);
-    reset_obj_refcount(state_protocols);
+    //node *state_protocols = node_CopyTree(protocols,True,True);
+    node *state_protocols = copy_class(protocols);
+    //node_SetParent(state_protocols,NULL);
+    //reset_obj_refcount(state_protocols);
     node_AddItem(wsd_state,state_protocols);//3
     inc_obj_refcount(state_protocols);
 

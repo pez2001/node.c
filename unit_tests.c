@@ -39,6 +39,7 @@ void base64_tests(void)
   str_DecodeBase64(b64,&decoded,&len);
   printf("base 64 decoded (%d) : [%s]\n",len,decoded);
   free(b64);
+  free(decoded);
 }
 
 void ptr_tests(void)

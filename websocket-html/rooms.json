@@ -5,7 +5,7 @@
 		{
 			"name": "lobby",
 			"topic": "Main Lobby (Nyx Interpreter Application)",
-			"created": 1415671671,
+			"created": 1415834261,
 			"password": "",
 			"bg_url": "http://www.daswallpaper.de/wallpaper/original/black-and-blue-cubes-wallpaper.jpg",
 			"ops": [
@@ -16,26 +16,38 @@
 		},		
 		{
 			"name": "hs",
-			"created": 0,
+			"time": 0,
 			"password": "",
 			"topic": "",
-			"users": [
-],
 			"ops": [				"User2",
 ],
 			"bg_url": "http://www.hdwallpaperbackground.com/uploads/allimg/130801/Hearthstone%20legend%20Warcraft%20Heroes%20HD%20Wallpapers%202_1024x768.jpg",
+			"users": [
+],
 			"users_num": 0,
 		},		
 		{
-			"name": "dev",
-			"created": 0,
+			"name": "test",
+			"time": 0,
 			"password": "",
 			"topic": "",
-			"users": [
-],
+			"bg_url": "",
 			"ops": [				"User2",
 ],
-			"bg_url": "http://www.daswallpaper.de/wallpaper/original/8829032-unique-hd-wallpapers.jpg",
+			"users": [
+],
+			"users_num": 0,
+		},		
+		{
+			"name": "hs2",
+			"time": 0,
+			"password": "",
+			"ops": [				"User2",
+],
+			"bg_url": "http://images.gamestar.de/images/idgwpgsgp/bdb/2587461/944x531.jpg",
+			"topic": "2nd Hearthstone Channel on NYX",
+			"users": [
+],
 			"users_num": 0,
 		},
 ],

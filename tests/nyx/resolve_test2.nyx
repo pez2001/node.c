@@ -1,0 +1,16 @@
+b="tt";
+println("b:"+b);
+c=b;
+println("c:"+c);
+d=c;
+println("d:"+d);
+e=d;
+println("e:"+e);
+g="to";
+func()={
+f=[];
+f[0]:=@g;
+println("f:"+f[0]);
+};
+func();
+

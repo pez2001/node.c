@@ -118,7 +118,7 @@ char *add_to_json(node *state,node *tree,long level,BOOL print_key)
     while(node_ItemIterationUnfinished(items))
     {
       node *sub = node_ItemIterate(items);
-      char *json_sub_tmp = add_to_json(state,sub,level+1,0);
+      char *json_sub_tmp = add_to_json(state,resolve_object_recursive(state,sub),level+1,0);
       json = str_CatFree(json,json_sub_tmp);
       json = str_CatFree(json,",");
       free(json_sub_tmp);
@@ -137,7 +137,7 @@ char *add_to_json(node *state,node *tree,long level,BOOL print_key)
         node *type = node_GetItemByKey(sub,"type");
         if(!strcmp(node_GetString(type),"function"))
           continue;
-        char *json_sub_tmp = add_to_json(state,sub,level+1,1);
+        char *json_sub_tmp = add_to_json(state,resolve_object_recursive(state,sub),level+1,1);
         json_sub = str_CatFree(json_sub,json_sub_tmp);
         json_sub = str_CatFree(json_sub,",\n");
         free(json_sub_tmp);
@@ -203,7 +203,7 @@ char *convert_to_json(node *state,node *obj)
       free(json_sub);
     }
   }*/
-  char *json_sub=add_to_json(state,obj,0,0);
+  char *json_sub=add_to_json(state,resolve_object_recursive(state,obj),0,0);
   json = str_CatFree(json,json_sub);
   free(json_sub);
   //printf("json:[%s]\n",json);
@@ -863,7 +863,20 @@ node *get_proxy_target(node *proxy)
   return(value);
 }
 
-node *resolve_object(node *state,node *obj)
+node *resolve_object_recursive(node *state,node *obj)
+{
+  node *robj = obj;
+  node *resolves = get_resolves(state);
+  while(!strcmp(get_obj_type(robj),"proxy"))
+  {
+    node_AddItem(resolves,robj);
+    robj=get_proxy_target(robj);
+    //printf("resolved target %x - %s from %x - %s\n",robj,get_obj_name(robj),obj,get_obj_name(obj));
+  }
+  return(robj);
+}
+
+node *resolve_object(node *state,node *obj)//_non_recursive
 {
   if(!strcmp(get_obj_type(obj),"proxy"))
   {
@@ -874,6 +887,7 @@ node *resolve_object(node *state,node *obj)
   else
     return(obj);
 }
+
 
 void setup_default_class_members(node *state)
 {
@@ -1188,10 +1202,11 @@ node *get_modules(node *state)
   return(node_GetItem(state,12));
 }
 
-node *copy_class(node *class_obj)
+node *copy_class_old(node *class_obj)
 {
   //removes no gc tag
   //and other internal objects
+  //updates all ref counts
   node *value = node_CopyTree(class_obj,True,True);
   node_SetParent(value,NULL);
   reset_obj_refcount(value);
@@ -1202,6 +1217,82 @@ node *copy_class(node *class_obj)
     node_FreeTree(no_gc);
   }
   return(value);
+}
+
+node *copy_class(node *src)
+{
+  node *dst=create_base_obj_layout(get_obj_name(src));
+  set_obj_string(dst,"type",get_obj_str(src,"type"));
+  if(!strcmp(get_obj_type(src),"proxy"))
+  {
+    node *target = get_proxy_target(src);
+    set_obj_ptr(dst,"target",(void*)target);
+    inc_obj_refcount(target);
+    return(dst);
+  }
+  else
+  {
+    node *src_value = node_CopyTree(get_value(src),True,True);
+    set_obj_value(dst,src_value);
+  }
+
+  node *src_il_block = node_GetItemByKey(src,"nyx_block");
+  if(src_il_block)
+  {
+    node *il_block = node_CopyTree(src_il_block,True,True);
+    add_obj_kv(dst,il_block);
+  }
+
+  /*
+    //special case should not be moved
+    node *src_obj_parameters = node_GetItemByKey(src,"nyx_parameters");
+    if(src_obj_parameters!=NULL)
+    {
+      remove_obj_kv(src,src_obj_parameters);
+      node *pars = node_CopyTree(src_obj_parameters,True,True);
+      add_obj_kv(dst,pars);
+      //add_obj_kv(dst,src_obj_parameters);
+    }
+  */
+  node *src_abp = node_GetItemByKey(src,"anonymous_block_parent");
+  if(src_abp)
+  {
+    node *anon_block = node_CopyTree(src_abp,True,True);
+    add_obj_kv(dst,anon_block);
+  }
+  node *src_members = node_GetItemByKey(src,"members");
+  node_ItemIterationReset(src_members);
+  while(node_ItemIterationUnfinished(src_members))
+  {
+    node *src_member = node_ItemIterate(src_members);
+    node *member = copy_class(src_member);
+    add_member(dst,member);
+    inc_obj_refcount(member);
+  }
+  node *src_items = node_GetItemByKey(src,"items");
+  if(src_items)
+  {
+    node *new_dst_items = create_obj("items");
+    add_obj_kv(dst,new_dst_items);
+    add_class_object_function(dst,"item_at",nyxh_item_at);
+    add_class_object_function(dst,"append_item",nyxh_append_item);
+    node_ItemIterationReset(src_items);
+    while(node_ItemIterationUnfinished(src_items))
+    {
+      node *src_item = node_ItemIterate(src_items);
+      node *item = copy_class(src_item);
+      inc_obj_refcount(item);
+      add_obj_kv(new_dst_items,item);
+    }
+  }
+
+  node *dst_privates = node_GetItemByKey(dst,"privates");
+  node_RemoveItem(dst,dst_privates);
+  node_FreeTree(dst_privates);
+  node *src_privates = node_GetItemByKey(src,"privates");
+  node *privates = node_CopyTree(src_privates,True,True);
+  add_obj_kv(dst,privates);
+  return(dst);
 }
 
 //move only data keep the ptr - important if proxies are used
@@ -1233,24 +1324,22 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
     add_obj_kv(dst,il_block);
   }
 
-  //special case should not be moved
   /*
-  node *dst_obj_parameters = node_GetItemByKey(dst,"nyx_parameters");
-  if(dst_obj_parameters)
-  {
-    remove_obj_kv(dst,dst_obj_parameters);
-    node_FreeTree(dst_obj_parameters);
-  }
-  node *src_obj_parameters = node_GetItemByKey(src,"nyx_parameters");
-  if(src_obj_parameters!=NULL)
-  {
-    remove_obj_kv(src,src_obj_parameters);
-    node *pars = node_CopyTree(src_obj_parameters,True,True);
-    add_obj_kv(dst,pars);
-    //add_obj_kv(dst,src_obj_parameters);
-  }
-
-
+    //special case should not be moved
+    node *dst_obj_parameters = node_GetItemByKey(dst,"nyx_parameters");
+    if(dst_obj_parameters)
+    {
+      remove_obj_kv(dst,dst_obj_parameters);
+      node_FreeTree(dst_obj_parameters);
+    }
+    node *src_obj_parameters = node_GetItemByKey(src,"nyx_parameters");
+    if(src_obj_parameters!=NULL)
+    {
+      remove_obj_kv(src,src_obj_parameters);
+      node *pars = node_CopyTree(src_obj_parameters,True,True);
+      add_obj_kv(dst,pars);
+      //add_obj_kv(dst,src_obj_parameters);
+    }
   */
 
   node *dst_abp = node_GetItemByKey(dst,"anonymous_block_parent");
@@ -1271,7 +1360,6 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   }
  
 
-  //TODO better object freeing , accounting complex sub objects
   node *dst_members = node_GetItemByKey(dst,"members");
   node *src_members = node_GetItemByKey(src,"members");
   node_ItemIterationReset(dst_members);
@@ -1286,8 +1374,18 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   node_ClearItems(dst_members);
   node_FreeTree(dst_members);
 
-  node *members = node_CopyTree(src_members,True,True);
-  add_obj_kv(dst,members);
+
+  node *new_dst_members = create_obj("members");
+  add_obj_kv(dst,new_dst_members);
+  node_ItemIterationReset(src_members);
+  while(node_ItemIterationUnfinished(src_members))
+  {
+    node *src_member = node_ItemIterate(src_members);
+    node *member = copy_class(src_member);
+    add_member(dst,member);
+  }
+  //node *members = node_CopyTree(src_members,True,True);
+  //add_obj_kv(dst,members);
 
 
   node *dst_items = node_GetItemByKey(dst,"items");
@@ -1308,12 +1406,19 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   }
   if(src_items)
   {
-    node *items = node_CopyTree(src_items,True,True);
-    //printf("copied items tree:\n");
-    //node_PrintTree(items);
-    add_obj_kv(dst,items);
+    node *new_dst_items = create_obj("items");
+    add_obj_kv(dst,new_dst_items);
+    add_class_object_function(dst,"item_at",nyxh_item_at);
+    add_class_object_function(dst,"append_item",nyxh_append_item);
+    node_ItemIterationReset(src_items);
+    while(node_ItemIterationUnfinished(src_items))
+    {
+      node *src_item = node_ItemIterate(src_items);
+      //node *items = node_CopyTree(src_items,True,True);
+      node *item = copy_class(src_item);
+      add_obj_kv(new_dst_items,item);
+    }
   }
-
 
   node *dst_privates = node_GetItemByKey(dst,"privates");
   node *src_privates = node_GetItemByKey(src,"privates");
@@ -1322,8 +1427,7 @@ void clean_move(node *state,node *dst,node *src)//TODO rename to clean_copy
   node_FreeTree(dst_privates);
 
   node *privates = node_CopyTree(src_privates,True,True);
-  add_obj_kv(dst,privates);//TODO ref_counts not correct
-  //add_obj_int(base,"refcount",0);
+  add_obj_kv(dst,privates);
 }
 
 node *execute_obj(node *state,node *obj,node *block,node *parameters,BOOL execute_block,BOOL execute_in_block)//,BOOL resolve_obj)
@@ -1693,8 +1797,8 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
   {
     node *token = node_ItemIterate(statement);
     
-    /*
-    printf("------\nevaluating next token in %x\n",block);
+    
+    /*printf("------\nevaluating next token in %x\n",block);
     node_Print(token,True,False);
     //node_PrintTree(token);
     printf("------\n");
@@ -1824,18 +1928,18 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         //node_PrintTree(actual_obj);
         if(node_GetItemByKey(actual_obj,"items")!=NULL)
         {
-          node *found_obj = get_item(state,actual_obj,key_obj,True);
+          node *array_obj = get_item(state,actual_obj,key_obj,True);
           //if(resolve_obj)
-          found_obj = resolve_object(state,found_obj);
-          //printf("found:%x (%s)\n",found_obj,get_obj_name(found_obj));
+          node *resolved_obj = resolve_object_recursive(state,array_obj);
+          //printf("found:%x (%s)\n",array_obj,get_obj_name(array_obj));
+          //printf("resolved:%x (%s)\n",resolved_obj,get_obj_name(resolved_obj));
           //fflush(stdout);
-          //node_PrintTree(found_obj);
           //if(node_GetItemByKey(found_obj,"anonymous_block_parent"))
           //{
             //printf("found abp in array item\n");
             //node_PrintTree(node_GetItemByKey(found_obj,"anonymous_block_parent"));
           //}
-          actual_obj = found_obj;
+          actual_obj = resolved_obj;
         }
         else //check if string is used as array with a number as key - return a single char string
         {
@@ -1873,8 +1977,9 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         node *parameter_token = node_ItemIterate(token);
         node *array_obj = evaluate_statement(state,parameter_token,block,0,NULL,NULL);//,True resolve
         //node_PrintTree(array_obj);
-        node *item = node_CopyTree(array_obj,True,True);
-        reset_obj_refcount(item);
+        //node *item = node_CopyTree(array_obj,True,True);
+        node *item = copy_class(array_obj);
+        //reset_obj_refcount(item);
         //printf("creating array item: %x from array_obj: %x\n",item,array_obj);
         //node_PrintTree(item);
         node_SetParent(item,items);
@@ -2023,20 +2128,18 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
         }
         else
         {
-
-        if(found_obj==NULL && extra_search_block && !is_sub_id)
-        {
-          found_obj = get_member_non_recursive(extra_search_block,node_GetString(token));
-          //if(found_obj)
-          //  printf("found in extra member non_rec\n");
-        }
-        if(found_obj==NULL && extra_search_block && !is_sub_id) 
-        {
-          found_obj = search_anonymous_block_for_member(extra_search_block,node_GetString(token));
-          //if(found_obj)
-          //  printf("found in extra anon block\n");
-        }
-
+          if(found_obj==NULL && extra_search_block && !is_sub_id)
+          {
+            found_obj = get_member_non_recursive(extra_search_block,node_GetString(token));
+            //if(found_obj)
+            //  printf("found in extra member non_rec\n");
+          }
+          if(found_obj==NULL && extra_search_block && !is_sub_id) 
+          {
+            found_obj = search_anonymous_block_for_member(extra_search_block,node_GetString(token));
+            //if(found_obj)
+            //  printf("found in extra anon block\n");
+          }
         }
 
         if(found_obj==NULL)
@@ -2077,6 +2180,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               add_garbage(state,oldm);
             }
             //printf("adding sub id: %x (%s) to %x (%s)\n",child,get_obj_name(child),actual_obj,get_obj_name(actual_obj));
+            //node_PrintTree(actual_obj);
             //fflush(stdout);
             add_member(actual_obj,child); 
             inc_obj_refcount(child);
@@ -2143,7 +2247,7 @@ node *evaluate_statement(node *state,node *statement,node *block,long iteration_
               found_obj = resolve_object(found_obj);
             }
           }*/
-          found_obj = resolve_object(state,found_obj);
+          found_obj = resolve_object_recursive(state,found_obj);
           //printf("found obj %x,%s (type:%s)\n",found_obj,get_obj_name(found_obj),get_obj_type(found_obj));
           //nyx_append_printf(state,"found obj %x,%s (type:%s)\n",found_obj,get_obj_name(found_obj),get_obj_type(found_obj));
           //fflush(stdout);
