@@ -501,7 +501,7 @@ function add_message(message)
 	}
 	else
 	{
-		document.getElementById("fs_chat").innerHTML = document.getElementById("fs_chat").innerHTML+"\n<br>"+message;
+		document.getElementById("fs_chat").innerHTML = document.getElementById("fs_chat").innerHTML+"\n"+message;
 		var textarea = document.getElementById("fs_chat");
 		//$("#fs_chat").animate({ scrollBottom: 0 }, 500);
 		textarea.scrollTop = textarea.scrollHeight;
