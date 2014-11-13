@@ -360,6 +360,7 @@ docker_update:
 	docker run -it --name=nyx_update pez2001/nyx:v2 /update_nyx.sh
 	docker commit -m "$(msg)" nyx_update pez2001/nyx:v2
 	docker push pez2001/nyx:v2
+	docker rm nyx_update
 
 docker_update_all:
 	docker run -it --name=nyx_update pez2001/nyx:v2 /update_nyx.sh all
