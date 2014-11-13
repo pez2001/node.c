@@ -24,4 +24,8 @@ endif
 
 
 clean:
+ifneq ($(LIBJOY), 0)
+	echo "Compilation dependancy not met -> install libjoy"
+else
 	$(MAKE) -C libjoy clean
+endif

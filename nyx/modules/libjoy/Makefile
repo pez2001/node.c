@@ -2,6 +2,7 @@ LIBJOY = $(shell echo \\\#include \<libjoy.h\>\\n int main\(int c,char**v\){} | 
 
 ifneq ($(LIBJOY), 0)
 	echo "Compilation dependancy not met -> install libjoy"
+	exit 0
 endif
 
 
