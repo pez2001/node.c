@@ -307,7 +307,6 @@ uninstall:
 	@rm /usr/lib/libnode.so /usr/lib/libnyx.so /usr/bin/nyxi
 
 
-
 clean: libnyx_clean
 	rm -f $(PLATFORM_LIB_PREFIX)node$(PLATFORM_LIB_EXT) *.do *.da *.o *.a *.so tools/build_inc/*.o imports/*.o imports/*.do tools/starter/*.o tools/starter/*.do
 
@@ -357,6 +356,22 @@ git:
 	@git commit -m "$(msg)"
 	@git push 
 	
+docker_update:
+	docker run -it --name=nyx_update pez2001/nyx:v2 /update_nyx.sh
+	docker commit -m "$(msg)" nyx_update pez2001/nyx:v2
+	docker push pez2001/nyx:v2
+
+docker_update_all:
+	docker run -it --name=nyx_update pez2001/nyx:v2 /update_nyx.sh all
+	docker commit -m "$(msg)" nyx_update pez2001/nyx:v2
+	docker push pez2001/nyx:v2
+
+docker_server_restart:
+	ssh root@voyagerproject.org /root/nyx.sh upgrade 
+
+server_upgrade: git docker_update docker_server_restart
+	echo "nyx server upgraded"
+
 indent:	
 	indent -bap -bli0 -i4 -l79 -ncs -npcs -npsl -fca -lc79 -fc1 -ts4 *.c *.h
 

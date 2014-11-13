@@ -341,6 +341,13 @@ echo_call=
 		skip=1;
 	});
 
+	(arguments["message"].index_of("/info")==0).do(
+	{
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: Server Build Thu,10.13.2014 2:09",arguments["session"].id);
+		skip=1;
+	});
+
+
 	(arguments["message"].index_of("/roll")==0).do(
 	{
 		treasure = arguments["message"].sub("/roll ".len());
