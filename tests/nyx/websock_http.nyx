@@ -347,6 +347,12 @@ echo_call=
 		skip=1;
 	});
 
+	(arguments["message"].index_of("/stephi")==0).do(
+	{
+		@daemon.send(arguments["protocol"],"[<font color=\"lightblue\">"+sys.string_time("%R")+"</font>]: Hallo mein schatz",arguments["session"].id);
+		skip=1;
+	});
+
 
 	(arguments["message"].index_of("/roll")==0).do(
 	{

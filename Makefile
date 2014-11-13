@@ -90,7 +90,7 @@ SUCCESS_NOTIFY =
 
 
 MAJOR_VERSION = 0
-MINOR_VERSION = 8
+MINOR_VERSION = 9
 BUILD = 6481
 DEBUG_BUILD = 5329
 
@@ -366,6 +366,7 @@ docker_update_all:
 	docker run -it --name=nyx_update pez2001/nyx:v2 /update_nyx.sh all
 	docker commit -m "$(msg)" nyx_update pez2001/nyx:v2
 	docker push pez2001/nyx:v2
+	docker rm nyx_update
 
 docker_server_restart:
 	ssh root@voyagerproject.org /root/nyx.sh upgrade 
