@@ -151,7 +151,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
 
       if(found_prot)
       {
-        printf("found prot in http callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
+        //printf("found prot in http callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
         if(!pss->session)
         {
           lsession_uid++;
@@ -163,7 +163,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
           pss->session = create_session(state,sessions,lsession_uid,get_obj_name(found_prot));
           node *session_privates = node_GetItemByKey(pss->session,"privates");
           set_obj_int(session_privates,"is_http",1);
-          printf("created new session :%d actual sessions num:%d\n",lsession_uid,lsessions_num);
+          //printf("created new session :%d actual sessions num:%d\n",lsession_uid,lsessions_num);
         }
         
 
@@ -183,7 +183,10 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         inc_obj_refcount(url_value);
         free(url);
         node_AddItem(parameters,pss->session);
+        inc_obj_refcount(pss->session);
         //node_AddItem(parameters,daemon_obj);
+        node_AddItem(parameters,sessions);
+        inc_obj_refcount(sessions);
         node *tmp_parent = node_GetParent(found_prot);
         node *bmembers = node_GetItemByKey(block,"members");
         node_SetParent(found_prot,bmembers);
@@ -195,6 +198,9 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         add_garbage(state,prot_value);
         dec_obj_refcount(url_value);
         add_garbage(state,url_value);
+        dec_obj_refcount(pss->session);
+        dec_obj_refcount(sessions);
+ 
         node *ret_obj_value = node_GetItemByKey(ret_obj,"value");
         if( (node_GetType(ret_obj_value)==NODE_TYPE_STRING && strlen(node_GetString(ret_obj_value))) || (node_GetType(ret_obj_value)==NODE_TYPE_BINARY && node_GetBinaryLength(ret_obj_value)) )
         {
@@ -228,7 +234,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     case LWS_CALLBACK_HTTP_FILE_COMPLETION:
       if(found_prot)
      {
-        printf("found prot in http file complete : %d,num:%d\n",lsession_uid,lsessions_num);
+        //printf("found prot in http file complete : %d,num:%d\n",lsession_uid,lsessions_num);
         lsessions_num--;
         node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
         node_SetSint32(sessions_num_value,lsessions_num);
@@ -389,7 +395,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
         {
           //if(lws_http_transaction_completed(wsi))
           //{
-            printf("removing http session num:%d\n",lsessions_num);
+            //printf("removing http session num:%d\n",lsessions_num);
             lsessions_num--;
             node *sessions_num_value = node_GetItemByKey(sessions_num,"value");
             node_SetSint32(sessions_num_value,lsessions_num);
@@ -408,7 +414,7 @@ static int callback_nyx_websockets(struct libwebsocket_context *context,struct l
     case LWS_CALLBACK_ESTABLISHED:
       if(found_prot)
       {
-        printf("found prot in establish callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
+        //printf("found prot in establish callback : uid:%d,num:%d (sess:%x)\n",lsession_uid+1,lsessions_num,pss->session);
         if(!pss->session)
         {
           lsession_uid++;

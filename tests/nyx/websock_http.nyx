@@ -42,7 +42,8 @@ rooms[lobby_name].password="";
 rooms[lobby_name].bg_url="http://www.daswallpaper.de/wallpaper/original/black-and-blue-cubes-wallpaper.jpg";
 rooms[lobby_name].users = [];
 rooms[lobby_name].ops = [];
-
+rooms[lobby_name].rules = "";
+rooms[lobby_name].filter="tags";
 
 rooms_json.rooms.each({
 	r=arguments[0];
@@ -65,7 +66,14 @@ http_call={
 	type="text/html";
 	
 	/*(url=="/jquery.nanoscroller.min.js").do({println("sending js");@msg = @js.data;@type="text/javascript";});*/
-	(url=="/status").do({@msg = "actual chat server status";@daemon.broadcast("echo","someone is watching the status");});
+	(url=="/status/users").do({
+		@msg = arguments["daemon.sessions"].len();
+		/*@daemon.broadcast("echo","someone is watching the status");*/
+	});
+	(url=="/status/rooms").do({
+		@msg = @rooms.len();
+		/*@daemon.broadcast("echo","someone is watching the status");*/
+	});
 	(url=="/stop").do({@msg = "stopping server";@running=0;});
 	(url=="/copco").do({@msg = @copco.data;@type="image/png";});
 	(url=="/favicon.ico").do({@msg = @fav.data;@type="image/ico";});

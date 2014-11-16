@@ -5,11 +5,13 @@
 		{
 			"name": "lobby",
 			"topic": "Main Lobby (Nyx Interpreter Application)",
-			"created": 1415834261,
+			"created": 1416109787,
 			"password": "",
 			"bg_url": "http://www.daswallpaper.de/wallpaper/original/black-and-blue-cubes-wallpaper.jpg",
 			"ops": [
 ],
+			"rules": "",
+			"filter": "tags",
 			"users": [
 ],
 			"users_num": 0,
