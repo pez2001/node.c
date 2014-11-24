@@ -1461,6 +1461,61 @@ node *node_GetItemByKey(node *n,char *key)
   return(item);
 }
 
+node *node_RecursiveGetItemByKey(node *n,char *key)
+{
+  void *item = NULL;
+  long old_index = node_GetItemIterationIndex(n);
+  node_ItemIterationReset(n);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *i = node_ItemIterate(n);
+    if(i->key!=NULL && !strcmp(i->key,key))
+    {
+       item = i;
+       break;
+    }
+    item = node_RecursiveGetItemByKey(i,key);
+    if(item)
+      break;
+  }
+  node_SetItemIterationIndex(n,old_index);
+  return(item);
+}
+
+node *node_IndexedGetItemByKey(node *n,char *key,long start_index)
+{
+  void *item = NULL;
+  long old_index = node_GetItemIterationIndex(n);
+  node_SetItemIterationIndex(n,start_index);
+  while(node_ItemIterationUnfinished(n))
+  {
+    node *i = node_ItemIterate(n);
+    if(i->key!=NULL && !strcmp(i->key,key))
+    {
+       item = i;
+       break;
+    }
+  }
+  node_SetItemIterationIndex(n,old_index);
+  return(item);
+}
+
+void *node_GetItemByPath(node *n,char *key_path)
+{
+  list *tokens = NULL;
+  str_Tokenize(key_path,"/",&tokens);
+  list_IterationReset(tokens);
+  node *actual_obj=n;
+  while(list_IterationUnfinished(tokens))
+  {
+    char *token = list_Iterate(tokens);
+    if(actual_obj)
+      actual_obj=node_GetItemByKey(actual_obj,token);
+  }
+  str_FreeTokens(tokens);
+  return(actual_obj);
+}
+
 void node_FreeItems(node *n)
 {
   node_ItemIterationReset(n);

@@ -630,9 +630,13 @@ int node_HasItems(node *n);
  * 
  * Return: node pointer or NULL
  */
-node *node_GetItemByKey(node *n,char *key);//TODO add getitembykey(n,key,start_index)
+node *node_GetItemByKey(node *n,char *key);
 
-//int node_SetItemByKey(node *n,char *key,)
+node *node_RecursiveGetItemByKey(node *n,char *key);
+
+node *node_IndexedGetItemByKey(node *n,char *key,long start_index);
+
+void *node_GetItemByPath(node *n,char *key_path);
 
 /**
  * node_HasItem() - Check s if the node has the item in its list
@@ -645,9 +649,6 @@ node *node_GetItemByKey(node *n,char *key);//TODO add getitembykey(n,key,start_i
  * Return: True if the node was found
  */
 int node_HasItem(node *n,node *s);
-
-//void *node_GetItemByPath(node *n,...);//TODO
-
 
 /**
  * node_ClearItems() - Clears the items list

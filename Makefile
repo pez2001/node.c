@@ -91,8 +91,8 @@ SUCCESS_NOTIFY =
 
 MAJOR_VERSION = 0
 MINOR_VERSION = 9
-BUILD = 6487
-DEBUG_BUILD = 5332
+BUILD = 6535
+DEBUG_BUILD = 5356
 
 CSTD = -std=c99
 #-std c99
@@ -371,8 +371,10 @@ docker_update_all:
 docker_server_restart:
 	ssh root@voyagerproject.org /root/nyx.sh upgrade 
 
-server_upgrade: git docker_update docker_server_restart
+#git 
+server_upgrade: docker_update docker_server_restart
 	echo "nyx server upgraded"
+
 
 indent:	
 	indent -bap -bli0 -i4 -l79 -ncs -npcs -npsl -fca -lc79 -fc1 -ts4 *.c *.h

@@ -34,6 +34,7 @@
 #include "memory.h"
 #endif
 
+#include "list.h"
 
 /**
  * str_EncodeBase64() - Encode memory chunk to Base64
@@ -244,7 +245,11 @@ char *str_ReplaceAll(char *hay,char *needle,char*diamond);
  *
  * Return: index
  */
-long str_IndexOf(char *hay,char *needle);
+long str_IndexOf(char *hay,char *needle);//TODO add long offset
+
+long str_Tokenize(char *string,char *splitter,list **tokens);
+
+void str_FreeTokens(list *tokens);
 
 /**
  * str_LastIndexOf() - Returns the last Index of the search string 
@@ -257,7 +262,7 @@ long str_IndexOf(char *hay,char *needle);
  *
  * Return: index
  */
-long str_LastIndexOf(char *hay,char *needle);
+long str_LastIndexOf(char *hay,char *needle);//TODO add long offset
 
 /**
  * str_CreateEmpty() - Create an empty String

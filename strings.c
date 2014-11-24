@@ -394,6 +394,47 @@ long str_IndexOf(char *hay,char *needle)
   return(index);
 }
 
+long str_Tokenize(char *string,char *splitter,list **tokens)
+{
+  long tokens_num=0;
+  long offset = 0;
+  long splitter_len = strlen(splitter);
+  long string_len = strlen(string);
+  *tokens=list_Create(0,0);
+  char *pos=NULL;
+  while((pos = strstr(string+offset,splitter)))
+  {
+    long index = (long)(pos-(string+offset));
+    if(index)
+    {
+      char *sub = str_Sub(string+offset,0,index);
+      list_Push(*tokens,sub);
+      tokens_num++;
+    }
+    offset+=index+splitter_len;
+  } 
+  if(offset<string_len)
+  {
+    char *sub = str_Sub(string+offset,0,string_len-offset);
+    list_Push(*tokens,sub);
+    tokens_num++;
+  }
+
+  return(tokens_num);
+}
+
+void str_FreeTokens(list *tokens)
+{
+  list_IterationReset(tokens);
+  while(list_IterationUnfinished(tokens))
+  {
+    char *token = list_Iterate(tokens);
+    free(token);
+  }
+  list_Close(tokens);
+}
+
+
 long str_LastIndexOf(char *hay,char *needle)
 {
   long index = -1;

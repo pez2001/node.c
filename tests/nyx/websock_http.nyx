@@ -45,6 +45,15 @@ rooms[lobby_name].ops = [];
 rooms[lobby_name].rules = "";
 rooms[lobby_name].filter="tags";
 
+
+random_bgs=[];
+random_bgs[0]="http://images.gamestar.de/images/idgwpgsgp/bdb/2587461/944x531.jpg";
+random_bgs[1]="http://us.battle.net/hearthstone/static/images/media/wallpapers/ipad_wallpaper1024x768.jpg?v=58-15";
+random_bgs[2]="http://www.hdwallpaperbackground.com/uploads/allimg/130801/Hearthstone%20legend%20Warcraft%20Heroes%20HD%20Wallpapers%202_1024x768.jpg";
+random_bgs[3]="http://www.daswallpaper.de/wallpaper/original/anonymous-hacker-curious-wallpaper.jpg";
+random_bgs[4]="http://www.daswallpaper.de/wallpaper/original/343609.jpg";
+random_bgs[5]="http://uploads.alphacoders.com/index.php/wallpapers/download/295044/images4/jpg/23195/2980";
+
 rooms_json.rooms.each({
 	r=arguments[0];
 	println("checking db room:"+r.name);

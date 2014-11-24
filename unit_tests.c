@@ -27,6 +27,80 @@
 int debug_level = 0;
 #endif
 
+
+void str_toks_tests(void)
+{
+  printf("tokenizing strings tests\n");
+  char *toks="Alpha/Beta/Kappa/Delta";
+  char *splits="/";
+  list *tokens=NULL;
+  str_Tokenize(toks,splits,&tokens);
+  list_IterationReset(tokens);
+  long i=0;
+  printf("string[%s]:%s\n",splits,toks);
+  while(list_IterationUnfinished(tokens))
+  {
+    char *tok=list_Iterate(tokens);
+    printf("t[%d]:[%s]\n",i++,tok);
+  }
+    
+  str_FreeTokens(tokens);
+
+
+  toks="/Alpha/Beta/Kappa/Delta/";
+  str_Tokenize(toks,splits,&tokens);
+  list_IterationReset(tokens);
+  printf("string2[%s]:%s\n",splits,toks);
+  while(list_IterationUnfinished(tokens))
+  {
+    char *tok=list_Iterate(tokens);
+    printf("t[%d]:[%s]\n",i++,tok);
+  }
+    
+  str_FreeTokens(tokens);
+
+
+  printf("tokenize strings tests thru\n");
+}
+
+
+void node_tests_extra(void)
+{
+  printf("node extra tests\n");
+  node *n = node_Create();
+  node_Free(n,True);
+  
+  n = node_Create();
+  node_SetKey(n,"root");
+  node *n2 = node_Create();
+  node_SetKey(n2,"version");
+  node_SetString(n2,"basic");
+  node_AddItem(n,n2);
+  node *n3 = node_Create();
+  node_SetKey(n3,"format");
+  node_SetString(n3,"memory");
+  node_AddItem(n2,n3);
+  node *n4 = node_Create();
+  node_SetKey(n4,"tales");
+  node_SetString(n4,"of the sea");
+  node_InsertItem(n3,n4,0);
+  node_PrintTree(n);
+
+
+  node *query = node_GetItemByPath(n,"/version/format/tales");
+  if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
+    printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
+  if(query!=NULL)
+    printf("query key:%s,type:%d\n",node_GetKey(query),node_GetType(query));
+
+  node *query2 = node_GetItemByPath(n,"/version/Rformat/Stales");
+  if(query2!=NULL)
+    printf("to fail query returned an object:%s\n",node_GetKey(query2));  
+
+  node_Free(n,True);
+  printf("node extra tests thru\n");
+}
+
 void base64_tests(void)
 {
   char *test="Hallo Welt";
@@ -174,7 +248,7 @@ void node_tests(void)
   if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
     printf("query:%s = %s\n",node_GetKey(query),node_GetString(query));
   if(query!=NULL)
-  	printf("query key:%s,type:%d\n",node_GetKey(query),node_GetType(query));
+    printf("query key:%s,type:%d\n",node_GetKey(query),node_GetType(query));
 
   query = node_GetItemByKey(n,"format");
   if(query != NULL && node_IsType(query,NODE_TYPE_STRING))
@@ -200,34 +274,33 @@ void json_speed_tests(void)
 {
   printf("json speed tests\n");
   #ifdef USE_MEMORY_DEBUGGING
-  mem_Init();
-  for(int i=0;i<10;i++)
-  {	
-  	printf("test round:%d\n",i);
+    mem_Init();
+    for(int i=0;i<10;i++)
+    	printf("test round:%d\n",i);
   #else
-  for(int i=0;i<10000;i++)
-  {	
+    for(int i=0;i<10000;i++)
   #endif
-  node *root = json_LoadFile("tests/test_wiki.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test7_export.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test7_export2nicer.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test_a.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test2.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test3.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test4.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test5.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test6.json");
-  node_FreeTree(root);
-  root = json_LoadFile("tests/test_broken2.json");
-  node_FreeTree(root);
+  { 
+    node *root = json_LoadFile("tests/test_wiki.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test7_export.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test7_export2nicer.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test_a.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test2.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test3.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test4.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test5.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test6.json");
+    node_FreeTree(root);
+    root = json_LoadFile("tests/test_broken2.json");
+    node_FreeTree(root);
   }
   #ifdef USE_MEMORY_DEBUGGING
   mem_Close();
@@ -719,7 +792,10 @@ void nyx_tests2(void)
 
 int main(int argc, char *argv[])
 {
-  base64_tests();
+  str_toks_tests();
+  node_tests_extra();
+  //base64_tests();
+
   //mem_tests();
   //ptr_tests();
   //ptr_tests2();
