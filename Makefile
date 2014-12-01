@@ -89,10 +89,10 @@ FAILED_NOTIFY =
 SUCCESS_NOTIFY = 
 
 
-MAJOR_VERSION = 0
-MINOR_VERSION = 9
-BUILD = 6535
-DEBUG_BUILD = 5356
+MAJOR_VERSION = 1
+MINOR_VERSION = 0
+BUILD = 6543
+DEBUG_BUILD = 5360
 
 CSTD = -std=c99
 #-std c99
@@ -112,11 +112,11 @@ CC=gcc
 AR=ar -c
 LD=ld
 
-NODE_FILES = list.c node.c memory.c strings.c imports/json.c imports/fbx.c imports/nyx.c
+NODE_FILES = list.c node.c memory.c strings.c maths.c imports/json.c imports/fbx.c imports/nyx.c
 NODE_BINS = node_c.a
-NODE_INCLUDE_FILES = node.h list.h memory.h strings.h imports/json.h imports/fbx.h imports/nyx.h
-NODE_OBJ = node.o list.o memory.o strings.o imports/json.o imports/fbx.o imports/nyx.o
-NODE_DEBUG_OBJ = node.do list.do memory.do strings.do imports/json.do imports/fbx.do imports/nyx.do
+NODE_INCLUDE_FILES = node.h list.h memory.h strings.h maths.h imports/json.h imports/fbx.h imports/nyx.h
+NODE_OBJ = node.o list.o memory.o strings.o maths.o imports/json.o imports/fbx.o imports/nyx.o
+NODE_DEBUG_OBJ = node.do list.do memory.do strings.do maths.do imports/json.do imports/fbx.do imports/nyx.do
 
 UT_FILES = unit_tests.c
 UT_OBJ = unit_tests.o

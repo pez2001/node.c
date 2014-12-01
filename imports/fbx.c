@@ -82,7 +82,9 @@ node *fbx_CreateNode(char *key_string,char *value_string,int is_value_string)
           node_SetBool(kv,False);
         else
         {
-          node_ParseNumber(kv,value_string);
+          double d = atof(value_string);
+          node_SetDouble(kv,d);
+          //node_ParseNumber(kv,value_string);
         }
   return(kv);
 }
@@ -226,7 +228,7 @@ node *fbx_Load(char *fbx,unsigned long len)
             break;
        case ';':
              state |= FBX_STATE_IN_COMMENT;
-             is_last_digit=0;
+             //is_last_digit=0;
        case '\n':
        case '\r':
        case '\t': 
