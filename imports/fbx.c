@@ -227,15 +227,30 @@ node *fbx_Load(char *fbx,unsigned long len)
             offset++;
             break;
        case ';':
-             state |= FBX_STATE_IN_COMMENT;
-             //is_last_digit=0;
+            state |= FBX_STATE_IN_COMMENT;
+            //is_last_digit=0;
        case '\n':
        case '\r':
        case '\t': 
-              offset++;
-              break;
+            if(!is_last_digit)
+            {
+              value_string = str_Trim(value_string);
+              if(strlen(value_string))
+              {
+                node *array_obj = node_Create();
+                //fbx_SetNode(array_obj,value_string,False);
+                fbx_SetNode(array_obj,value_string,True);
+                node_array_Add(new_obj,array_obj);
+                node_SetParent(array_obj,new_obj);
+                free(value_string);
+                value_string = str_CreateEmpty();
+              }
+            }
+            offset++;
+            break;
        default:
               if((is_last_digit==1 && fbx_isdigit(fbx[offset])==0 ))
+              //if((is_last_digit!= fbx_isdigit(fbx[offset])))
               {
                 is_last_digit = fbx_isdigit(fbx[offset]);
                 value_string = str_Trim(value_string);
@@ -250,22 +265,38 @@ node *fbx_Load(char *fbx,unsigned long len)
                   value_string = str_AddChar(value_string,fbx[offset]);
                 }
                 offset++;
-                break;
               }
-               else
+              /*else if((is_last_digit==0) && fbx_isdigit(fbx[offset])==1)
+              {
+                is_last_digit = fbx_isdigit(fbx[offset]);
+                value_string = str_Trim(value_string);
+                if(strlen(value_string))
+                {
+                  node *array_obj = node_Create();
+                  fbx_SetNode(array_obj,value_string,False);
+                  node_array_Add(new_obj,array_obj);
+                  node_SetParent(array_obj,new_obj);
+                  free(value_string);
+                  value_string= str_CreateEmpty();
+                  value_string = str_AddChar(value_string,fbx[offset]);
+                }
+                offset++;
+              }*/
+              else
               {
                 is_last_digit = fbx_isdigit(fbx[offset]);
                 value_string = str_AddChar(value_string,fbx[offset]);
                 offset++;
-                break;
               }
+              break;
        case ' ':
        case ',': 
                value_string = str_Trim(value_string);
                if(strlen(value_string))
                {
                  node *array_obj = node_Create();
-                 fbx_SetNode(array_obj,value_string,False);
+                 //fbx_SetNode(array_obj,value_string,False);
+                 fbx_SetNode(array_obj,value_string,!is_last_digit);
                  node_array_Add(new_obj,array_obj);
                  node_SetParent(array_obj,new_obj);
                  free(value_string);
