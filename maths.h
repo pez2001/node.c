@@ -28,8 +28,8 @@ typedef struct _vec2
 
 }vec2;
 
-typedef double *mat4[4];
-typedef double *mat44[16];
+//typedef double *mat4[4];
+//typedef double *mat44[16];
 
 
 

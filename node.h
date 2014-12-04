@@ -632,6 +632,8 @@ int node_HasItems(node *n);
  */
 node *node_GetItemByKey(node *n,char *key);
 
+node *node_FlatGetItemByKey(node *n,char *key);
+
 node *node_RecursiveGetItemByKey(node *n,char *key);
 
 node *node_IndexedGetItemByKey(node *n,char *key,long start_index);
