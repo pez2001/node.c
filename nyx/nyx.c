@@ -604,6 +604,7 @@ node *get_member_part(node *obj,char *key)
   long match_len = 0;
   node *match = NULL;
   node *members = node_GetItemByKey(obj,"members");
+  //node_PrintTree(obj);
   if(members!=NULL)
   {
     //printf("looking for member [%s] in %x:%s\n",key,obj,get_obj_name(obj));

@@ -873,6 +873,10 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
     {
       //printf("assigning item :%x - %s was resolved from :%x - %s\n",obj,get_obj_name(obj),resolved,get_obj_name(resolved));
       obj = resolved;
+      dec_obj_refcount(resolved_target);
+      //printf("proxy_target %x - %s rc: %d\n",resolved_target,get_obj_name(resolved_target),get_obj_refcount(resolved_target));
+      add_garbage(state,resolved_target);
+
     }
   }
 
@@ -909,11 +913,9 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
   {
     //printf("assigning cpy obj to itself, skipping\n");
     value = obj;
-
   }
   else
   {
-
     node *parent = node_GetParent(obj);
     if(parent)
     {
@@ -952,14 +954,18 @@ node *nyxh_assign_copy(node *state,node *self,node *obj,node *block,node *parame
       //printf("adding %x to parent %x(pp:%x)\n",value,parent,node_GetParent(parent));
       //fflush(stdout);
       node_AddItem(parent,value);
-      //node_SetParent(value,parent);
+      node_SetParent(value,parent);
       //inc_obj_refcount(value);
+      reset_obj_refcount(value);
+      inc_obj_refcount(value);
     }
     else
     {
       //printf("adding %x to block %x\n",value,block);
       //fflush(stdout);
       add_member(block,value);
+      //inc_obj_refcount(value);
+      reset_obj_refcount(value);
       inc_obj_refcount(value);
     }
   }

@@ -36,6 +36,10 @@
 //#define USE_WHOLE_NODE_FUNCTION_SET ;TODO Later filter some functions to get even smaller code
 
 
+//TODO add binary search/insert/sort by hash/key/value
+//add node math vector & matrix types
+ 
+
 
 #ifdef __cplusplus
 extern "C"  {
@@ -192,6 +196,22 @@ void *node_GetItemByKeyHash(node *n,unsigned long key_hash);
  * Return: pointer to the newly created node
  */
 node *node_Create(void);
+
+node *node_CreateBool(char *key,int value,node *parent);
+node *node_CreateString(char *key,char *value,node *parent);
+node *node_CreateInt(char *key,int value,node *parent);
+node *node_CreateSint8(char *key,char value,node *parent);
+node *node_CreateSint16(char *key,short value,node *parent);
+node *node_CreateSint32(char *key,long value,node *parent);
+node *node_CreateSint64(char *key,long long value,node *parent);
+node *node_CreateUint8(char *key,unsigned char value,node *parent);
+node *node_CreateUint16(char *key,unsigned short value,node *parent);
+node *node_CreateUint32(char *key,unsigned long value,node *parent);
+node *node_CreateUint64(char *key,unsigned long long value,node *parent);
+node *node_CreateNode(char *key,node *value,node *parent);
+node *node_CreateUser(char *key,void *value,node *parent);
+node *node_CreateFloat(char *key,float value,node *parent);
+node *node_CreateDouble(char *key,double value,node *parent);
 
 /**
  * node_CreateFilled() - Creates a Node and sets the most important members

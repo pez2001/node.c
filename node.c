@@ -904,10 +904,13 @@ void node_SetKey(node *n,char *key)
 {
   if(n->key != NULL)
     free(n->key);
-  n->key = str_Copy(key);
-  #ifdef USE_FNV_HASHES
-  n->key_hash = node_ComputeHash(key);
-  #endif
+  if(key)
+  {
+    n->key = str_Copy(key);
+    #ifdef USE_FNV_HASHES
+      n->key_hash = node_ComputeHash(key);
+    #endif
+  }
 }
 
 void node_SetValue(node *n,unsigned long long value,BOOL copy_value,BOOL free_old_value)
@@ -1798,6 +1801,170 @@ unsigned long node_GetBinaryLength(node *n)
     return(((node_binary*)(unsigned long)n->value)->len);
 }
 
+node *node_CreateBool(char *key,int value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetBool(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateString(char *key,char *value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetString(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateInt(char *key,int value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetInt(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateSint8(char *key,char value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetSint8(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateSint16(char *key,short value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetSint16(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateSint32(char *key,long value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetSint32(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateSint64(char *key,long long value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetSint64(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateUint8(char *key,unsigned char value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetUint8(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateUint16(char *key,unsigned short value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetUint16(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateUint32(char *key,unsigned long value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetUint32(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateUint64(char *key,unsigned long long value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetUint64(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateNode(char *key,node *value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetNode(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateUser(char *key,void *value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetUser(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateFloat(char *key,float value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetFloat(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
+
+node *node_CreateDouble(char *key,double value,node *parent)
+{
+  node *r = node_Create();
+  node_SetKey(r,key);
+  node_SetDouble(r,value);
+  node_SetParent(r,parent);
+  if(parent)
+    node_AddItem(parent,r);
+  return(r);
+}
 
 
 

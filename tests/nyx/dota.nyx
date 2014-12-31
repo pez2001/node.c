@@ -19,7 +19,10 @@ print("Number of players in Dota2 now:",j.response.player_count);
 };
 
 println("");
-?(1,{read_players()},{},1);
+/*?(1,{read_players()},{},1);*/
+/*read_players();*/
+i=10;
+?({i},{read_players();i--},{},1);
 
 
 
