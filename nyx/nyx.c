@@ -58,12 +58,12 @@ void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array,long it
     node_AddItem(output,child);
     node_SetParent(child,output);
     set_obj_int(child,"item_index",item_index);
-    printf("added item to array in json import: %x (%s)\n",child,get_obj_name(child));
+    //printf("added item to array in json import: %x (%s)\n",child,get_obj_name(child));
     //node_PrintTree(child);
   }
   else
   {
-    printf("added member item:%x (%s)\n",child,get_obj_name(child));
+    //printf("added member item:%x (%s)\n",child,get_obj_name(child));
     add_member(output,child);
   }
   inc_obj_refcount(child);
@@ -86,7 +86,7 @@ void convert_from_json(node *state,node *output,char *json)
     node *sub = node_ItemIterate(json_tree);
     add_json_tree(state,output,sub,0,-1);
   }
-  printf("returned json object:%x\n",output);
+  //printf("returned json object:%x\n",output);
   //node_PrintTree(output);
   node_FreeTree(json_tree);
 }
@@ -747,15 +747,15 @@ long get_last_index_obj(node *obj)
 
 node *get_item(node *state,node *obj,node *key,BOOL append_new_item)//TODO remove BOOl and seperate into 2 functions
 {
-  printf("get item in :%x (%s)\n",obj,get_obj_name(obj));
+  //printf("get item in :%x (%s)\n",obj,get_obj_name(obj));
   node *items = node_GetItemByKey(obj,"items");
   if(!items)
   {
     printf("tried to search for an item in a non array obj :%s\n",get_obj_name(obj));
     return(NULL);
   }
-  printf("items:\n");
-  node_PrintTree(items);
+  //printf("items:\n");
+  //node_PrintTree(items);
   node *key_value = get_value(key);
   char *key_name = NULL;
   long item_index = -1; 
