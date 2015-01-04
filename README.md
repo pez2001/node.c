@@ -13,6 +13,7 @@ a node.c based scripting language with a pretty unique feature "it uses no keywo
 
 Example:
 
+```
 /*a brainfuck interpreter written in nyx*/
 
 program = "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++.";
@@ -49,6 +50,8 @@ while({ip<program_len},{
 });
 
 /*end of nyx brainfuck interpreter*/
+
+```
 
 BUILD = 6609
 
