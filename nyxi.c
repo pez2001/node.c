@@ -124,6 +124,11 @@ onyx
 nyxdeb
 
 
+ki n cloud normalize j based on i of n added up and normalized again = new synapse movement direction of i
+
+
+
+
 
 
 */

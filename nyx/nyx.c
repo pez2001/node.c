@@ -58,9 +58,14 @@ void add_json_tree(node *state,node *output,node *tree,BOOL add_to_array,long it
     node_AddItem(output,child);
     node_SetParent(child,output);
     set_obj_int(child,"item_index",item_index);
+    printf("added item to array in json import: %x (%s)\n",child,get_obj_name(child));
+    //node_PrintTree(child);
   }
   else
+  {
+    printf("added member item:%x (%s)\n",child,get_obj_name(child));
     add_member(output,child);
+  }
   inc_obj_refcount(child);
   node_ItemIterationReset(tree);
   while(node_ItemIterationUnfinished(tree))
@@ -81,6 +86,8 @@ void convert_from_json(node *state,node *output,char *json)
     node *sub = node_ItemIterate(json_tree);
     add_json_tree(state,output,sub,0,-1);
   }
+  printf("returned json object:%x\n",output);
+  //node_PrintTree(output);
   node_FreeTree(json_tree);
 }
 
@@ -740,12 +747,15 @@ long get_last_index_obj(node *obj)
 
 node *get_item(node *state,node *obj,node *key,BOOL append_new_item)//TODO remove BOOl and seperate into 2 functions
 {
+  printf("get item in :%x (%s)\n",obj,get_obj_name(obj));
   node *items = node_GetItemByKey(obj,"items");
   if(!items)
   {
     printf("tried to search for an item in a non array obj :%s\n",get_obj_name(obj));
     return(NULL);
   }
+  printf("items:\n");
+  node_PrintTree(items);
   node *key_value = get_value(key);
   char *key_name = NULL;
   long item_index = -1; 
@@ -775,6 +785,7 @@ node *get_item(node *state,node *obj,node *key,BOOL append_new_item)//TODO remov
       if(!nindex)
       {
         printf("item has no item_index :%s (%x)\n",get_obj_name(item),item);
+        node_PrintTree(item);
       }
       long cindex = node_GetSint32(nindex);
       if(item_index == cindex)
@@ -1235,6 +1246,14 @@ node *copy_class(node *src)
   {
     node *src_value = node_CopyTree(get_value(src),True,True);
     set_obj_value(dst,src_value);
+  }
+
+  node *src_item_index = node_GetItemByKey(src,"item_index");
+  if(src_item_index)
+  {
+     node *item_index = node_CopyTree(src_item_index,True,True);
+     node_AddItem(dst,item_index);
+     node_SetParent(item_index,dst);
   }
 
   node *src_il_block = node_GetItemByKey(src,"nyx_block");
